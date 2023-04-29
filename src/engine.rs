@@ -1,6 +1,9 @@
 use crate::{camera::Camera, renderer::Renderer};
 use std::time::Duration;
-use winit::{event::WindowEvent, window::Window};
+use winit::{
+    event::{DeviceEvent, WindowEvent},
+    window::Window,
+};
 
 /// The `Engine` struct is the main entry point for the game engine.
 pub struct Engine {
@@ -25,8 +28,8 @@ impl Engine {
         };
     }
 
-    pub fn update(&mut self, _dt: Duration) {
-        // nothing to do
+    pub fn update(&mut self, dt: Duration) {
+        //
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -37,7 +40,11 @@ impl Engine {
         self.renderer.resize(new_size);
     }
 
-    pub fn input(&mut self, _event: &WindowEvent) -> bool {
+    pub fn input(&mut self, event: &DeviceEvent) {
+        //
+    }
+
+    pub fn input_keyboard(&self, event: &WindowEvent) -> bool {
         false
     }
 }

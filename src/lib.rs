@@ -10,9 +10,12 @@ use winit::{
     window::WindowBuilder,
 };
 
+#[tracing::instrument]
 pub async fn run() {
+    let file_appender = tracing_appender::rolling::hourly("logs", "engine.log");
     let subscriber = tracing_subscriber::fmt()
         .compact()
+        .with_writer(file_appender)
         .with_file(true)
         .with_line_number(true)
         .with_thread_ids(false)
@@ -45,7 +48,7 @@ pub async fn run() {
                 // The system is out of memory, we should probably quit
                 Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
                 // All other errors (Outdated, Timeout) should be resolved by the next frame
-                Err(e) => eprintln!("{:?}", e),
+                Err(e) => tracing::error!("{:?}", e),
             }
         }
         Event::MainEventsCleared => {
@@ -53,11 +56,13 @@ pub async fn run() {
             // request it.
             engine.window.request_redraw();
         }
+        Event::DeviceEvent { ref event, .. } => {
+            engine.input(event);
+        }
         Event::WindowEvent {
             ref event,
             window_id,
-        } if window_id == engine.window.id() && !engine.input(event) => match event {
-            #[cfg(not(target_arch = "wasm32"))]
+        } if window_id == engine.window.id() && !engine.input_keyboard(event) => match event {
             WindowEvent::CloseRequested
             | WindowEvent::KeyboardInput {
                 input:
