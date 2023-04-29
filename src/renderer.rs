@@ -16,8 +16,9 @@ pub struct Renderer {
     surface: wgpu::Surface,
     pub config: wgpu::SurfaceConfiguration,
     pub device: wgpu::Device,
-    queue: wgpu::Queue,
+    pub queue: wgpu::Queue,
     pub size: winit::dpi::PhysicalSize<u32>,
+    pub texture_bind_group_layout: wgpu::BindGroupLayout,
     pub depth_texture: Texture,
     drawables: Vec<Box<dyn Draw>>,
 }
@@ -70,8 +71,32 @@ impl Renderer {
         };
         surface.configure(&device, &config);
 
-        let depth_texture = Texture::create_depth_texture(&device, &config, "depth_texture");
+        let texture_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        // This should match the filterable field of the
+                        // corresponding Texture entry above.
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                ],
+                label: Some("texture_bind_group_layout"),
+            });
 
+        let depth_texture = Texture::create_depth_texture(&device, &config, "depth_texture");
         let drawables = vec![];
 
         return Self {
@@ -80,6 +105,7 @@ impl Renderer {
             device,
             queue,
             size,
+            texture_bind_group_layout,
             depth_texture,
             drawables,
         };
