@@ -1,7 +1,7 @@
 use crate::{camera::Camera, renderer::Renderer};
 use std::time::Duration;
 use winit::{
-    event::{DeviceEvent, WindowEvent},
+    event::{DeviceEvent, ElementState, KeyboardInput, MouseButton, WindowEvent},
     window::Window,
 };
 
@@ -29,7 +29,7 @@ impl Engine {
     }
 
     pub fn update(&mut self, dt: Duration) {
-        //
+        self.camera.update(&self.renderer.queue, dt);
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -38,13 +38,32 @@ impl Engine {
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         self.renderer.resize(new_size);
+        self.camera
+            .projection
+            .resize(new_size.width, new_size.height)
     }
 
     pub fn input(&mut self, event: &DeviceEvent) {
-        //
+        match event {
+            DeviceEvent::MouseMotion { delta } => {
+                self.camera.controller.process_mouse(delta.0, delta.1)
+            }
+            _ => {}
+        }
     }
 
-    pub fn input_keyboard(&self, event: &WindowEvent) -> bool {
-        false
+    pub fn input_keyboard(&mut self, event: &WindowEvent) -> bool {
+        match event {
+            WindowEvent::KeyboardInput {
+                input:
+                    KeyboardInput {
+                        virtual_keycode: Some(key),
+                        state,
+                        ..
+                    },
+                ..
+            } => self.camera.controller.process_keyboard(*key, *state),
+            _ => false,
+        }
     }
 }
