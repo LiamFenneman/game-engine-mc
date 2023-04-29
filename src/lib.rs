@@ -32,7 +32,7 @@ pub async fn run() {
     let mut engine = engine::Engine::new(window, renderer);
     let mut last_render_time = Instant::now();
 
-    let block = block::Block::new(&engine.renderer);
+    let block = block::DrawBlock::new(&engine.renderer, block::Block::new());
     engine.renderer.add_drawable(Box::new(block));
 
     event_loop.run(move |event, _, control_flow| match event {
