@@ -1,3 +1,4 @@
+use crate::renderer::Renderer;
 use cgmath::*;
 use std::f32::consts::FRAC_PI_2;
 use wgpu::util::DeviceExt;
@@ -54,7 +55,7 @@ pub struct Camera {
 
 impl Camera {
     pub fn new<V: Into<Point3<f32>>, Y: Into<Rad<f32>>, P: Into<Rad<f32>>>(
-        renderer: &crate::Renderer,
+        renderer: &Renderer,
         position: V,
         yaw: Y,
         pitch: P,
