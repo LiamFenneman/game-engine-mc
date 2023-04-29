@@ -1,8 +1,8 @@
-mod block;
-mod camera;
-mod engine;
-mod renderer;
-mod texture;
+pub mod block;
+pub mod camera;
+pub mod engine;
+pub mod renderer;
+pub mod texture;
 
 use std::time::Instant;
 use winit::{

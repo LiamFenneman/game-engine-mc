@@ -78,7 +78,7 @@ impl Camera {
             0.1,
             100.0,
         );
-        let camera_controller = CameraController::new(20.0, 0.4);
+        let camera_controller = CameraController::new(20.0, 0.3);
 
         let uniforms = Uniforms::new();
 
@@ -145,30 +145,6 @@ impl Camera {
             Vector3::new(self.yaw.0.cos(), self.pitch.0.sin(), self.yaw.0.sin()).normalize(),
             Vector3::unit_y(),
         )
-    }
-
-    pub fn input(&mut self, event: &DeviceEvent) {
-        match event {
-            DeviceEvent::MouseMotion { delta } => {
-                self.controller.process_mouse(delta.0, delta.1);
-            }
-            _ => {}
-        }
-    }
-
-    pub fn input_keyboard(&mut self, event: &WindowEvent) -> bool {
-        match event {
-            WindowEvent::KeyboardInput {
-                input:
-                    KeyboardInput {
-                        state,
-                        virtual_keycode: Some(key),
-                        ..
-                    },
-                ..
-            } => self.controller.process_keyboard(*key, *state),
-            _ => false,
-        }
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {

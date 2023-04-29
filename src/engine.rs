@@ -1,7 +1,7 @@
 use crate::{camera::Camera, renderer::Renderer};
 use std::time::Duration;
 use winit::{
-    event::{DeviceEvent, ElementState, KeyboardInput, MouseButton, WindowEvent},
+    event::{DeviceEvent, KeyboardInput, WindowEvent},
     window::Window,
 };
 
@@ -38,9 +38,7 @@ impl Engine {
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         self.renderer.resize(new_size);
-        self.camera
-            .projection
-            .resize(new_size.width, new_size.height)
+        self.camera.resize(new_size);
     }
 
     pub fn input(&mut self, event: &DeviceEvent) {
