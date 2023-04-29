@@ -27,12 +27,20 @@ pub async fn run() {
 
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
+    window.set_cursor_visible(false);
+    window
+        .set_cursor_grab(winit::window::CursorGrabMode::Confined)
+        .unwrap();
 
     let renderer = renderer::Renderer::new(&window, window.inner_size()).await;
     let mut engine = engine::Engine::new(window, renderer);
     let mut last_render_time = Instant::now();
 
-    let block = block::DrawBlock::new(&engine.renderer, block::Block::new());
+    let block = block::DrawBlock::new(
+        &engine.renderer,
+        block::Block::new(),
+        &engine.camera.uniform_bind_group_layout,
+    );
     engine.renderer.add_drawable(Box::new(block));
 
     event_loop.run(move |event, _, control_flow| match event {
