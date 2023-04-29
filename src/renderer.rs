@@ -1,4 +1,4 @@
-use crate::{texture::Texture, camera::Camera};
+use crate::{camera::Camera, texture::Texture};
 use winit::window::Window;
 
 /// The `Draw` trait is implemented by types that can be drawn by the `Renderer`.
