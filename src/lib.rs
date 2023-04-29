@@ -1,9 +1,9 @@
 mod camera;
-mod model;
-mod resources;
 mod texture;
 
+use camera::Camera;
 use std::time::{Duration, Instant};
+use wgpu::util::DeviceExt;
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
@@ -12,8 +12,7 @@ use winit::{
 
 /// The `Draw` trait is implemented by types that can be drawn by the `Renderer`.
 pub trait Draw {
-    // TODO: use `thiserror`
-    fn draw<'a>(&'a self, render_pass: &mut wgpu::RenderPass<'a>, uniforms: &'a wgpu::BindGroup) -> anyhow::Result<()>;
+    fn draw<'a>(&'a self, render_pass: &mut wgpu::RenderPass<'a>, uniforms: &'a wgpu::BindGroup);
 }
 
 /// The `Vertex` trait is implemented by types that can be used as vertices in a mesh.
@@ -25,11 +24,23 @@ pub trait Vertex {
 pub struct Engine {
     window: Window,
     renderer: Renderer,
+    camera: Camera,
 }
 
 impl Engine {
     pub fn new(window: Window, renderer: Renderer) -> Self {
-        return Self { window, renderer };
+        let camera = Camera::new(
+            &renderer,
+            (0.0, 5.0, 10.0),
+            cgmath::Deg(-90.0),
+            cgmath::Deg(-20.0),
+        );
+
+        return Self {
+            window,
+            renderer,
+            camera,
+        };
     }
 
     pub fn update(&mut self, _dt: Duration) {
@@ -37,7 +48,7 @@ impl Engine {
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
-        return self.renderer.render();
+        return self.renderer.render(&self.camera);
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
@@ -57,6 +68,7 @@ pub struct Renderer {
     queue: wgpu::Queue,
     size: winit::dpi::PhysicalSize<u32>,
     depth_texture: texture::Texture,
+    drawables: Vec<Box<dyn Draw>>,
 }
 
 impl Renderer {
@@ -110,6 +122,8 @@ impl Renderer {
         let depth_texture =
             texture::Texture::create_depth_texture(&device, &config, "depth_texture");
 
+        let drawables = vec![];
+
         return Self {
             surface,
             config,
@@ -117,6 +131,7 @@ impl Renderer {
             queue,
             size,
             depth_texture,
+            drawables,
         };
     }
 
@@ -126,10 +141,12 @@ impl Renderer {
             self.config.width = new_size.width;
             self.config.height = new_size.height;
             self.surface.configure(&self.device, &self.config);
+            self.depth_texture =
+                texture::Texture::create_depth_texture(&self.device, &self.config, "depth_texture");
         }
     }
 
-    pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(&mut self, camera: &Camera) -> Result<(), wgpu::SurfaceError> {
         // get the frame to draw to
         let output = self.surface.get_current_texture()?;
         let view = output
@@ -151,8 +168,8 @@ impl Renderer {
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color {
                             r: 0.1,
-                            g: 0.05,
-                            b: 0.5,
+                            g: 0.2,
+                            b: 0.3,
                             a: 1.0,
                         }),
                         store: true,
@@ -169,6 +186,9 @@ impl Renderer {
             });
 
             // render things to the scene
+            for drawable in &mut self.drawables {
+                drawable.draw(&mut render_pass, &camera.uniform_bind_group);
+            }
         }
 
         // render finished, submit to the queue
@@ -176,64 +196,149 @@ impl Renderer {
         output.present();
         Ok(())
     }
+
+    pub fn add_drawable(&mut self, drawable: Box<dyn Draw>) {
+        self.drawables.push(drawable);
+    }
 }
 
 pub fn create_render_pipeline(
-    device: &wgpu::Device,
+    renderer: &Renderer,
     layout: &wgpu::PipelineLayout,
-    color_format: wgpu::TextureFormat,
     depth_format: Option<wgpu::TextureFormat>,
     vertex_layouts: &[wgpu::VertexBufferLayout],
     shader: wgpu::ShaderModuleDescriptor,
 ) -> wgpu::RenderPipeline {
-    let shader = device.create_shader_module(shader);
+    let shader = renderer.device.create_shader_module(shader);
 
-    return device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-        label: Some("Render Pipeline"),
-        layout: Some(layout),
-        vertex: wgpu::VertexState {
-            module: &shader,
-            entry_point: "vs_main",
-            buffers: vertex_layouts,
-        },
-        fragment: Some(wgpu::FragmentState {
-            module: &shader,
-            entry_point: "fs_main",
-            targets: &[Some(wgpu::ColorTargetState {
-                format: color_format,
-                blend: Some(wgpu::BlendState {
-                    alpha: wgpu::BlendComponent::REPLACE,
-                    color: wgpu::BlendComponent::REPLACE,
-                }),
-                write_mask: wgpu::ColorWrites::ALL,
-            })],
-        }),
-        primitive: wgpu::PrimitiveState {
-            topology: wgpu::PrimitiveTopology::TriangleList,
-            strip_index_format: None,
-            front_face: wgpu::FrontFace::Ccw,
-            cull_mode: Some(wgpu::Face::Back),
-            // Setting this to anything other than Fill requires Features::NON_FILL_POLYGON_MODE
-            polygon_mode: wgpu::PolygonMode::Fill,
-            // Requires Features::DEPTH_CLIP_CONTROL
-            unclipped_depth: false,
-            // Requires Features::CONSERVATIVE_RASTERIZATION
-            conservative: false,
-        },
-        depth_stencil: depth_format.map(|format| wgpu::DepthStencilState {
-            format,
-            depth_write_enabled: true,
-            depth_compare: wgpu::CompareFunction::Less,
-            stencil: wgpu::StencilState::default(),
-            bias: wgpu::DepthBiasState::default(),
-        }),
-        multisample: wgpu::MultisampleState {
-            count: 1,
-            mask: !0,
-            alpha_to_coverage_enabled: false,
-        },
-        multiview: None,
-    });
+    return renderer
+        .device
+        .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("Render Pipeline"),
+            layout: Some(layout),
+            vertex: wgpu::VertexState {
+                module: &shader,
+                entry_point: "vs_main",
+                buffers: vertex_layouts,
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &shader,
+                entry_point: "fs_main",
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: renderer.config.format,
+                    blend: Some(wgpu::BlendState {
+                        alpha: wgpu::BlendComponent::REPLACE,
+                        color: wgpu::BlendComponent::REPLACE,
+                    }),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                strip_index_format: None,
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: Some(wgpu::Face::Back),
+                // Setting this to anything other than Fill requires Features::NON_FILL_POLYGON_MODE
+                polygon_mode: wgpu::PolygonMode::Fill,
+                // Requires Features::DEPTH_CLIP_CONTROL
+                unclipped_depth: false,
+                // Requires Features::CONSERVATIVE_RASTERIZATION
+                conservative: false,
+            },
+            depth_stencil: depth_format.map(|format| wgpu::DepthStencilState {
+                format,
+                depth_write_enabled: true,
+                depth_compare: wgpu::CompareFunction::Less,
+                stencil: wgpu::StencilState::default(),
+                bias: wgpu::DepthBiasState::default(),
+            }),
+            multisample: wgpu::MultisampleState {
+                count: 1,
+                mask: !0,
+                alpha_to_coverage_enabled: false,
+            },
+            multiview: None,
+        });
+}
+
+struct DebugDrawable {
+    render_pipeline: wgpu::RenderPipeline,
+    vertex_buffer: wgpu::Buffer,
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+struct V {
+    position: [f32; 3],
+    color: [f32; 3],
+}
+impl V {
+    const ATTRIBS: [wgpu::VertexAttribute; 2] =
+        wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x3];
+}
+impl Vertex for V {
+    fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
+        use std::mem;
+
+        wgpu::VertexBufferLayout {
+            array_stride: mem::size_of::<Self>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &Self::ATTRIBS,
+        }
+    }
+}
+impl DebugDrawable {
+    #[rustfmt::skip]
+    const VERTICES: &[V] = &[
+        V { position: [0.0, 0.5, 0.0], color: [1.0, 0.0, 0.0] },
+        V { position: [-0.5, -0.5, 0.0], color: [0.0, 1.0, 0.0] },
+        V { position: [0.5, -0.5, 0.0], color: [0.0, 0.0, 1.0] },
+    ];
+
+    fn new(renderer: &Renderer) -> Self {
+        let layout = renderer
+            .device
+            .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("Debug Pipeline Layout"),
+                bind_group_layouts: &[],
+                push_constant_ranges: &[],
+            });
+
+        let shader = wgpu::ShaderModuleDescriptor {
+            label: Some("Debug Shader"),
+            source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
+        };
+
+        let render_pipeline = create_render_pipeline(
+            renderer,
+            &layout,
+            Some(texture::Texture::DEPTH_FORMAT),
+            &[V::desc()],
+            shader,
+        );
+
+        let vertex_buffer = renderer
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: bytemuck::cast_slice(Self::VERTICES),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+
+        return Self {
+            render_pipeline,
+            vertex_buffer,
+        };
+    }
+}
+
+impl Draw for DebugDrawable {
+    fn draw<'a>(&'a self, render_pass: &mut wgpu::RenderPass<'a>, uniforms: &'a wgpu::BindGroup) {
+        render_pass.set_pipeline(&self.render_pipeline);
+        render_pass.set_bind_group(1, &uniforms, &[]);
+
+        render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+        render_pass.draw(0..3, 0..1);
+    }
 }
 
 pub async fn run() {
@@ -253,6 +358,10 @@ pub async fn run() {
     let renderer = Renderer::new(&window, window.inner_size()).await;
     let mut engine = Engine::new(window, renderer);
     let mut last_render_time = Instant::now();
+
+    engine
+        .renderer
+        .add_drawable(Box::new(DebugDrawable::new(&engine.renderer)));
 
     event_loop.run(move |event, _, control_flow| match event {
         Event::RedrawRequested(window_id) if window_id == engine.window.id() => {

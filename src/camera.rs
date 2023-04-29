@@ -1,5 +1,6 @@
 use cgmath::*;
 use std::f32::consts::FRAC_PI_2;
+use wgpu::util::DeviceExt;
 use winit::dpi::PhysicalPosition;
 use winit::event::*;
 
@@ -13,23 +14,99 @@ pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
 
 const SAFE_FRAC_PI_2: f32 = FRAC_PI_2 - 0.0001;
 
+#[repr(C)]
+#[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct Uniforms {
+    view_position: [f32; 4],
+    view_proj: [[f32; 4]; 4],
+}
+
+impl Uniforms {
+    pub fn new() -> Self {
+        Self {
+            view_position: [0.0; 4],
+            view_proj: cgmath::Matrix4::identity().into(),
+        }
+    }
+
+    pub fn update_view_proj(
+        &mut self,
+        position: Point3<f32>,
+        camera_matrix: Matrix4<f32>,
+        projection_matrix: Matrix4<f32>,
+    ) {
+        self.view_position = position.to_homogeneous().into();
+        self.view_proj = (projection_matrix * camera_matrix).into()
+    }
+}
+
 #[derive(Debug)]
 pub struct Camera {
     pub position: Point3<f32>,
     yaw: Rad<f32>,
     pitch: Rad<f32>,
+
+    pub uniform_bind_group_layout: wgpu::BindGroupLayout,
+    pub uniform_bind_group: wgpu::BindGroup,
+    uniforms: Uniforms,
+    uniform_buffer: wgpu::Buffer,
 }
 
 impl Camera {
     pub fn new<V: Into<Point3<f32>>, Y: Into<Rad<f32>>, P: Into<Rad<f32>>>(
+        renderer: &crate::Renderer,
         position: V,
         yaw: Y,
         pitch: P,
     ) -> Self {
+        let uniforms = Uniforms::new();
+
+        let uniform_buffer =
+            renderer
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("Uniform Buffer"),
+                    contents: bytemuck::cast_slice(&[uniforms]),
+                    usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+                });
+
+        let uniform_bind_group_layout =
+            renderer
+                .device
+                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                    entries: &[wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    }],
+                    label: Some("uniform_bind_group_layout"),
+                });
+
+        let uniform_bind_group = renderer
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &uniform_bind_group_layout,
+                entries: &[wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: uniform_buffer.as_entire_binding(),
+                }],
+                label: Some("uniform_bind_group"),
+            });
+
         Self {
             position: position.into(),
             yaw: yaw.into(),
             pitch: pitch.into(),
+
+            uniform_bind_group_layout,
+            uniform_bind_group,
+            uniforms,
+            uniform_buffer,
         }
     }
 
