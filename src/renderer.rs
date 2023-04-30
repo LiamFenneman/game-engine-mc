@@ -24,6 +24,11 @@ pub struct Renderer {
 }
 
 impl Renderer {
+    fn features() -> wgpu::Features {
+        wgpu::Features::TEXTURE_BINDING_ARRAY
+            | wgpu::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING
+    }
+
     pub async fn new(window: &Window, size: winit::dpi::PhysicalSize<u32>) -> Self {
         // the instance is a handle to our GPU
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
@@ -51,7 +56,7 @@ impl Renderer {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: None,
-                    features: wgpu::Features::empty(),
+                    features: Self::features(),
                     limits: wgpu::Limits::default(),
                 },
                 None,

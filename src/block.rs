@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 use crate::{
     renderer::{create_render_pipeline, Draw, Renderer, Vertex},
     texture::Texture,
@@ -11,13 +13,15 @@ use wgpu::util::DeviceExt;
 pub struct BlockVertex {
     position: [f32; 3],
     tex_coords: [f32; 2],
+    tex_index: u32,
 }
 
 impl BlockVertex {
-    pub fn new(position: Vector3<f32>, tex_coords: Vector2<f32>) -> Self {
+    pub fn new(position: Vector3<f32>, tex_coords: Vector2<f32>, tex_index: u32) -> Self {
         Self {
             position: [position.x, position.y, position.z],
             tex_coords: [tex_coords.x, tex_coords.y],
+            tex_index,
         }
     }
 }
@@ -36,7 +40,12 @@ impl Vertex for BlockVertex {
                 wgpu::VertexAttribute {
                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 1,
-                    format: wgpu::VertexFormat::Float32x2, // NEW!
+                    format: wgpu::VertexFormat::Float32x2,
+                },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32; 5]>() as wgpu::BufferAddress,
+                    shader_location: 2,
+                    format: wgpu::VertexFormat::Uint32,
                 },
             ],
         }
@@ -58,12 +67,82 @@ impl DrawBlock {
         block: Block,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
     ) -> Self {
+        let textures = vec![
+            Texture::from_bytes(
+                &renderer.device,
+                &renderer.queue,
+                include_bytes!("../res/grass_top.png"),
+                "block",
+                false,
+            )
+            .unwrap(),
+            Texture::from_bytes(
+                &renderer.device,
+                &renderer.queue,
+                include_bytes!("../res/grass_side.png"),
+                "block",
+                false,
+            )
+            .unwrap(),
+            Texture::from_bytes(
+                &renderer.device,
+                &renderer.queue,
+                include_bytes!("../res/grass_bottom.png"),
+                "block",
+                false,
+            )
+            .unwrap(),
+        ];
+        let texture_views = textures.iter().map(|t| &t.view).collect::<Vec<_>>();
+        let texture_samplers = textures.iter().map(|t| &t.sampler).collect::<Vec<_>>();
+
+        let bind_group_layout =
+            renderer
+                .device
+                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                    entries: &[
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 0,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
+                            ty: wgpu::BindingType::Texture {
+                                multisampled: false,
+                                view_dimension: wgpu::TextureViewDimension::D2,
+                                sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                            },
+                            count: Some(NonZeroU32::new(texture_views.len() as u32).unwrap()),
+                        },
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 1,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
+                            ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                            count: Some(NonZeroU32::new(texture_samplers.len() as u32).unwrap()),
+                        },
+                    ],
+                    label: Some("texture_bind_group_layout"),
+                });
+        let bind_group = renderer
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: wgpu::BindingResource::TextureViewArray(&texture_views),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::SamplerArray(&texture_samplers),
+                    },
+                ],
+                label: Some("diffuse_bind_group"),
+            });
+
         let layout = renderer
             .device
             .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Debug Pipeline Layout"),
                 bind_group_layouts: &[
-                    &renderer.texture_bind_group_layout,
+                    &bind_group_layout,
                     uniform_bind_group_layout,
                 ],
                 push_constant_ranges: &[],
@@ -81,27 +160,6 @@ impl DrawBlock {
             &[BlockVertex::desc()],
             shader,
         );
-
-        let bytes = include_bytes!("../res/grass_side.png");
-        let texture =
-            Texture::from_bytes(&renderer.device, &renderer.queue, bytes, "block", false).unwrap();
-
-        let bind_group = renderer
-            .device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &renderer.texture_bind_group_layout,
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: wgpu::BindingResource::TextureView(&texture.view),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: wgpu::BindingResource::Sampler(&texture.sampler),
-                    },
-                ],
-                label: Some("diffuse_bind_group"),
-            });
 
         let vertex_buffer = renderer
             .device
@@ -213,40 +271,40 @@ impl FaceDirection {
         use cgmath::{vec2, vec3};
         return match self {
             FaceDirection::TOP => [
-                BlockVertex::new(vec3(0.0, 1.0, 0.0), vec2(0.0, 0.0)),
-                BlockVertex::new(vec3(0.0, 1.0, 1.0), vec2(0.0, 1.0)),
-                BlockVertex::new(vec3(1.0, 1.0, 1.0), vec2(1.0, 1.0)),
-                BlockVertex::new(vec3(1.0, 1.0, 0.0), vec2(1.0, 0.0)),
+                BlockVertex::new(vec3(0.0, 1.0, 0.0), vec2(0.0, 0.0), 0),
+                BlockVertex::new(vec3(0.0, 1.0, 1.0), vec2(0.0, 1.0), 0),
+                BlockVertex::new(vec3(1.0, 1.0, 1.0), vec2(1.0, 1.0), 0),
+                BlockVertex::new(vec3(1.0, 1.0, 0.0), vec2(1.0, 0.0), 0),
             ],
             FaceDirection::BOTTOM => [
-                BlockVertex::new(vec3(0.0, 0.0, 0.0), vec2(0.0, 0.0)),
-                BlockVertex::new(vec3(0.0, 0.0, 1.0), vec2(0.0, 1.0)),
-                BlockVertex::new(vec3(1.0, 0.0, 1.0), vec2(1.0, 1.0)),
-                BlockVertex::new(vec3(1.0, 0.0, 0.0), vec2(1.0, 0.0)),
+                BlockVertex::new(vec3(0.0, 0.0, 1.0), vec2(0.0, 0.0), 2),
+                BlockVertex::new(vec3(0.0, 0.0, 0.0), vec2(0.0, 1.0), 2),
+                BlockVertex::new(vec3(1.0, 0.0, 0.0), vec2(1.0, 1.0), 2),
+                BlockVertex::new(vec3(1.0, 0.0, 1.0), vec2(1.0, 0.0), 2),
             ],
             FaceDirection::RIGHT => [
-                BlockVertex::new(vec3(1.0, 1.0, 1.0), vec2(0.0, 0.0)),
-                BlockVertex::new(vec3(1.0, 0.0, 1.0), vec2(0.0, 1.0)),
-                BlockVertex::new(vec3(1.0, 0.0, 0.0), vec2(1.0, 1.0)),
-                BlockVertex::new(vec3(1.0, 1.0, 0.0), vec2(1.0, 0.0)),
+                BlockVertex::new(vec3(1.0, 1.0, 1.0), vec2(0.0, 0.0), 1),
+                BlockVertex::new(vec3(1.0, 0.0, 1.0), vec2(0.0, 1.0), 1),
+                BlockVertex::new(vec3(1.0, 0.0, 0.0), vec2(1.0, 1.0), 1),
+                BlockVertex::new(vec3(1.0, 1.0, 0.0), vec2(1.0, 0.0), 1),
             ],
             FaceDirection::LEFT => [
-                BlockVertex::new(vec3(0.0, 1.0, 0.0), vec2(0.0, 0.0)),
-                BlockVertex::new(vec3(0.0, 0.0, 0.0), vec2(0.0, 1.0)),
-                BlockVertex::new(vec3(0.0, 0.0, 1.0), vec2(1.0, 1.0)),
-                BlockVertex::new(vec3(0.0, 1.0, 1.0), vec2(1.0, 0.0)),
+                BlockVertex::new(vec3(0.0, 1.0, 0.0), vec2(0.0, 0.0), 1),
+                BlockVertex::new(vec3(0.0, 0.0, 0.0), vec2(0.0, 1.0), 1),
+                BlockVertex::new(vec3(0.0, 0.0, 1.0), vec2(1.0, 1.0), 1),
+                BlockVertex::new(vec3(0.0, 1.0, 1.0), vec2(1.0, 0.0), 1),
             ],
             FaceDirection::FRONT => [
-                BlockVertex::new(vec3(0.0, 1.0, 1.0), vec2(0.0, 0.0)),
-                BlockVertex::new(vec3(0.0, 0.0, 1.0), vec2(0.0, 1.0)),
-                BlockVertex::new(vec3(1.0, 0.0, 1.0), vec2(1.0, 1.0)),
-                BlockVertex::new(vec3(1.0, 1.0, 1.0), vec2(1.0, 0.0)),
+                BlockVertex::new(vec3(0.0, 1.0, 1.0), vec2(0.0, 0.0), 1),
+                BlockVertex::new(vec3(0.0, 0.0, 1.0), vec2(0.0, 1.0), 1),
+                BlockVertex::new(vec3(1.0, 0.0, 1.0), vec2(1.0, 1.0), 1),
+                BlockVertex::new(vec3(1.0, 1.0, 1.0), vec2(1.0, 0.0), 1),
             ],
             FaceDirection::BACK => [
-                BlockVertex::new(vec3(1.0, 1.0, 0.0), vec2(0.0, 0.0)),
-                BlockVertex::new(vec3(1.0, 0.0, 0.0), vec2(0.0, 1.0)),
-                BlockVertex::new(vec3(0.0, 0.0, 0.0), vec2(1.0, 1.0)),
-                BlockVertex::new(vec3(0.0, 1.0, 0.0), vec2(1.0, 0.0)),
+                BlockVertex::new(vec3(1.0, 1.0, 0.0), vec2(0.0, 0.0), 1),
+                BlockVertex::new(vec3(1.0, 0.0, 0.0), vec2(0.0, 1.0), 1),
+                BlockVertex::new(vec3(0.0, 0.0, 0.0), vec2(1.0, 1.0), 1),
+                BlockVertex::new(vec3(0.0, 1.0, 0.0), vec2(1.0, 0.0), 1),
             ],
         };
     }
