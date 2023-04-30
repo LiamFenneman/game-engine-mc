@@ -1,8 +1,8 @@
-use cgmath::*;
+use cgmath::{perspective, Angle, InnerSpace, Matrix4, Point3, Rad, SquareMatrix, Vector3};
 use std::f32::consts::FRAC_PI_2;
 use std::time::Duration;
 use wgpu::util::DeviceExt;
-use winit::event::*;
+use winit::event::{ElementState, VirtualKeyCode};
 
 use crate::renderer::Renderer;
 
@@ -22,6 +22,7 @@ pub struct Uniforms {
 }
 
 impl Uniforms {
+    #[must_use]
     pub fn new() -> Self {
         return Self {
             view_position: [0.0; 4],
@@ -36,7 +37,7 @@ impl Uniforms {
         projection_matrix: Matrix4<f32>,
     ) {
         self.view_position = position.to_homogeneous().into();
-        self.view_proj = (projection_matrix * camera_matrix).into()
+        self.view_proj = (projection_matrix * camera_matrix).into();
     }
 }
 
@@ -154,7 +155,7 @@ impl Camera {
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
-        self.projection.resize(new_size.width, new_size.height)
+        self.projection.resize(new_size.width, new_size.height);
     }
 
     pub fn update(&mut self, queue: &wgpu::Queue, dt: Duration) {
@@ -218,6 +219,7 @@ pub struct Projection {
     zfar: f32,
 }
 
+#[allow(clippy::cast_precision_loss)]
 impl Projection {
     pub fn new<F: Into<Rad<f32>>>(width: u32, height: u32, fovy: F, znear: f32, zfar: f32) -> Self {
         return Self {
@@ -232,6 +234,7 @@ impl Projection {
         self.aspect = width as f32 / height as f32;
     }
 
+    #[must_use]
     pub fn calc_matrix(&self) -> Matrix4<f32> {
         return OPENGL_TO_WGPU_MATRIX * perspective(self.fovy, self.aspect, self.znear, self.zfar);
     }
@@ -252,6 +255,7 @@ pub struct CameraController {
 }
 
 impl CameraController {
+    #[must_use]
     pub fn new(speed: f32, sensitivity: f32) -> Self {
         return Self {
             amount_left: 0.0,
@@ -302,8 +306,8 @@ impl CameraController {
         };
     }
 
-    pub fn process_mouse(&mut self, mouse_dx: f64, mouse_dy: f64) {
-        self.rotate_horizontal = mouse_dx as f32;
-        self.rotate_vertical = mouse_dy as f32;
+    pub fn process_mouse(&mut self, dx: f64, dy: f64) {
+        self.rotate_horizontal = dx as f32;
+        self.rotate_vertical = dy as f32;
     }
 }

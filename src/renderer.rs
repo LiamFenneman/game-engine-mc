@@ -100,6 +100,10 @@ impl Renderer {
         }
     }
 
+    /// Renders the scene to the screen.
+    ///
+    /// # Errors
+    /// Errors if the surface is lost. Which should never happen.
     pub fn render(&mut self, camera: &Camera) -> Result<(), wgpu::SurfaceError> {
         // get the frame to draw to
         let output = self.surface.get_current_texture()?;

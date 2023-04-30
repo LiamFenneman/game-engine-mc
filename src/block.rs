@@ -15,6 +15,7 @@ pub struct BlockVertex {
 }
 
 impl BlockVertex {
+    #[must_use]
     pub fn new(position: Vector3<f32>, tex_coords: Vector2<f32>, tex_index: u32) -> Self {
         return Self {
             position: [position.x, position.y, position.z],
@@ -50,6 +51,7 @@ impl Vertex for BlockVertex {
     }
 }
 
+#[allow(unused)]
 pub struct DrawBlock {
     render_pipeline: wgpu::RenderPipeline,
     bind_group: wgpu::BindGroup,
@@ -60,6 +62,11 @@ pub struct DrawBlock {
 }
 
 impl DrawBlock {
+    /// Creates a new [`DrawBlock`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if a [`Texture`] fails to parse bytes.
     pub fn new(
         renderer: &Renderer,
         block: Block,
@@ -168,6 +175,7 @@ impl Default for Block {
 }
 
 impl Block {
+    #[must_use]
     pub fn new() -> Self {
         let faces = Self::generate_faces();
 
@@ -185,16 +193,18 @@ impl Block {
         return [top, bottom, right, left, front, back];
     }
 
+    #[must_use]
     pub fn get_vertices(&self) -> Vec<BlockVertex> {
         let mut vertices = Vec::new();
 
-        for face in self.faces.iter() {
+        for face in &self.faces {
             vertices.extend_from_slice(&face.vertices);
         }
 
         return vertices;
     }
 
+    #[must_use]
     pub fn get_indices(&self) -> Vec<u16> {
         let mut indices = Vec::new();
 
@@ -260,6 +270,7 @@ impl FaceDirection {
     }
 }
 
+#[allow(unused)]
 struct Face {
     vertices: [BlockVertex; 4],
     direction: FaceDirection,
@@ -273,7 +284,7 @@ impl Face {
         };
     }
 
-    #[allow(clippy::identity_op)]
+    #[allow(clippy::identity_op, clippy::unused_self)]
     pub fn get_indices(&self, i: u16) -> [u16; 6] {
         let displacement = i * 4;
         return [

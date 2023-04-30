@@ -32,6 +32,10 @@ impl Engine {
         self.camera.update(&self.renderer.queue, dt);
     }
 
+    /// Renders the game.
+    ///
+    /// # Errors
+    /// Errors if the surface is lost.
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         return self.renderer.render(&self.camera);
     }
@@ -43,7 +47,7 @@ impl Engine {
 
     pub fn input(&mut self, event: &DeviceEvent) {
         if let DeviceEvent::MouseMotion { delta } = event {
-            self.camera.controller.process_mouse(delta.0, delta.1)
+            self.camera.controller.process_mouse(delta.0, delta.1);
         }
     }
 

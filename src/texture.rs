@@ -1,5 +1,5 @@
 use crate::renderer::Renderer;
-use anyhow::*;
+use anyhow::Result;
 use image::GenericImageView;
 use std::num::NonZeroU32;
 
@@ -10,6 +10,10 @@ pub struct TextureArray {
 }
 
 impl TextureArray {
+    /// Create a new [`TextureArray`] from a list of [`Texture`]s.
+    ///
+    /// # Panics
+    /// Panics if the length of `textures` is 0.
     pub fn new(renderer: &Renderer, textures: Vec<Texture>, label: &str) -> Self {
         let texture_views = textures
             .iter()
@@ -43,7 +47,7 @@ impl TextureArray {
                             count: Some(NonZeroU32::new(textures.len() as u32).unwrap()),
                         },
                     ],
-                    label: Some(&format!("{}_bind_group_layout", label)),
+                    label: Some(&format!("{label}_bind_group_layout")),
                 });
 
         let bind_group = renderer
@@ -80,6 +84,7 @@ pub struct Texture {
 impl Texture {
     pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 
+    #[must_use]
     pub fn create_depth_texture(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
@@ -123,6 +128,10 @@ impl Texture {
         };
     }
 
+    /// Create a new [`Texture`] from a list of bytes.
+    ///
+    /// # Errors
+    /// Errors if the bytes cannot be decoded into an image.
     pub fn from_bytes(
         device: &wgpu::Device,
         queue: &wgpu::Queue,
@@ -131,16 +140,23 @@ impl Texture {
         is_normal_map: bool,
     ) -> Result<Self> {
         let img = image::load_from_memory(bytes)?;
-        return Self::from_image(device, queue, &img, Some(label), is_normal_map);
+        return Ok(Self::from_image(
+            device,
+            queue,
+            &img,
+            Some(label),
+            is_normal_map,
+        ));
     }
 
+    #[must_use]
     pub fn from_image(
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         img: &image::DynamicImage,
         label: Option<&str>,
         is_normal_map: bool,
-    ) -> Result<Self> {
+    ) -> Self {
         let rgba = img.to_rgba8();
         let dimensions = img.dimensions();
 
@@ -192,10 +208,10 @@ impl Texture {
             ..Default::default()
         });
 
-        return Ok(Self {
+        return Self {
             texture,
             view,
             sampler,
-        });
+        };
     }
 }
