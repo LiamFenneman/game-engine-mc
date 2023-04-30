@@ -3,7 +3,7 @@ use fs_extra::copy_items;
 use fs_extra::dir::CopyOptions;
 use std::env;
 
-const RESOURCES_DIR: &str = "res/";
+const RESOURCES_DIR: &str = "../res/";
 
 fn main() -> Result<()> {
     // This tells cargo to rerun this script if something in /res/ changes.

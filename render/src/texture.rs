@@ -1,5 +1,4 @@
 use crate::renderer::Renderer;
-use anyhow::Result;
 use image::GenericImageView;
 use std::num::NonZeroU32;
 
@@ -138,7 +137,7 @@ impl Texture {
         bytes: &[u8],
         label: &str,
         is_normal_map: bool,
-    ) -> Result<Self> {
+    ) -> Result<Self, image::ImageError> {
         let img = image::load_from_memory(bytes)?;
         return Ok(Self::from_image(
             device,

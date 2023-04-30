@@ -15,7 +15,7 @@ pub mod texture;
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
-    window::WindowBuilder,
+    window::{WindowBuilder, CursorGrabMode},
 };
 
 /// The `main` function is the entry point of the game.
@@ -39,7 +39,8 @@ pub async fn run() {
     let window = WindowBuilder::new().build(&event_loop).unwrap();
     window.set_cursor_visible(false);
     window
-        .set_cursor_grab(winit::window::CursorGrabMode::Confined)
+        .set_cursor_grab(CursorGrabMode::Confined)
+        .or_else(|_e| return window.set_cursor_grab(CursorGrabMode::Locked))
         .unwrap();
 
     let renderer = renderer::Renderer::new(&window, window.inner_size()).await;
