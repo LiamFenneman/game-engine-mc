@@ -23,9 +23,11 @@ pub struct Renderer {
 }
 
 impl Renderer {
+    #[allow(clippy::implicit_return)]
     fn features() -> wgpu::Features {
-        return wgpu::Features::TEXTURE_BINDING_ARRAY
-            | wgpu::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING;
+        use wgpu::Features;
+        Features::TEXTURE_BINDING_ARRAY
+            | Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING
     }
 
     pub async fn new(window: &Window, size: winit::dpi::PhysicalSize<u32>) -> Self {

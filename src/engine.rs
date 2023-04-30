@@ -1,5 +1,4 @@
-use crate::{camera::Camera, renderer::Renderer};
-use std::time::Duration;
+use crate::{camera::Camera, renderer::Renderer, stats::FrameStats};
 use winit::{
     event::{DeviceEvent, KeyboardInput, WindowEvent},
     window::Window,
@@ -10,6 +9,7 @@ pub struct Engine {
     pub window: Window,
     pub renderer: Renderer,
     pub camera: Camera,
+    pub stats: FrameStats,
 }
 
 impl Engine {
@@ -21,15 +21,20 @@ impl Engine {
             cgmath::Deg(-20.0),
         );
 
+        let stats = FrameStats::default();
+
         return Self {
             window,
             renderer,
             camera,
+            stats,
         };
     }
 
-    pub fn update(&mut self, dt: Duration) {
-        self.camera.update(&self.renderer.queue, dt);
+    pub fn update(&mut self) {
+        self.stats.fps();
+        self.camera
+            .update(&self.renderer.queue, self.stats.delta_time);
     }
 
     /// Renders the game.

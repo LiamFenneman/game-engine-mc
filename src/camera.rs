@@ -1,6 +1,5 @@
 use cgmath::{perspective, Angle, InnerSpace, Matrix4, Point3, Rad, SquareMatrix, Vector3};
 use std::f32::consts::FRAC_PI_2;
-use std::time::Duration;
 use wgpu::util::DeviceExt;
 use winit::event::{ElementState, VirtualKeyCode};
 
@@ -141,7 +140,7 @@ impl Camera {
             uniforms,
         };
 
-        camera.update(&renderer.queue, Duration::from_secs(0));
+        camera.update(&renderer.queue, 0.0);
 
         return camera;
     }
@@ -158,8 +157,8 @@ impl Camera {
         self.projection.resize(new_size.width, new_size.height);
     }
 
-    pub fn update(&mut self, queue: &wgpu::Queue, dt: Duration) {
-        self.update_camera_controller(dt);
+    pub fn update(&mut self, queue: &wgpu::Queue, dt: f64) {
+        self.update_camera_controller(dt as f32);
         self.uniforms.update_view_proj(
             self.position,
             self.calc_matrix(),
@@ -172,9 +171,7 @@ impl Camera {
         );
     }
 
-    pub fn update_camera_controller(&mut self, dt: Duration) {
-        let dt = dt.as_secs_f32();
-
+    pub fn update_camera_controller(&mut self, dt: f32) {
         // Move forward/backward and left/right
         let (yaw_sin, yaw_cos) = self.yaw.0.sin_cos();
         let forward = Vector3::new(yaw_cos, 0.0, yaw_sin).normalize();

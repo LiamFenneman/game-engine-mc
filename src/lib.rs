@@ -9,16 +9,19 @@ pub mod block;
 pub mod camera;
 pub mod engine;
 pub mod renderer;
+pub mod stats;
 pub mod texture;
 
-use std::time::Instant;
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
 
-#[tracing::instrument]
+/// The `main` function is the entry point of the game.
+///
+/// # Panics
+/// Possible causes of panic include denied permission, incompatible system, and lack of memory.
 pub async fn run() {
     let file_appender = tracing_appender::rolling::hourly("logs", "engine.log");
     let subscriber = tracing_subscriber::fmt()
@@ -41,7 +44,6 @@ pub async fn run() {
 
     let renderer = renderer::Renderer::new(&window, window.inner_size()).await;
     let mut engine = engine::Engine::new(window, renderer);
-    let mut last_render_time = Instant::now();
 
     let block = block::DrawBlock::new(
         &engine.renderer,
@@ -52,10 +54,7 @@ pub async fn run() {
 
     event_loop.run(move |event, _, control_flow| match event {
         Event::RedrawRequested(window_id) if window_id == engine.window.id() => {
-            let now = Instant::now();
-            let dt = now - last_render_time;
-            last_render_time = now;
-            engine.update(dt);
+            engine.update();
             match engine.render() {
                 Ok(_) => {}
                 // Reconfigure the surface if lost
