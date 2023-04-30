@@ -13,12 +13,12 @@ impl TextureArray {
     pub fn new(renderer: &Renderer, textures: Vec<Texture>, label: &str) -> Self {
         let texture_views = textures
             .iter()
-            .map(|texture| &texture.view)
+            .map(|texture| return &texture.view)
             .collect::<Vec<_>>();
 
         let texture_samplers = textures
             .iter()
-            .map(|texture| &texture.sampler)
+            .map(|texture| return &texture.sampler)
             .collect::<Vec<_>>();
 
         let bind_group_layout =
@@ -116,11 +116,11 @@ impl Texture {
             ..Default::default()
         });
 
-        Self {
+        return Self {
             texture,
             view,
             sampler,
-        }
+        };
     }
 
     pub fn from_bytes(
@@ -131,7 +131,7 @@ impl Texture {
         is_normal_map: bool,
     ) -> Result<Self> {
         let img = image::load_from_memory(bytes)?;
-        Self::from_image(device, queue, &img, Some(label), is_normal_map)
+        return Self::from_image(device, queue, &img, Some(label), is_normal_map);
     }
 
     pub fn from_image(
@@ -192,10 +192,10 @@ impl Texture {
             ..Default::default()
         });
 
-        Ok(Self {
+        return Ok(Self {
             texture,
             view,
             sampler,
-        })
+        });
     }
 }

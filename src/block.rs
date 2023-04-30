@@ -16,17 +16,17 @@ pub struct BlockVertex {
 
 impl BlockVertex {
     pub fn new(position: Vector3<f32>, tex_coords: Vector2<f32>, tex_index: u32) -> Self {
-        Self {
+        return Self {
             position: [position.x, position.y, position.z],
             tex_coords: [tex_coords.x, tex_coords.y],
             tex_index,
-        }
+        };
     }
 }
 
 impl Vertex for BlockVertex {
     fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
-        wgpu::VertexBufferLayout {
+        return wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<BlockVertex>() as wgpu::BufferAddress,
             step_mode: wgpu::VertexStepMode::Vertex,
             attributes: &[
@@ -46,7 +46,7 @@ impl Vertex for BlockVertex {
                     format: wgpu::VertexFormat::Uint32,
                 },
             ],
-        }
+        };
     }
 }
 
@@ -161,6 +161,12 @@ pub struct Block {
     faces: [Face; 6],
 }
 
+impl Default for Block {
+    fn default() -> Self {
+        return Self::new();
+    }
+}
+
 impl Block {
     pub fn new() -> Self {
         let faces = Self::generate_faces();
@@ -192,16 +198,15 @@ impl Block {
     pub fn get_indices(&self) -> Vec<u16> {
         let mut indices = Vec::new();
 
-        let mut face_counter = 0;
-        for face in self.faces.iter() {
-            indices.extend_from_slice(&face.get_indices(face_counter));
-            face_counter += 1;
+        for (face_counter, face) in self.faces.iter().enumerate() {
+            indices.extend_from_slice(&face.get_indices(face_counter as u16));
         }
 
         return indices;
     }
 }
 
+#[allow(clippy::upper_case_acronyms)]
 enum FaceDirection {
     TOP,
     BOTTOM,
@@ -212,17 +217,6 @@ enum FaceDirection {
 }
 
 impl FaceDirection {
-    pub fn to_vec(self) -> Vector3<i32> {
-        match self {
-            FaceDirection::TOP => Vector3::new(0, 1, 0),
-            FaceDirection::BOTTOM => Vector3::new(0, -1, 0),
-            FaceDirection::RIGHT => Vector3::new(1, 0, 0),
-            FaceDirection::LEFT => Vector3::new(-1, 0, 0),
-            FaceDirection::FRONT => Vector3::new(0, 0, 1),
-            FaceDirection::BACK => Vector3::new(0, 0, -1),
-        }
-    }
-
     pub fn get_vertices(&self) -> [BlockVertex; 4] {
         use cgmath::{vec2, vec3};
         return match self {
@@ -279,15 +273,16 @@ impl Face {
         };
     }
 
+    #[allow(clippy::identity_op)]
     pub fn get_indices(&self, i: u16) -> [u16; 6] {
         let displacement = i * 4;
-        [
+        return [
             0 + displacement,
             1 + displacement,
             2 + displacement,
             2 + displacement,
             3 + displacement,
             0 + displacement,
-        ]
+        ];
     }
 }

@@ -1,3 +1,6 @@
+#![deny(clippy::implicit_return)]
+#![allow(clippy::needless_return)]
+
 pub mod block;
 pub mod camera;
 pub mod engine;

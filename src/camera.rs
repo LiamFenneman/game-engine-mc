@@ -23,10 +23,10 @@ pub struct Uniforms {
 
 impl Uniforms {
     pub fn new() -> Self {
-        Self {
+        return Self {
             view_position: [0.0; 4],
             view_proj: cgmath::Matrix4::identity().into(),
-        }
+        };
     }
 
     pub fn update_view_proj(
@@ -37,6 +37,12 @@ impl Uniforms {
     ) {
         self.view_position = position.to_homogeneous().into();
         self.view_proj = (projection_matrix * camera_matrix).into()
+    }
+}
+
+impl Default for Uniforms {
+    fn default() -> Self {
+        return Self::new();
     }
 }
 
@@ -140,11 +146,11 @@ impl Camera {
     }
 
     pub fn calc_matrix(&self) -> Matrix4<f32> {
-        Matrix4::look_to_rh(
+        return Matrix4::look_to_rh(
             self.position,
             Vector3::new(self.yaw.0.cos(), self.pitch.0.sin(), self.yaw.0.sin()).normalize(),
             Vector3::unit_y(),
-        )
+        );
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
@@ -181,15 +187,12 @@ impl Camera {
             * self.controller.speed
             * dt;
 
-        self.position.y += (self.controller.amount_up - self.controller.amount_down)
-            * self.controller.speed
-            * dt;
+        self.position.y +=
+            (self.controller.amount_up - self.controller.amount_down) * self.controller.speed * dt;
 
         // Rotate
-        self.yaw +=
-            Rad(self.controller.rotate_horizontal) * self.controller.sensitivity * dt;
-        self.pitch +=
-            Rad(-self.controller.rotate_vertical) * self.controller.sensitivity * dt;
+        self.yaw += Rad(self.controller.rotate_horizontal) * self.controller.sensitivity * dt;
+        self.pitch += Rad(-self.controller.rotate_vertical) * self.controller.sensitivity * dt;
 
         // If process_mouse isn't called every frame, these values
         // will not get set to zero, and the camera will rotate
@@ -217,12 +220,12 @@ pub struct Projection {
 
 impl Projection {
     pub fn new<F: Into<Rad<f32>>>(width: u32, height: u32, fovy: F, znear: f32, zfar: f32) -> Self {
-        Self {
+        return Self {
             aspect: width as f32 / height as f32,
             fovy: fovy.into(),
             znear,
             zfar,
-        }
+        };
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
@@ -230,7 +233,7 @@ impl Projection {
     }
 
     pub fn calc_matrix(&self) -> Matrix4<f32> {
-        OPENGL_TO_WGPU_MATRIX * perspective(self.fovy, self.aspect, self.znear, self.zfar)
+        return OPENGL_TO_WGPU_MATRIX * perspective(self.fovy, self.aspect, self.znear, self.zfar);
     }
 }
 
@@ -250,7 +253,7 @@ pub struct CameraController {
 
 impl CameraController {
     pub fn new(speed: f32, sensitivity: f32) -> Self {
-        Self {
+        return Self {
             amount_left: 0.0,
             amount_right: 0.0,
             amount_forward: 0.0,
@@ -261,7 +264,7 @@ impl CameraController {
             rotate_vertical: 0.0,
             speed,
             sensitivity,
-        }
+        };
     }
 
     pub fn process_keyboard(&mut self, key: VirtualKeyCode, state: ElementState) -> bool {
@@ -270,7 +273,7 @@ impl CameraController {
         } else {
             0.0
         };
-        match key {
+        return match key {
             VirtualKeyCode::W | VirtualKeyCode::Up => {
                 self.amount_forward = amount;
                 true
@@ -296,7 +299,7 @@ impl CameraController {
                 true
             }
             _ => false,
-        }
+        };
     }
 
     pub fn process_mouse(&mut self, mouse_dx: f64, mouse_dy: f64) {
@@ -304,4 +307,3 @@ impl CameraController {
         self.rotate_vertical = mouse_dy as f32;
     }
 }
-

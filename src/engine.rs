@@ -42,16 +42,13 @@ impl Engine {
     }
 
     pub fn input(&mut self, event: &DeviceEvent) {
-        match event {
-            DeviceEvent::MouseMotion { delta } => {
-                self.camera.controller.process_mouse(delta.0, delta.1)
-            }
-            _ => {}
+        if let DeviceEvent::MouseMotion { delta } = event {
+            self.camera.controller.process_mouse(delta.0, delta.1)
         }
     }
 
     pub fn input_keyboard(&mut self, event: &WindowEvent) -> bool {
-        match event {
+        return match event {
             WindowEvent::KeyboardInput {
                 input:
                     KeyboardInput {
@@ -62,6 +59,6 @@ impl Engine {
                 ..
             } => self.camera.controller.process_keyboard(*key, *state),
             _ => false,
-        }
+        };
     }
 }

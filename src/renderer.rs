@@ -24,8 +24,8 @@ pub struct Renderer {
 
 impl Renderer {
     fn features() -> wgpu::Features {
-        wgpu::Features::TEXTURE_BINDING_ARRAY
-            | wgpu::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING
+        return wgpu::Features::TEXTURE_BINDING_ARRAY
+            | wgpu::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING;
     }
 
     pub async fn new(window: &Window, size: winit::dpi::PhysicalSize<u32>) -> Self {
@@ -148,7 +148,7 @@ impl Renderer {
         // render finished, submit to the queue
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
-        Ok(())
+        return Ok(());
     }
 
     pub fn add_drawable(&mut self, drawable: Box<dyn Draw>) {
@@ -199,12 +199,14 @@ pub fn create_render_pipeline(
                 // Requires Features::CONSERVATIVE_RASTERIZATION
                 conservative: false,
             },
-            depth_stencil: depth_format.map(|format| wgpu::DepthStencilState {
-                format,
-                depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::Less,
-                stencil: wgpu::StencilState::default(),
-                bias: wgpu::DepthBiasState::default(),
+            depth_stencil: depth_format.map(|format| {
+                return wgpu::DepthStencilState {
+                    format,
+                    depth_write_enabled: true,
+                    depth_compare: wgpu::CompareFunction::Less,
+                    stencil: wgpu::StencilState::default(),
+                    bias: wgpu::DepthBiasState::default(),
+                };
             }),
             multisample: wgpu::MultisampleState {
                 count: 1,
