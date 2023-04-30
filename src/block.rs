@@ -1,8 +1,6 @@
-use std::num::NonZeroU32;
-
 use crate::{
     renderer::{create_render_pipeline, Draw, Renderer, Vertex},
-    texture::Texture,
+    texture::{Texture, TextureArray},
 };
 use bytemuck::{Pod, Zeroable};
 use cgmath::{Vector2, Vector3};
@@ -67,89 +65,47 @@ impl DrawBlock {
         block: Block,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
     ) -> Self {
-        let textures = vec![
-            Texture::from_bytes(
-                &renderer.device,
-                &renderer.queue,
-                include_bytes!("../res/grass_top.png"),
-                "block",
-                false,
-            )
-            .unwrap(),
-            Texture::from_bytes(
-                &renderer.device,
-                &renderer.queue,
-                include_bytes!("../res/grass_side.png"),
-                "block",
-                false,
-            )
-            .unwrap(),
-            Texture::from_bytes(
-                &renderer.device,
-                &renderer.queue,
-                include_bytes!("../res/grass_bottom.png"),
-                "block",
-                false,
-            )
-            .unwrap(),
-        ];
-        let texture_views = textures.iter().map(|t| &t.view).collect::<Vec<_>>();
-        let texture_samplers = textures.iter().map(|t| &t.sampler).collect::<Vec<_>>();
-
-        let bind_group_layout =
-            renderer
-                .device
-                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                    entries: &[
-                        wgpu::BindGroupLayoutEntry {
-                            binding: 0,
-                            visibility: wgpu::ShaderStages::FRAGMENT,
-                            ty: wgpu::BindingType::Texture {
-                                multisampled: false,
-                                view_dimension: wgpu::TextureViewDimension::D2,
-                                sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                            },
-                            count: Some(NonZeroU32::new(texture_views.len() as u32).unwrap()),
-                        },
-                        wgpu::BindGroupLayoutEntry {
-                            binding: 1,
-                            visibility: wgpu::ShaderStages::FRAGMENT,
-                            ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                            count: Some(NonZeroU32::new(texture_samplers.len() as u32).unwrap()),
-                        },
-                    ],
-                    label: Some("texture_bind_group_layout"),
-                });
-        let bind_group = renderer
-            .device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &bind_group_layout,
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: wgpu::BindingResource::TextureViewArray(&texture_views),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: wgpu::BindingResource::SamplerArray(&texture_samplers),
-                    },
-                ],
-                label: Some("diffuse_bind_group"),
-            });
+        let textures = TextureArray::new(
+            renderer,
+            vec![
+                Texture::from_bytes(
+                    &renderer.device,
+                    &renderer.queue,
+                    include_bytes!("../res/grass_top.png"),
+                    "block",
+                    false,
+                )
+                .unwrap(),
+                Texture::from_bytes(
+                    &renderer.device,
+                    &renderer.queue,
+                    include_bytes!("../res/grass_side.png"),
+                    "block",
+                    false,
+                )
+                .unwrap(),
+                Texture::from_bytes(
+                    &renderer.device,
+                    &renderer.queue,
+                    include_bytes!("../res/grass_bottom.png"),
+                    "block",
+                    false,
+                )
+                .unwrap(),
+            ],
+            "block_texture",
+        );
 
         let layout = renderer
             .device
             .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("Debug Pipeline Layout"),
-                bind_group_layouts: &[
-                    &bind_group_layout,
-                    uniform_bind_group_layout,
-                ],
+                label: Some("Block Pipeline Layout"),
+                bind_group_layouts: &[&textures.bind_group_layout, uniform_bind_group_layout],
                 push_constant_ranges: &[],
             });
 
         let shader = wgpu::ShaderModuleDescriptor {
-            label: Some("Debug Shader"),
+            label: Some("Block Shader"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
         };
 
@@ -178,14 +134,14 @@ impl DrawBlock {
 
         let num_indices = block.get_indices().len() as u32;
 
-        Self {
+        return Self {
             render_pipeline,
-            bind_group,
+            bind_group: textures.bind_group,
             vertex_buffer,
             index_buffer,
             num_indices,
             block,
-        }
+        };
     }
 }
 

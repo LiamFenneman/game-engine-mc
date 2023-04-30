@@ -1,5 +1,75 @@
+use crate::renderer::Renderer;
 use anyhow::*;
 use image::GenericImageView;
+use std::num::NonZeroU32;
+
+pub struct TextureArray {
+    pub textures: Vec<Texture>,
+    pub bind_group_layout: wgpu::BindGroupLayout,
+    pub bind_group: wgpu::BindGroup,
+}
+
+impl TextureArray {
+    pub fn new(renderer: &Renderer, textures: Vec<Texture>, label: &str) -> Self {
+        let texture_views = textures
+            .iter()
+            .map(|texture| &texture.view)
+            .collect::<Vec<_>>();
+
+        let texture_samplers = textures
+            .iter()
+            .map(|texture| &texture.sampler)
+            .collect::<Vec<_>>();
+
+        let bind_group_layout =
+            renderer
+                .device
+                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                    entries: &[
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 0,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
+                            ty: wgpu::BindingType::Texture {
+                                multisampled: false,
+                                view_dimension: wgpu::TextureViewDimension::D2,
+                                sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                            },
+                            count: Some(NonZeroU32::new(textures.len() as u32).unwrap()),
+                        },
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 1,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
+                            ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                            count: Some(NonZeroU32::new(textures.len() as u32).unwrap()),
+                        },
+                    ],
+                    label: Some(&format!("{}_bind_group_layout", label)),
+                });
+
+        let bind_group = renderer
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: wgpu::BindingResource::TextureViewArray(&texture_views),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::SamplerArray(&texture_samplers),
+                    },
+                ],
+                label: Some("diffuse_bind_group"),
+            });
+
+        return Self {
+            textures,
+            bind_group_layout,
+            bind_group,
+        };
+    }
+}
 
 pub struct Texture {
     pub texture: wgpu::Texture,
