@@ -1,9 +1,15 @@
 [workspace]
 members = [
-    "render"
+    "render",
+    "world",
 ]
 
 [workspace.package]
 authors = ["Liam Fenneman"]
 version = "0.1.0"
 edition = "2021"
+
+[workspace.dependencies]
+tracing = "0.1.37"
+tracing-appender = "0.2.2"
+tracing-subscriber = "0.3.17"
