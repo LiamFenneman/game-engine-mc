@@ -51,11 +51,12 @@ impl Display for BlockType {
 
 impl Distribution<BlockType> for Standard {
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> BlockType {
-        return match rng.gen_range(0..4) {
-            0 => BlockType::Grass,
-            1 => BlockType::Stone,
-            2 => BlockType::Water,
-            3 => BlockType::Wood,
+        return match rng.gen_range(0..5) {
+            0 => BlockType::Air,
+            1 => BlockType::Grass,
+            2 => BlockType::Stone,
+            3 => BlockType::Water,
+            4 => BlockType::Wood,
             _ => unreachable!(),
         };
     }
