@@ -5,6 +5,7 @@ use rand::{seq::SliceRandom, Rng, SeedableRng};
 /// A perlin noise generator.
 pub struct Noise {
     seed: u64,
+    octaves: u8,
     frequency: f64,
     amplitude: f64,
     offset: f64,
@@ -16,7 +17,7 @@ pub struct Noise {
 impl Noise {
     /// Create a new noise generator.
     #[must_use]
-    pub fn new(seed: u64, frequency: f64, amplitude: f64, offset: f64) -> Self {
+    pub fn new(seed: u64, octaves: u8, frequency: f64, amplitude: f64, offset: f64) -> Self {
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed);
         let mut random_floats = Vec::with_capacity(256);
         let mut permutation_table = Vec::with_capacity(512);
@@ -33,6 +34,7 @@ impl Noise {
 
         return Self {
             seed,
+            octaves,
             frequency,
             amplitude,
             offset,
@@ -45,16 +47,25 @@ impl Noise {
     /// Sample the noise at a given value, using the default smooth function.
     #[must_use]
     pub fn sample_1d(&self, v: f64) -> f64 {
-        return self.sample_1d_with_fn(v, smoothstep2);
+        let mut out = 0.0;
+        let mut f = self.frequency;
+        let mut a = self.amplitude;
+        for _ in 0..self.octaves {
+            out += self.sample_1d_with_fn(v * f, smoothstep2) * a;
+            f *= 2.0;
+            a *= 0.5;
+        }
+        #[allow(clippy::cast_lossless)]
+        return out / self.octaves as f64;
     }
 
     /// Sample the noise at a given value, using a custom smooth function.
     #[must_use]
-    pub fn sample_1d_with_fn<F>(&self, v: f64, smooth_fn: F) -> f64
+    fn sample_1d_with_fn<F>(&self, v: f64, smooth_fn: F) -> f64
     where
         F: Fn(f64) -> f64,
     {
-        let v = v * self.frequency + self.offset;
+        let v = v + self.offset;
         let i = v.floor() as isize;
 
         // get the frational part of v, if it is negative, then add 1
@@ -70,16 +81,25 @@ impl Noise {
         let min = i as usize & self.mask;
         let max = (min + 1) & self.mask;
         let out = lerp(self.random_floats[min], self.random_floats[max], t);
-        return out * self.amplitude;
+        return out;
     }
 
     #[must_use]
     pub fn sample_2d(&self, v: Vector2<f64>) -> f64 {
-        return self.sample_2d_with_fn(v, smoothstep2);
+        let mut out = 0.0;
+        let mut f = self.frequency;
+        let mut a = self.amplitude;
+        for _ in 0..self.octaves {
+            out += self.sample_2d_with_fn(v * f, smoothstep2) * a;
+            f *= 2.0;
+            a *= 0.5;
+        }
+        #[allow(clippy::cast_lossless)]
+        return out / self.octaves as f64;
     }
 
     #[allow(clippy::similar_names, clippy::cast_sign_loss)]
-    pub fn sample_2d_with_fn<F>(&self, v: Vector2<f64>, smooth_fn: F) -> f64
+    fn sample_2d_with_fn<F>(&self, v: Vector2<f64>, smooth_fn: F) -> f64
     where
         F: Fn(f64) -> f64,
     {
@@ -118,6 +138,6 @@ impl Noise {
 
 impl Default for Noise {
     fn default() -> Self {
-        return Self::new(0, 1.0, 1.0, 0.0);
+        return Self::new(0, 1, 1.0, 1.0, 0.0);
     }
 }

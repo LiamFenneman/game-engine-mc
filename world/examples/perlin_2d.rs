@@ -1,6 +1,6 @@
 fn main() {
     const SIZE: usize = 512;
-    let perlin = ge_world::noise::Noise::new(0, 1.0, 1.0, 0.0);
+    let perlin = ge_world::noise::Noise::new(0, 5, 0.2, 1.5, 0.0);
 
     let mut samples = Vec::with_capacity(SIZE * SIZE);
     for y in 0..SIZE {

@@ -6,8 +6,10 @@ fn main() {
 
     const MIN: i32 = -10;
     const MAX: i32 = 10;
-    const SAMPLES: i32 = 10;
-    let perlin = Noise::new(0, 1.0, 1.0, 0.0);
+    const SAMPLES: i32 = 100;
+    let perlin = Noise::new(0, 1, 1.0, 1.0, 0.0);
+    let perlin2 = Noise::new(0, 2, 1.0, 1.25, 0.0);
+    let perlin5 = Noise::new(0, 5, 1.0, 2.5, 0.0);
 
     root.fill(&WHITE).unwrap();
     let mut chart = ChartBuilder::on(&root)
@@ -24,6 +26,22 @@ fn main() {
             ((MIN * SAMPLES)..=(MAX * SAMPLES))
                 .map(|x| x as f64 / SAMPLES as f64)
                 .map(|x| (x, perlin.sample_1d(x))),
+            &BLACK,
+        ))
+        .unwrap();
+    chart
+        .draw_series(LineSeries::new(
+            ((MIN * SAMPLES)..=(MAX * SAMPLES))
+                .map(|x| x as f64 / SAMPLES as f64)
+                .map(|x| (x, perlin2.sample_1d(x))),
+            &BLUE,
+        ))
+        .unwrap();
+    chart
+        .draw_series(LineSeries::new(
+            ((MIN * SAMPLES)..=(MAX * SAMPLES))
+                .map(|x| x as f64 / SAMPLES as f64)
+                .map(|x| (x, perlin5.sample_1d(x))),
             &RED,
         ))
         .unwrap();
