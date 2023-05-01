@@ -1,6 +1,6 @@
 fn main() {
     const SIZE: usize = 512;
-    let perlin = ge_world::noise::Noise::new(0, 5, 0.2, 1.5, 0.0);
+    let perlin = ge_world::noise::Noise::new(0, 5, 0.1, 0.7, 0.0);
 
     let mut samples = Vec::with_capacity(SIZE * SIZE);
     for y in 0..SIZE {
@@ -12,7 +12,7 @@ fn main() {
     let buffer = samples
         .iter()
         .flat_map(|s| {
-            let r = (s * 255.0) as u8;
+            let r = ((s + 1.0) / 2.0 * 255.0) as u8;
             [r, r, r]
         })
         .collect::<Vec<_>>();

@@ -1,8 +1,9 @@
 use cgmath::Vector3;
 use ge_world::{
-    gen::{RandomWorldGenerator, WorldGenerator},
+    gen::{NoiseWorldGenerator, RandomWorldGenerator, WorldGenerator},
     util, World,
 };
+use rand::SeedableRng;
 
 const WORLD_SIZE: u32 = 8;
 
@@ -18,12 +19,12 @@ impl TestRenderer {
     pub fn render(&self, limit_y: Option<u32>) {
         let limit_y = match limit_y {
             Some(limit_y) => limit_y,
-            None => WORLD_SIZE,
+            None => self.0.size.y,
         };
 
-        for y in 0..limit_y.min(WORLD_SIZE) {
-            for z in 0..WORLD_SIZE {
-                for x in 0..WORLD_SIZE {
+        for y in 0..limit_y.min(self.0.size.y) {
+            for z in 0..self.0.size.z {
+                for x in 0..self.0.size.x {
                     let block = self.0.blocks.iter().find(|block| {
                         block.position.x == x && block.position.y == y && block.position.z == z
                     });
@@ -40,12 +41,14 @@ impl TestRenderer {
 }
 
 fn main() {
-    let world_gen = RandomWorldGenerator {
+    #[allow(unused)]
+    let mut world_gen = RandomWorldGenerator {
         world_size: WORLD_SIZE,
+        rng: rand_chacha::ChaCha8Rng::seed_from_u64(0),
     };
+    let mut world_gen = NoiseWorldGenerator::default();
     let renderer = TestRenderer::new(world_gen.generate());
-    renderer.render(Some(1));
-    // renderer.render(None);
+    renderer.render(Some(8));
 
     let p = Vector3::new(1, 0, 1);
     let i = util::pos_to_idx(p, WORLD_SIZE);

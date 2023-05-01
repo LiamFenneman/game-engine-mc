@@ -5,6 +5,7 @@ use rand::{distributions::Standard, prelude::Distribution};
 #[derive(Debug, Clone)]
 pub struct World {
     pub blocks: Vec<Block>,
+    pub size: Vector3<u32>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
