@@ -6,6 +6,7 @@
 #![allow(clippy::default_trait_access)]
 
 pub mod gen;
+pub mod noise;
 pub mod util;
 
 mod types;

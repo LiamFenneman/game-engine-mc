@@ -1,7 +1,37 @@
 use cgmath::Vector3;
-use ge_world::{*, gen::WorldGenerator};
+use ge_world::{gen::{WorldGenerator, self}, util::{self, cosine_smooth, smoothstep, smoothstep2}, World, noise::perlin};
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    use plotters::prelude::*;
+    let root = BitMapBackend::new("images/0.png", (640, 480)).into_drawing_area();
+
+    const MIN: i32 = -10;
+    const MAX: i32 = 10;
+    const SAMPLES: i32 = 10;
+
+    root.fill(&WHITE)?;
+    let mut chart = ChartBuilder::on(&root)
+        .margin(5)
+        .x_label_area_size(30)
+        .y_label_area_size(30)
+        .build_cartesian_2d((MIN as f64)..(MAX as f64), 0f64..1f64)?;
+
+    chart.configure_mesh().draw()?;
+
+    chart.draw_series(LineSeries::new(
+        ((MIN * SAMPLES)..=(MAX * SAMPLES))
+            .map(|x| x as f64 / SAMPLES as f64)
+            .map(|x| (x, perlin(x, cosine_smooth, 0, 1.0, 1.0, 0.0))),
+        &RED,
+    ))?;
+
+    root.present()?;
+
+    Ok(())
+}
+
+#[allow(dead_code)]
+fn world_gen_test() {
     let world_gen = gen::RandomWorldGenerator {
         world_size: WORLD_SIZE,
     };
