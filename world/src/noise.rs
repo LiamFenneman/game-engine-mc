@@ -1,5 +1,6 @@
 use crate::util::{lerp, smoothstep2};
-use rand::{Rng, SeedableRng};
+use cgmath::Vector2;
+use rand::{seq::SliceRandom, Rng, SeedableRng};
 
 /// A perlin noise generator.
 pub struct Noise {
@@ -7,8 +8,9 @@ pub struct Noise {
     frequency: f64,
     amplitude: f64,
     offset: f64,
-    permutations: Vec<f64>,
+    random_floats: Vec<f64>,
     mask: usize,
+    permutation_table: Vec<usize>,
 }
 
 impl Noise {
@@ -16,30 +18,39 @@ impl Noise {
     #[must_use]
     pub fn new(seed: u64, frequency: f64, amplitude: f64, offset: f64) -> Self {
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed);
-        let permutations = (0..256)
-            .map(|_| return rng.gen_range(0f64..=1f64))
-            .collect::<Vec<_>>();
-        let mask = permutations.len() - 1;
+        let mut random_floats = Vec::with_capacity(256);
+        let mut permutation_table = Vec::with_capacity(512);
+        for k in 0..256 {
+            random_floats.push(rng.gen_range(0f64..=1f64));
+            permutation_table.push(k);
+        }
+        let mask = random_floats.len() - 1;
+
+        permutation_table.shuffle(&mut rng);
+        for k in 0..256 {
+            permutation_table.push(k);
+        }
 
         return Self {
             seed,
             frequency,
             amplitude,
             offset,
-            permutations,
+            random_floats,
             mask,
+            permutation_table,
         };
     }
 
     /// Sample the noise at a given value, using the default smooth function.
     #[must_use]
-    pub fn sample(&self, v: f64) -> f64 {
-        return self.sample_with_fn(v, smoothstep2);
+    pub fn sample_1d(&self, v: f64) -> f64 {
+        return self.sample_1d_with_fn(v, smoothstep2);
     }
 
     /// Sample the noise at a given value, using a custom smooth function.
     #[must_use]
-    pub fn sample_with_fn<F>(&self, v: f64, smooth_fn: F) -> f64
+    pub fn sample_1d_with_fn<F>(&self, v: f64, smooth_fn: F) -> f64
     where
         F: Fn(f64) -> f64,
     {
@@ -58,8 +69,44 @@ impl Noise {
         #[allow(clippy::cast_sign_loss)] // we know that i is positive
         let min = i as usize & self.mask;
         let max = (min + 1) & self.mask;
-        let out = lerp(self.permutations[min], self.permutations[max], t);
+        let out = lerp(self.random_floats[min], self.random_floats[max], t);
         return out * self.amplitude;
+    }
+
+    #[must_use]
+    pub fn sample_2d(&self, v: Vector2<f64>) -> f64 {
+        return self.sample_2d_with_fn(v, smoothstep2);
+    }
+
+    #[allow(clippy::similar_names, clippy::cast_sign_loss)]
+    pub fn sample_2d_with_fn<F>(&self, v: Vector2<f64>, smooth_fn: F) -> f64
+    where
+        F: Fn(f64) -> f64,
+    {
+        let v = v * self.frequency + Vector2::new(self.offset, self.offset);
+
+        let ix = v.x.floor() as isize;
+        let iy = v.y.floor() as isize;
+        let fx = v.x.fract();
+        let fy = v.y.fract();
+
+        let rx0 = ix as usize & self.mask;
+        let rx1 = (rx0 + 1) & self.mask;
+        let ry0 = iy as usize & self.mask;
+        let ry1 = (ry0 + 1) & self.mask;
+
+        let c00 = self.random_floats[self.permutation_table[self.permutation_table[rx0] + ry0]];
+        let c10 = self.random_floats[self.permutation_table[self.permutation_table[rx1] + ry0]];
+        let c01 = self.random_floats[self.permutation_table[self.permutation_table[rx0] + ry1]];
+        let c11 = self.random_floats[self.permutation_table[self.permutation_table[rx1] + ry1]];
+
+        let sx = smooth_fn(fx);
+        let sy = smooth_fn(fy);
+
+        let nx0 = lerp(c00, c10, sx);
+        let nx1 = lerp(c01, c11, sx);
+
+        return lerp(nx0, nx1, sy) * self.amplitude;
     }
 
     /// Get the seed used to generate the noise.
