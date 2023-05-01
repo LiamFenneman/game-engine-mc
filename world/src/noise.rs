@@ -1,28 +1,76 @@
-use rand::{SeedableRng, Rng};
+use crate::util::{lerp, smoothstep2};
+use rand::{Rng, SeedableRng};
 
-use crate::util::lerp;
+/// A perlin noise generator.
+pub struct Noise {
+    seed: u64,
+    frequency: f64,
+    amplitude: f64,
+    offset: f64,
+    permutations: Vec<f64>,
+    mask: usize,
+}
 
-#[allow(clippy::pedantic)]
-pub fn perlin<F>(v: f64, smooth_fn: F, seed: u64, f: f64, a: f64, o: f64) -> f64
-where
-    F: Fn(f64) -> f64,
-{
-    let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed);
-    let perms = (0..256).map(|_| return rng.gen_range(0f64..=1f64)).collect::<Vec<_>>();
-    let mask = perms.len() as isize - 1;
+impl Noise {
+    /// Create a new noise generator.
+    #[must_use]
+    pub fn new(seed: u64, frequency: f64, amplitude: f64, offset: f64) -> Self {
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed);
+        let permutations = (0..256)
+            .map(|_| return rng.gen_range(0f64..=1f64))
+            .collect::<Vec<_>>();
+        let mask = permutations.len() - 1;
 
-    let v = v * f + o;
-    let i = v.floor() as isize;
+        return Self {
+            seed,
+            frequency,
+            amplitude,
+            offset,
+            permutations,
+            mask,
+        };
+    }
 
-    // get the frational part of v, if it is negative, then add 1
-    // so that it is always positive and in the range (0..=1)
-    let mut f = v.fract();
-    if f < 0.0 { f += 1.0 }
+    /// Sample the noise at a given value, using the default smooth function.
+    #[must_use]
+    pub fn sample(&self, v: f64) -> f64 {
+        return self.sample_with_fn(v, smoothstep2);
+    }
 
-    let t = smooth_fn(f);
+    /// Sample the noise at a given value, using a custom smooth function.
+    #[must_use]
+    pub fn sample_with_fn<F>(&self, v: f64, smooth_fn: F) -> f64
+    where
+        F: Fn(f64) -> f64,
+    {
+        let v = v * self.frequency + self.offset;
+        let i = v.floor() as isize;
 
-    let min = i & mask;
-    let max = (min + 1) & mask;
-    let out = lerp(perms[min as usize], perms[max as usize], t);
-    return out * a;
+        // get the frational part of v, if it is negative, then add 1
+        // so that it is always positive and in the range (0..=1)
+        let mut f = v.fract();
+        if f < 0.0 {
+            f += 1.0;
+        }
+
+        let t = smooth_fn(f);
+
+        #[allow(clippy::cast_sign_loss)] // we know that i is positive
+        let min = i as usize & self.mask;
+        let max = (min + 1) & self.mask;
+        let out = lerp(self.permutations[min], self.permutations[max], t);
+        return out * self.amplitude;
+    }
+
+    /// Get the seed used to generate the noise.
+    #[must_use]
+    pub fn seed(&self) -> u64 {
+        return self.seed;
+    }
+}
+
+impl Default for Noise {
+    fn default() -> Self {
+        return Self::new(0, 1.0, 1.0, 0.0);
+    }
 }

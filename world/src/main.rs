@@ -1,5 +1,9 @@
 use cgmath::Vector3;
-use ge_world::{gen::{WorldGenerator, self}, util::{self, cosine_smooth, smoothstep, smoothstep2}, World, noise::perlin};
+use ge_world::{
+    gen::{self, WorldGenerator},
+    noise::Noise,
+    util, World,
+};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     use plotters::prelude::*;
@@ -8,6 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     const MIN: i32 = -10;
     const MAX: i32 = 10;
     const SAMPLES: i32 = 10;
+    let perlin = Noise::new(0, 1.0, 1.0, 0.0);
 
     root.fill(&WHITE)?;
     let mut chart = ChartBuilder::on(&root)
@@ -21,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     chart.draw_series(LineSeries::new(
         ((MIN * SAMPLES)..=(MAX * SAMPLES))
             .map(|x| x as f64 / SAMPLES as f64)
-            .map(|x| (x, perlin(x, cosine_smooth, 0, 1.0, 1.0, 0.0))),
+            .map(|x| (x, perlin.sample(x))),
         &RED,
     ))?;
 
