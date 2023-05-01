@@ -22,7 +22,7 @@ impl Noise {
         let mut random_floats = Vec::with_capacity(256);
         let mut permutation_table = Vec::with_capacity(512);
         for k in 0..256 {
-            random_floats.push(rng.gen_range(0f64..=1f64));
+            random_floats.push(rng.gen_range(-1f64..=1f64));
             permutation_table.push(k);
         }
         let mask = random_floats.len() - 1;
@@ -55,8 +55,7 @@ impl Noise {
             f *= 2.0;
             a *= 0.5;
         }
-        #[allow(clippy::cast_lossless)]
-        return out / self.octaves as f64;
+        return out;
     }
 
     /// Sample the noise at a given value, using a custom smooth function.
@@ -94,8 +93,7 @@ impl Noise {
             f *= 2.0;
             a *= 0.5;
         }
-        #[allow(clippy::cast_lossless)]
-        return out / self.octaves as f64;
+        return out;
     }
 
     #[allow(clippy::similar_names, clippy::cast_sign_loss)]
