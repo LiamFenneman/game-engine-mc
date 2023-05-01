@@ -1,8 +1,8 @@
 use cgmath::Vector3;
-use ge_world::*;
+use ge_world::{*, gen::WorldGenerator};
 
 fn main() {
-    let world_gen = RandomWorldGenerator {
+    let world_gen = gen::RandomWorldGenerator {
         world_size: WORLD_SIZE,
     };
     let renderer = TestRenderer::new(world_gen.generate());
