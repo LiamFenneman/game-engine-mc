@@ -1,0 +1,15 @@
+[package]
+name = "ge-dev-ui"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+eframe = { version = "0.21.0", default-features = false, features = [
+    "default_fonts",
+    "glow",
+] }
+egui = "0.21"
+egui_extras = { version = "0.21", features = ["image"] }
+image = { workspace = true, default-features = false, features = ["png"] }
+tracing-subscriber.workspace = true

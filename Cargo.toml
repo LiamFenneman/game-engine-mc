@@ -2,6 +2,7 @@
 members = [
     "render",
     "world",
+    "dev-ui",
 ]
 
 [workspace.package]
