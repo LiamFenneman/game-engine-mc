@@ -5,6 +5,7 @@ use ge_world::noise::NoiseField;
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct Noise2D {
     pub is_open: bool,
+    size: usize,
 
     seed: u64,
     octaves: u8,
@@ -37,13 +38,11 @@ impl Noise2D {
     }
 
     pub fn generate_image(&mut self) -> ColorImage {
-        const SIZE: usize = 256;
-
         debug_assert!(self.noise_field.is_some());
 
-        let mut samples = Vec::with_capacity(SIZE * SIZE);
-        for y in 0..SIZE {
-            for x in 0..SIZE {
+        let mut samples = Vec::with_capacity(self.size * self.size);
+        for y in 0..self.size {
+            for x in 0..self.size {
                 samples.push(self.noise_field.as_ref().unwrap().sample_2d(
                     Vector2::new(x as f64, y as f64),
                     Some(self.offset),
@@ -61,7 +60,7 @@ impl Noise2D {
             .collect::<Vec<_>>();
 
         tracing::debug!("Generated noise image");
-        return ColorImage::from_rgb([256, 256], &buffer);
+        return ColorImage::from_rgb([self.size, self.size], &buffer);
     }
 }
 
@@ -69,6 +68,7 @@ impl Default for Noise2D {
     fn default() -> Self {
         let mut s = Self {
             is_open: false,
+            size: 256,
 
             seed: 0,
             octaves: 5,
@@ -103,6 +103,19 @@ impl Noise2D {
         }
 
         egui::Window::new(format!("{self}")).show(ctx, |ui| {
+            let r_seed = ui.add(
+                egui::Slider::new(&mut self.seed, 0..=50)
+                    .step_by(1.0)
+                    .text("Seed"),
+            );
+            let r_size = ui.add(
+                egui::Slider::new(&mut self.size, 16..=512)
+                    .step_by(16.0)
+                    .text("Size"),
+            );
+
+            ui.separator();
+
             let r_octa = ui.add(
                 egui::Slider::new(&mut self.octaves, 1..=10)
                     .step_by(1.0)
@@ -139,12 +152,14 @@ impl Noise2D {
                     .text("Offset Y"),
             );
             let r_scal = ui.add(
-                egui::Slider::new(&mut self.scale, 1.0..=1000.0)
+                egui::Slider::new(&mut self.scale, 1.0..=512.0)
                     .step_by(1.0)
                     .text("Scale"),
             );
 
-            if r_octa.changed()
+            if r_seed.changed()
+                || r_size.changed()
+                || r_octa.changed()
                 || r_freq.changed()
                 || r_ampl.changed()
                 || r_lacu.changed()
