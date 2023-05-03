@@ -6,10 +6,12 @@ version.workspace = true
 
 [dependencies]
 cgmath.workspace = true
-image = "0.24"
-plotters = "0.3"
 rand = "0.8.5"
 rand_chacha = "0.3.1"
 tracing-appender.workspace = true
 tracing-subscriber.workspace = true
 tracing.workspace = true
+
+[dev-dependencies]
+image = "0.24"
+plotters = "0.3"
