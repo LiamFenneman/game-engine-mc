@@ -2,6 +2,7 @@ use crate::util::{lerp, smoothstep2};
 use cgmath::Vector2;
 use rand::{seq::SliceRandom, Rng, SeedableRng};
 
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct NoiseField {
     noises: Vec<Noise>,
     seed: u64,
@@ -62,7 +63,14 @@ impl NoiseField {
     }
 }
 
+impl Default for NoiseField {
+    fn default() -> Self {
+        return NoiseField::new(0, 5, 1.0, 0.5, 2.0, 0.5);
+    }
+}
+
 /// A perlin noise generator.
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct Noise {
     frequency: f64,
     amplitude: f64,
