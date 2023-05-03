@@ -1,4 +1,4 @@
-use crate::{noise::Noise, Block, World};
+use crate::{noise::NoiseField, Block, World};
 use cgmath::Vector3;
 use rand::Rng;
 
@@ -28,7 +28,7 @@ pub trait WorldGenerator {
 }
 
 pub struct NoiseWorldGenerator {
-    pub noise: Noise,
+    pub noise_field: NoiseField,
     pub size: Vector3<u32>,
 }
 
@@ -56,10 +56,9 @@ impl WorldGenerator for NoiseWorldGenerator {
 
 impl Default for NoiseWorldGenerator {
     fn default() -> Self {
-        // let noise = Noise::new(rand::random(), 5, 1.0, 1.5, 0.0);
-        let noise = todo!();
+        let noise_field = NoiseField::new(rand::random(), 5, 1.0, 0.5, 2.0, 0.5);
         let size = Vector3::new(16, 256, 16);
-        return Self { noise, size };
+        return Self { noise_field, size };
     }
 }
 
