@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    "render",
-    "world",
-    "dev-ui",
+    "ge-render",
+    "ge-world",
+    "ge-dev-ui",
 ]
 
 [workspace.package]
