@@ -5,11 +5,15 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+cgmath.workspace = true
 eframe = { version = "0.21.0", default-features = false, features = [
     "default_fonts",
     "glow",
+    "persistence",
 ] }
 egui = "0.21"
 egui_extras = { version = "0.21", features = ["image"] }
+ge-world = { path = "../world" }
 image = { workspace = true, default-features = false, features = ["png"] }
+serde.workspace = true
 tracing-subscriber.workspace = true

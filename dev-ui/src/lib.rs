@@ -1,12 +1,15 @@
-#[derive(Default)]
+#![deny(clippy::implicit_return)]
+#![allow(clippy::needless_return)]
+
+mod noise;
+
+#[derive(Default, serde::Deserialize, serde::Serialize)]
 pub struct App {
-    show_window: bool,
+    noise_window: noise::Noise2D,
 }
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let Self { show_window } = self;
-
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
@@ -16,42 +19,33 @@ impl eframe::App for App {
                 });
             });
         });
+        egui::SidePanel::right("egui_demo_panel")
+            .resizable(false)
+            .default_width(150.0)
+            .show(ctx, |ui| {
+                egui::ScrollArea::vertical().show(ui, |ui| {
+                    ui.with_layout(egui::Layout::top_down_justified(egui::Align::LEFT), |ui| {
+                        ui.label("Windows");
 
-        egui::SidePanel::left("side_panel").show(ctx, |ui| {
-            ui.heading("Select a demo");
+                        ui.toggle_value(&mut self.noise_window.is_open, "2D Noise");
 
-            ui.separator();
-            if ui.button("Toggle Example").clicked() {
-                *show_window = !*show_window;
-            }
+                        ui.separator();
 
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-                ui.horizontal(|ui| {
-                    ui.spacing_mut().item_spacing.x = 0.0;
-                    ui.label("powered by ");
-                    ui.hyperlink_to("egui", "https://github.com/emilk/egui");
-                    ui.label(" and ");
-                    ui.hyperlink_to(
-                        "eframe",
-                        "https://github.com/emilk/egui/tree/master/crates/eframe",
-                    );
-                    ui.label(".");
+                        if ui.button("Organize windows").clicked() {
+                            ui.ctx().memory_mut(|mem| mem.reset_areas());
+                        }
+                    });
                 });
             });
-        });
-
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Game Engine Developer UI");
-            egui::warn_if_debug_build(ui);
+            ui.with_layout(egui::Layout::bottom_up(egui::Align::RIGHT), |ui| {
+                return {
+                    egui::warn_if_debug_build(ui);
+                };
+            });
         });
 
-        if *show_window {
-            egui::Window::new("Window").show(ctx, |ui| {
-                ui.label("Windows can be moved by dragging them.");
-                ui.label("They are automatically sized based on contents.");
-                ui.label("You can turn on resizing and scrolling if you like.");
-                ui.label("You would normally choose either panels OR windows.");
-            });
-        }
+        // windows
+        self.noise_window.window(ctx);
     }
 }
