@@ -2,13 +2,70 @@ use crate::util::{lerp, smoothstep2};
 use cgmath::Vector2;
 use rand::{seq::SliceRandom, Rng, SeedableRng};
 
+pub struct NoiseField {
+    noises: Vec<Noise>,
+    seed: u64,
+}
+
+impl NoiseField {
+    #[must_use]
+    pub fn new(
+        seed: u64,
+        octaves: u8,
+        frequency: f64,
+        amplitude: f64,
+        lacunarity: f64,
+        gain: f64,
+    ) -> Self {
+        let noises: Vec<Noise> = (0..octaves)
+            .map(|i| {
+                return Noise::new(
+                    seed,
+                    frequency * lacunarity.powi(i32::from(i)),
+                    amplitude * gain.powi(i32::from(i)),
+                );
+            })
+            .collect();
+
+        return Self { noises, seed };
+    }
+
+    #[must_use]
+    pub fn sample_1d(&self, position: f64, offset: Option<f64>, scale: Option<f64>) -> f64 {
+        let scale = scale.unwrap_or(1.0);
+        return self
+            .noises
+            .iter()
+            .map(|noise| return noise.sample_1d(position / scale, offset))
+            .sum::<f64>();
+    }
+
+    #[must_use]
+    pub fn sample_2d(
+        &self,
+        position: Vector2<f64>,
+        offset: Option<Vector2<f64>>,
+        scale: Option<f64>,
+    ) -> f64 {
+        let scale = scale.unwrap_or(1.0);
+        return self
+            .noises
+            .iter()
+            .map(|noise| return noise.sample_2d(position / scale, offset))
+            .sum::<f64>();
+    }
+
+    /// Get the seed used to generate the noise.
+    #[must_use]
+    pub fn seed(&self) -> u64 {
+        return self.seed;
+    }
+}
+
 /// A perlin noise generator.
 pub struct Noise {
-    seed: u64,
-    octaves: u8,
     frequency: f64,
     amplitude: f64,
-    offset: f64,
     random_floats: Vec<f64>,
     mask: usize,
     permutation_table: Vec<usize>,
@@ -17,7 +74,7 @@ pub struct Noise {
 impl Noise {
     /// Create a new noise generator.
     #[must_use]
-    pub fn new(seed: u64, octaves: u8, frequency: f64, amplitude: f64, offset: f64) -> Self {
+    pub fn new(seed: u64, frequency: f64, amplitude: f64) -> Self {
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed);
         let mut random_floats = Vec::with_capacity(256);
         let mut permutation_table = Vec::with_capacity(512);
@@ -33,11 +90,8 @@ impl Noise {
         }
 
         return Self {
-            seed,
-            octaves,
             frequency,
             amplitude,
-            offset,
             random_floats,
             mask,
             permutation_table,
@@ -46,16 +100,9 @@ impl Noise {
 
     /// Sample the noise at a given value, using the default smooth function.
     #[must_use]
-    pub fn sample_1d(&self, v: f64) -> f64 {
-        let mut out = 0.0;
-        let mut f = self.frequency;
-        let mut a = self.amplitude;
-        for _ in 0..self.octaves {
-            out += self.sample_1d_with_fn(v * f, smoothstep2) * a;
-            f *= 2.0;
-            a *= 0.5;
-        }
-        return out;
+    pub fn sample_1d(&self, v: f64, offset: Option<f64>) -> f64 {
+        let offset = offset.unwrap_or(0.0);
+        return self.sample_1d_with_fn(v + offset, smoothstep2);
     }
 
     /// Sample the noise at a given value, using a custom smooth function.
@@ -64,7 +111,7 @@ impl Noise {
     where
         F: Fn(f64) -> f64,
     {
-        let v = v + self.offset;
+        let v = v * self.frequency;
         let i = v.floor() as isize;
 
         // get the frational part of v, if it is negative, then add 1
@@ -80,20 +127,13 @@ impl Noise {
         let min = i as usize & self.mask;
         let max = (min + 1) & self.mask;
         let out = lerp(self.random_floats[min], self.random_floats[max], t);
-        return out;
+        return out * self.amplitude;
     }
 
     #[must_use]
-    pub fn sample_2d(&self, v: Vector2<f64>) -> f64 {
-        let mut out = 0.0;
-        let mut f = self.frequency;
-        let mut a = self.amplitude;
-        for _ in 0..self.octaves {
-            out += self.sample_2d_with_fn(v * f, smoothstep2) * a;
-            f *= 2.0;
-            a *= 0.5;
-        }
-        return out;
+    pub fn sample_2d(&self, v: Vector2<f64>, offset: Option<Vector2<f64>>) -> f64 {
+        let offset = offset.unwrap_or(Vector2::new(0.0, 0.0));
+        return self.sample_2d_with_fn(v + offset, smoothstep2);
     }
 
     #[allow(clippy::similar_names, clippy::cast_sign_loss)]
@@ -101,7 +141,7 @@ impl Noise {
     where
         F: Fn(f64) -> f64,
     {
-        let v = v * self.frequency + Vector2::new(self.offset, self.offset);
+        let v = v * self.frequency;
 
         let ix = v.x.floor() as isize;
         let iy = v.y.floor() as isize;
@@ -125,17 +165,5 @@ impl Noise {
         let nx1 = lerp(c01, c11, sx);
 
         return lerp(nx0, nx1, sy) * self.amplitude;
-    }
-
-    /// Get the seed used to generate the noise.
-    #[must_use]
-    pub fn seed(&self) -> u64 {
-        return self.seed;
-    }
-}
-
-impl Default for Noise {
-    fn default() -> Self {
-        return Self::new(0, 1, 1.0, 1.0, 0.0);
     }
 }

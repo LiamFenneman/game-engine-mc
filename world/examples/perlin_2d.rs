@@ -1,11 +1,19 @@
+use cgmath::Vector2;
+use ge_world::noise::NoiseField;
+
 fn main() {
     const SIZE: usize = 512;
-    let perlin = ge_world::noise::Noise::new(0, 5, 0.1, 0.7, 0.0);
+    let seed = rand::random();
+    let noise_field = NoiseField::new(seed, 5, 1.0, 0.5, 2.0, 0.5);
 
     let mut samples = Vec::with_capacity(SIZE * SIZE);
     for y in 0..SIZE {
         for x in 0..SIZE {
-            samples.push(perlin.sample_2d(cgmath::Vector2::new(x as f64, y as f64)));
+            samples.push(noise_field.sample_2d(
+                Vector2::new(x as f64, y as f64),
+                None,
+                Some(SIZE as f64 / 2.0),
+            ));
         }
     }
 

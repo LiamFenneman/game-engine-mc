@@ -1,4 +1,4 @@
-use ge_world::noise::Noise;
+use ge_world::noise::NoiseField;
 use plotters::prelude::*;
 
 fn main() {
@@ -7,7 +7,8 @@ fn main() {
     const MIN: i32 = -10;
     const MAX: i32 = 10;
     const SAMPLES: i32 = 100;
-    let perlin = Noise::new(rand::random(), 5, 1.0, 0.5, 0.0);
+    let seed = rand::random();
+    let perlin = NoiseField::new(seed, 4, 1.0, 0.5, 2.0, 0.5);
 
     root.fill(&WHITE).unwrap();
     let mut chart = ChartBuilder::on(&root)
@@ -21,7 +22,7 @@ fn main() {
 
     let samples = ((MIN * SAMPLES)..=(MAX * SAMPLES))
         .map(|x| x as f64 / SAMPLES as f64)
-        .map(|x| (x, perlin.sample_1d(x)))
+        .map(|x| (x, perlin.sample_1d(x, None, None)))
         .collect::<Vec<_>>();
 
     chart.draw_series(LineSeries::new(samples, &RED)).unwrap();

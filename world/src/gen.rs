@@ -35,9 +35,10 @@ pub struct NoiseWorldGenerator {
 impl WorldGenerator for NoiseWorldGenerator {
     #[allow(clippy::cast_lossless, clippy::cast_sign_loss)]
     fn generate_at(&mut self, position: Vector3<u32>) -> Block {
-        let sample_y = self
-            .noise
-            .sample_2d(cgmath::Vector2::new(position.x as f64, position.z as f64));
+        let sample_y = 0.0;
+        // let sample_y = self
+        //     .noise
+        //     .sample_2d(cgmath::Vector2::new(position.x as f64, position.z as f64));
 
         let surface_y = 10 + (sample_y * 20.0) as u32;
         let ty = match surface_y / 10 {
@@ -55,7 +56,8 @@ impl WorldGenerator for NoiseWorldGenerator {
 
 impl Default for NoiseWorldGenerator {
     fn default() -> Self {
-        let noise = Noise::new(rand::random(), 5, 1.0, 1.5, 0.0);
+        // let noise = Noise::new(rand::random(), 5, 1.0, 1.5, 0.0);
+        let noise = todo!();
         let size = Vector3::new(16, 256, 16);
         return Self { noise, size };
     }
