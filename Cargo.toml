@@ -11,6 +11,7 @@ edition = "2021"
 
 [workspace.dependencies]
 cgmath = "0.18.0"
+image = "0.24.6"
 tracing = "0.1.37"
 tracing-appender = "0.2.2"
 tracing-subscriber = "0.3.17"
