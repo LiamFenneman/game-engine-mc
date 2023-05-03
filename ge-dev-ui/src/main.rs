@@ -1,7 +1,10 @@
 use eframe::egui;
 
 fn main() -> Result<(), eframe::Error> {
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        .compact()
+        .with_max_level(tracing::Level::DEBUG)
+        .init();
 
     let options = eframe::NativeOptions {
         initial_window_size: Some(egui::vec2(800.0, 600.0)),

@@ -25,6 +25,7 @@ pub struct Noise2D {
 
 impl Noise2D {
     pub fn generate_noise_field(&mut self) -> NoiseField {
+        tracing::debug!("Generated noise field");
         return NoiseField::new(
             self.seed,
             self.octaves,
@@ -59,6 +60,7 @@ impl Noise2D {
             })
             .collect::<Vec<_>>();
 
+        tracing::debug!("Generated noise image");
         return ColorImage::from_rgb([256, 256], &buffer);
     }
 }

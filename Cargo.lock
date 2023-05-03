@@ -976,6 +976,7 @@ dependencies = [
  "ge-world",
  "image",
  "serde",
+ "tracing",
  "tracing-subscriber",
 ]
 
