@@ -34,11 +34,11 @@ impl Spline {
             // get the point before and after the requested point
             let next = self.points.lower_bound(Bound::Included(&point));
             let Some(prev) = next.peek_prev() else {
-                    return self.min.1;
-                };
+                return self.min.1;
+            };
             let Some(next) = next.key_value() else {
-                    return self.max.1;
-                };
+                return self.max.1;
+            };
 
             // lerp between the two points
             let t = f64::from(point - prev.0) / f64::from(next.0 - prev.0);
