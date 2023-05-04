@@ -5,8 +5,11 @@
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::default_trait_access)]
 
+#![feature(btree_cursors)]
+
 pub mod gen;
 pub mod noise;
+pub mod spline;
 pub mod util;
 
 mod types;
