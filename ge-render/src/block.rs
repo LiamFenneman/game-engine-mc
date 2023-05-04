@@ -78,7 +78,7 @@ impl DrawBlock {
                 Texture::from_bytes(
                     &renderer.device,
                     &renderer.queue,
-                    include_bytes!("../../assets/grass_1.png"),
+                    include_bytes!("../../assets/grass_0.png"),
                     "block",
                     false,
                 )
@@ -86,7 +86,7 @@ impl DrawBlock {
                 Texture::from_bytes(
                     &renderer.device,
                     &renderer.queue,
-                    include_bytes!("../../assets/grass_0.png"),
+                    include_bytes!("../../assets/grass_1.png"),
                     "block",
                     false,
                 )
