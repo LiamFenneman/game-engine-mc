@@ -1,4 +1,4 @@
-use cgmath::Vector2;
+use cgmath::vec2;
 use ge_world::noise::NoiseField;
 
 fn main() {
@@ -10,9 +10,9 @@ fn main() {
     for y in 0..SIZE {
         for x in 0..SIZE {
             samples.push(noise_field.sample_2d(
-                Vector2::new(x as f64, y as f64),
+                vec2(x as f64, y as f64),
                 None,
-                Some(SIZE as f64 / 2.0),
+                Some(vec2(SIZE as f64 / 2.0, SIZE as f64 / 2.0)),
             ));
         }
     }

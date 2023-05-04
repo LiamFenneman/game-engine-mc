@@ -1,3 +1,5 @@
+use std::ops::RangeInclusive;
+
 use cgmath::Vector3;
 use ge_world::{
     gen::{NoiseWorldGenerator, RandomWorldGenerator, WorldGenerator},
@@ -16,13 +18,8 @@ impl TestRenderer {
         Self(world)
     }
 
-    pub fn render(&self, limit_y: Option<u32>) {
-        let limit_y = match limit_y {
-            Some(limit_y) => limit_y,
-            None => self.0.size.y,
-        };
-
-        for y in 0..limit_y.min(self.0.size.y) {
+    pub fn render(&self, y_range: RangeInclusive<u32>) {
+        for y in y_range {
             for z in 0..self.0.size.z {
                 for x in 0..self.0.size.x {
                     let block = self.0.blocks.iter().find(|block| {
@@ -48,7 +45,7 @@ fn main() {
     };
     let mut world_gen = NoiseWorldGenerator::default();
     let renderer = TestRenderer::new(world_gen.generate());
-    renderer.render(Some(8));
+    renderer.render(90..=110);
 
     let p = Vector3::new(1, 0, 1);
     let i = util::pos_to_idx(p, WORLD_SIZE);

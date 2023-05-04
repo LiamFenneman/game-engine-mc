@@ -1,5 +1,5 @@
 use crate::util::{lerp, smoothstep2};
-use cgmath::Vector2;
+use cgmath::{vec2, Vector2};
 use rand::{seq::SliceRandom, Rng, SeedableRng};
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
@@ -46,13 +46,15 @@ impl NoiseField {
         &self,
         position: Vector2<f64>,
         offset: Option<Vector2<f64>>,
-        scale: Option<f64>,
+        scale: Option<Vector2<f64>>,
     ) -> f64 {
-        let scale = scale.unwrap_or(1.0);
+        let scale = scale.unwrap_or(vec2(1.0, 1.0));
         return self
             .noises
             .iter()
-            .map(|noise| return noise.sample_2d(position / scale, offset))
+            .map(|noise| {
+                return noise.sample_2d(vec2(position.x / scale.x, position.y / scale.y), offset);
+            })
             .sum::<f64>();
     }
 

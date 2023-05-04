@@ -1,4 +1,4 @@
-use cgmath::Vector2;
+use cgmath::{Vector2, vec2};
 use egui::{ColorImage, TextureHandle};
 use ge_world::noise::NoiseField;
 
@@ -44,9 +44,9 @@ impl Noise2D {
         for y in 0..self.size {
             for x in 0..self.size {
                 samples.push(self.noise_field.as_ref().unwrap().sample_2d(
-                    Vector2::new(x as f64, y as f64),
+                    vec2(x as f64, y as f64),
                     Some(self.offset),
-                    Some(self.scale),
+                    Some(vec2(self.scale, self.scale)),
                 ));
             }
         }

@@ -1,5 +1,5 @@
 use crate::{noise::NoiseField, Block, World};
-use cgmath::Vector3;
+use cgmath::{vec2, Vector3};
 use rand::Rng;
 
 /// A `WorldGenerator` is a trait that generates a `World`.
@@ -30,18 +30,22 @@ pub trait WorldGenerator {
 pub struct NoiseWorldGenerator {
     pub noise_field: NoiseField,
     pub size: Vector3<u32>,
+
+    base_y: u32,
+    amplitude: f64,
 }
 
 impl WorldGenerator for NoiseWorldGenerator {
     #[allow(clippy::cast_lossless, clippy::cast_sign_loss)]
     fn generate_at(&mut self, position: Vector3<u32>) -> Block {
-        let sample_y = 0.0;
-        // let sample_y = self
-        //     .noise
-        //     .sample_2d(cgmath::Vector2::new(position.x as f64, position.z as f64));
+        let sample_y = self.noise_field.sample_2d(
+            vec2(position.x as f64, position.z as f64),
+            None,
+            Some(vec2(self.size.x as f64, self.size.z as f64)),
+        );
 
-        let surface_y = 10 + (sample_y * 20.0) as u32;
-        let ty = match surface_y / 10 {
+        let surface_y = (self.base_y as f64 + sample_y * self.amplitude) as u32;
+        let ty = match surface_y {
             y if position.y > y => crate::BlockType::Air,
             _ => crate::BlockType::Stone,
         };
@@ -58,7 +62,12 @@ impl Default for NoiseWorldGenerator {
     fn default() -> Self {
         let noise_field = NoiseField::new(rand::random(), 5, 1.0, 0.5, 2.0, 0.5);
         let size = Vector3::new(16, 256, 16);
-        return Self { noise_field, size };
+        return Self {
+            noise_field,
+            size,
+            base_y: 100,
+            amplitude: 20.0,
+        };
     }
 }
 
