@@ -14,7 +14,7 @@ pub mod stats;
 pub mod world;
 
 use winit::{
-    event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
+    event::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::{CursorGrabMode, WindowBuilder},
 };
@@ -60,7 +60,7 @@ pub async fn run() {
         &engine.renderer,
         &mut engine.resources,
         &block::Block::new(),
-        &engine.camera.uniform_bind_group_layout,
+        &engine.uniform_bind_group_layout,
     );
     engine.renderer.add_drawable(Box::new(world));
 
@@ -82,13 +82,14 @@ pub async fn run() {
             // request it.
             engine.window.request_redraw();
         }
-        Event::DeviceEvent { ref event, .. } => {
-            engine.input(event);
-        }
+        Event::DeviceEvent {
+            event: DeviceEvent::MouseMotion { delta },
+            ..
+        } => engine.camera_controller.process_mouse(delta.0, delta.1),
         Event::WindowEvent {
             ref event,
             window_id,
-        } if window_id == engine.window.id() && !engine.input_keyboard(event) => match event {
+        } if window_id == engine.window.id() && !engine.input(event) => match event {
             WindowEvent::CloseRequested
             | WindowEvent::KeyboardInput {
                 input:

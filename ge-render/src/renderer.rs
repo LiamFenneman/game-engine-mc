@@ -1,4 +1,3 @@
-use crate::camera::Camera;
 use ge_resource::texture::Texture;
 use winit::window::Window;
 
@@ -93,21 +92,22 @@ impl Renderer {
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
-        if new_size.width > 0 && new_size.height > 0 {
-            self.size = new_size;
-            self.config.width = new_size.width;
-            self.config.height = new_size.height;
-            self.surface.configure(&self.device, &self.config);
-            self.depth_texture =
-                Texture::create_depth_texture(&self.device, &self.config, "depth_texture");
-        }
+        self.size = new_size;
+        self.config.width = new_size.width;
+        self.config.height = new_size.height;
+        self.surface.configure(&self.device, &self.config);
+        self.depth_texture =
+            Texture::create_depth_texture(&self.device, &self.config, "depth_texture");
     }
 
     /// Renders the scene to the screen.
     ///
     /// # Errors
     /// Errors if the surface is lost. Which should never happen.
-    pub fn render(&mut self, camera: &Camera) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(
+        &mut self,
+        uniform_bind_group: &wgpu::BindGroup,
+    ) -> Result<(), wgpu::SurfaceError> {
         // get the frame to draw to
         let output = self.surface.get_current_texture()?;
         let view = output
@@ -148,7 +148,7 @@ impl Renderer {
 
             // render things to the scene
             for drawable in &mut self.drawables {
-                drawable.draw(&mut render_pass, &camera.uniform_bind_group);
+                drawable.draw(&mut render_pass, uniform_bind_group);
             }
         }
 
