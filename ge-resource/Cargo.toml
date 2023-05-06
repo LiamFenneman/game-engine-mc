@@ -10,4 +10,4 @@ nom = "7.1"
 wgpu.workspace = true
 
 [dev-dependencies]
-beul.workspcace = true
+beul = "1.0"
