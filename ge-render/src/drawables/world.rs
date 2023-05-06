@@ -2,11 +2,11 @@ use crate::{
     block::{Block, BlockVertex},
     renderer::{create_render_pipeline, Draw, Renderer, Vertex},
 };
+use cgmath::vec3;
 use ge_resource::{texture::Texture, ResourceManager};
+use ge_world::gen::{NoiseWorldGenerator, WorldGenerator};
 use std::rc::Rc;
 use wgpu::util::DeviceExt;
-
-const NUM_INSTANCES_PER_ROW: u32 = 10;
 
 pub struct DrawWorld {
     render_pipeline: wgpu::RenderPipeline,
@@ -72,17 +72,18 @@ impl DrawWorld {
 
         // instances
 
-        let instances = (0..NUM_INSTANCES_PER_ROW)
-            .flat_map(|z| {
-                return (0..NUM_INSTANCES_PER_ROW).map(move |x| {
-                    #[allow(clippy::cast_precision_loss)]
-                    let position = cgmath::Vector3 {
-                        x: x as f32,
-                        y: 0.0,
-                        z: z as f32,
-                    };
-                    return Instance { position };
-                });
+        let world = NoiseWorldGenerator::default().generate();
+        let instances = world
+            .blocks
+            .iter()
+            .filter(|&b| return b.position.y > 84)
+            .filter(|&b| return b.ty != ge_world::BlockType::Air)
+            .map(|&b| {
+                let (x, y, z) = b.position.into();
+                #[allow(clippy::cast_precision_loss)]
+                return Instance {
+                    position: vec3(x as f32, y as f32 - 84.0, z as f32),
+                };
             })
             .collect::<Vec<_>>();
 
