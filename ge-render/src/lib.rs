@@ -11,6 +11,7 @@ pub mod drawables;
 pub mod engine;
 pub mod renderer;
 pub mod stats;
+pub mod world;
 
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
@@ -55,13 +56,13 @@ pub async fn run() {
     let renderer = renderer::Renderer::new(&window, window.inner_size()).await;
     let mut engine = engine::Engine::new(window, renderer);
 
-    let block = drawables::block::DrawBlock::new(
+    let world = drawables::world::DrawWorld::new(
         &engine.renderer,
         &mut engine.resources,
         &block::Block::new(),
         &engine.camera.uniform_bind_group_layout,
     );
-    engine.renderer.add_drawable(Box::new(block));
+    engine.renderer.add_drawable(Box::new(world));
 
     event_loop.run(move |event, _, control_flow| match event {
         Event::RedrawRequested(window_id) if window_id == engine.window.id() => {

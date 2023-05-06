@@ -907,6 +907,7 @@ dependencies = [
  "cgmath",
  "fs_extra",
  "ge-resource",
+ "ge-world",
  "tracing",
  "tracing-appender",
  "tracing-subscriber",

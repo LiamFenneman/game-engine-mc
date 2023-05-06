@@ -10,6 +10,7 @@ beul.workspace = true
 bytemuck = { version = "1.13", features = [ "derive" ] }
 cgmath.workspace = true
 ge-resource = { path = "../ge-resource" }
+ge-world = { path = "../ge-world" }
 tracing.workspace = true
 tracing-appender.workspace = true
 tracing-subscriber.workspace = true
