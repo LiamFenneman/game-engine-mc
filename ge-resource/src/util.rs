@@ -1,5 +1,4 @@
-use crate::parse;
-use ge_render::texture::{Texture, TextureArray};
+use crate::{parse, texture::{TextureArray, Texture}};
 use std::{
     env,
     fs::read_dir,

@@ -1,4 +1,5 @@
 use crate::{camera::Camera, renderer::Renderer, stats::FrameStats};
+use ge_resource::ResourceManager;
 use winit::{
     event::{DeviceEvent, KeyboardInput, WindowEvent},
     window::Window,
@@ -8,12 +9,15 @@ use winit::{
 pub struct Engine {
     pub window: Window,
     pub renderer: Renderer,
+    pub resources: ResourceManager,
     pub camera: Camera,
     pub stats: FrameStats,
 }
 
 impl Engine {
     pub fn new(window: Window, renderer: Renderer) -> Self {
+        let resources = ResourceManager::default();
+        
         let camera = Camera::new(
             &renderer,
             (0.0, 5.0, 10.0),
@@ -26,6 +30,7 @@ impl Engine {
         return Self {
             window,
             renderer,
+            resources,
             camera,
             stats,
         };

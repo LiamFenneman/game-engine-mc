@@ -1,11 +1,11 @@
 use image::GenericImageView;
-use std::num::NonZeroU32;
+use std::{num::NonZeroU32, rc::Rc};
 
 #[derive(Debug)]
 pub struct TextureArray {
     pub textures: Vec<Texture>,
     pub bind_group_layout: wgpu::BindGroupLayout,
-    pub bind_group: wgpu::BindGroup,
+    pub bind_group: Rc<wgpu::BindGroup>,
 }
 
 impl TextureArray {
@@ -14,11 +14,7 @@ impl TextureArray {
     /// # Panics
     /// Panics if the length of `textures` is 0.
     #[must_use]
-    pub fn new(
-        device: &wgpu::Device,
-        textures: Vec<Texture>,
-        label: &str,
-    ) -> Self {
+    pub fn new(device: &wgpu::Device, textures: Vec<Texture>, label: &str) -> Self {
         let texture_views = textures
             .iter()
             .map(|texture| return &texture.view)
@@ -69,7 +65,7 @@ impl TextureArray {
         return Self {
             textures,
             bind_group_layout,
-            bind_group,
+            bind_group: Rc::new(bind_group),
         };
     }
 }

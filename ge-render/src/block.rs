@@ -1,9 +1,9 @@
-use crate::{
-    renderer::{create_render_pipeline, Draw, Renderer, Vertex},
-    texture::{Texture, TextureArray},
-};
+use std::rc::Rc;
+
+use crate::renderer::{create_render_pipeline, Draw, Renderer, Vertex};
 use bytemuck::{Pod, Zeroable};
 use cgmath::{Vector2, Vector3};
+use ge_resource::{texture::Texture, ResourceManager};
 use wgpu::util::DeviceExt;
 
 #[repr(C)]
@@ -54,7 +54,7 @@ impl Vertex for BlockVertex {
 #[allow(unused)]
 pub struct DrawBlock {
     render_pipeline: wgpu::RenderPipeline,
-    bind_group: wgpu::BindGroup,
+    bind_group: Rc<wgpu::BindGroup>,
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
     num_indices: u32,
@@ -69,39 +69,11 @@ impl DrawBlock {
     /// Panics if a [`Texture`] fails to parse bytes.
     pub fn new(
         renderer: &Renderer,
+        resources: &mut ResourceManager,
         block: Block,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
     ) -> Self {
-        let textures = TextureArray::new(
-            &renderer.device,
-            vec![
-                Texture::from_bytes(
-                    &renderer.device,
-                    &renderer.queue,
-                    include_bytes!("../../assets/grass_0.png"),
-                    "block",
-                    false,
-                )
-                .unwrap(),
-                Texture::from_bytes(
-                    &renderer.device,
-                    &renderer.queue,
-                    include_bytes!("../../assets/grass_1.png"),
-                    "block",
-                    false,
-                )
-                .unwrap(),
-                Texture::from_bytes(
-                    &renderer.device,
-                    &renderer.queue,
-                    include_bytes!("../../assets/grass_2.png"),
-                    "block",
-                    false,
-                )
-                .unwrap(),
-            ],
-            "block_texture",
-        );
+        let textures = resources.load_texture_array("grass", &renderer.device, &renderer.queue);
 
         let layout = renderer
             .device
@@ -143,7 +115,7 @@ impl DrawBlock {
 
         return Self {
             render_pipeline,
-            bind_group: textures.bind_group,
+            bind_group: Rc::clone(&textures.bind_group),
             vertex_buffer,
             index_buffer,
             num_indices,

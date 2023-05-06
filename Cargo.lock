@@ -906,6 +906,7 @@ dependencies = [
  "bytemuck",
  "cgmath",
  "fs_extra",
+ "ge-resource",
  "image",
  "tracing",
  "tracing-appender",
@@ -919,7 +920,7 @@ name = "ge-resource"
 version = "0.1.0"
 dependencies = [
  "beul",
- "ge-render",
+ "image",
  "nom",
  "wgpu",
 ]

@@ -5,7 +5,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-ge-render = { path = "../ge-render" }
+image.workspace = true
 nom = "7.1"
 wgpu.workspace = true
 

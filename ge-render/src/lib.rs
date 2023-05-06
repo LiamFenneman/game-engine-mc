@@ -10,12 +10,11 @@ pub mod camera;
 pub mod engine;
 pub mod renderer;
 pub mod stats;
-pub mod texture;
 
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
-    window::{WindowBuilder, CursorGrabMode},
+    window::{CursorGrabMode, WindowBuilder},
 };
 
 /// The `main` function is the entry point of the game.
@@ -23,6 +22,15 @@ use winit::{
 /// # Panics
 /// Possible causes of panic include denied permission, incompatible system, and lack of memory.
 pub async fn run() {
+    // get the asset directory
+    std::env::set_var(
+        "ASSET_DIR",
+        dbg!(format!(
+            "{}/assets/",
+            std::env::current_dir().unwrap().display()
+        )),
+    );
+
     let file_appender = tracing_appender::rolling::hourly("logs", "engine.log");
     let subscriber = tracing_subscriber::fmt()
         .compact()
@@ -48,6 +56,7 @@ pub async fn run() {
 
     let block = block::DrawBlock::new(
         &engine.renderer,
+        &mut engine.resources,
         block::Block::new(),
         &engine.camera.uniform_bind_group_layout,
     );

@@ -6,10 +6,11 @@
 #![allow(clippy::default_trait_access)]
 
 pub mod parse;
+pub mod texture;
 pub mod util;
 
-use ge_render::texture::TextureArray;
 use std::collections::HashMap;
+use texture::TextureArray;
 
 /// A resource manager that caches textures.
 #[derive(Debug, Default)]
