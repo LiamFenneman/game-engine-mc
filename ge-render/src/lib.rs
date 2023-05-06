@@ -24,15 +24,6 @@ use winit::{
 /// # Panics
 /// Possible causes of panic include denied permission, incompatible system, and lack of memory.
 pub async fn run() {
-    // get the asset directory
-    std::env::set_var(
-        "ASSET_DIR",
-        dbg!(format!(
-            "{}/assets/",
-            std::env::current_dir().unwrap().display()
-        )),
-    );
-
     let file_appender = tracing_appender::rolling::hourly("logs", "engine.log");
     let subscriber = tracing_subscriber::fmt()
         .compact()
