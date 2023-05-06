@@ -73,7 +73,7 @@ impl DrawBlock {
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
     ) -> Self {
         let textures = TextureArray::new(
-            renderer,
+            &renderer.device,
             vec![
                 Texture::from_bytes(
                     &renderer.device,

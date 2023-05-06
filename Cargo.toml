@@ -1,8 +1,9 @@
 [workspace]
 members = [
-    "ge-render",
-    "ge-world",
     "ge-dev-ui",
+    "ge-render",
+    "ge-resource",
+    "ge-world",
 ]
 
 [workspace.package]
@@ -11,9 +12,12 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace.dependencies]
+beul = "1.0"
 cgmath = { version = "0.18.0", features = ["serde"] }
 image = "0.24.6"
 serde = { version = "1.0", features = ["derive"] }
 tracing = "0.1.37"
 tracing-appender = "0.2.2"
 tracing-subscriber = "0.3.17"
+wgpu = { version = "0.16.0", features = ["trace"] }
+winit = "0.28.3"

@@ -6,15 +6,15 @@ version.workspace = true
 default-run = "ge-render"
 
 [dependencies]
-beul = "1.0"
+beul.workspace = true
 bytemuck = { version = "1.13", features = [ "derive" ] }
 cgmath.workspace = true
 image = { workspace = true, default-features = false, features = ["png", "jpeg"] }
 tracing.workspace = true
 tracing-appender.workspace = true
 tracing-subscriber.workspace = true
-wgpu = { version = "0.16.0", features = ["trace"] }
-winit = "0.28.3"
+wgpu.workspace = true
+winit.workspace = true
 
 [build-dependencies]
 anyhow = "1.0"

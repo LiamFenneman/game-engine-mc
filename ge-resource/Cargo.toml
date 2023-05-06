@@ -1,0 +1,13 @@
+[package]
+name = "ge-resource"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+ge-render = { path = "../ge-render" }
+nom = "7.1"
+wgpu.workspace = true
+
+[dev-dependencies]
+beul.workspcace = true
