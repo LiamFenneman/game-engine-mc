@@ -5,6 +5,7 @@
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::default_trait_access)]
 
+pub mod data;
 pub mod parse;
 pub mod texture;
 
@@ -15,6 +16,7 @@ use texture::TextureArray;
 #[derive(Debug)]
 pub struct ResourceManager {
     asset_path: PathBuf,
+    data_path: PathBuf,
     map: HashMap<String, TextureArray>,
 }
 
@@ -23,6 +25,7 @@ impl Default for ResourceManager {
         return Self {
             map: HashMap::new(),
             asset_path: PathBuf::from("assets"),
+            data_path: PathBuf::from("data"),
         };
     }
 }

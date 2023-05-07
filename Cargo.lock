@@ -922,6 +922,9 @@ dependencies = [
  "beul",
  "image",
  "nom",
+ "ron",
+ "serde",
+ "thiserror",
  "wgpu",
 ]
 

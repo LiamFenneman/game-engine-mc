@@ -7,6 +7,9 @@ version.workspace = true
 [dependencies]
 image.workspace = true
 nom = "7.1"
+ron = "0.8"
+serde.workspace = true
+thiserror = "1.0"
 wgpu.workspace = true
 
 [dev-dependencies]
