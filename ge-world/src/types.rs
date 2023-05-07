@@ -1,11 +1,21 @@
 use cgmath::Vector3;
-use rand::{distributions::Standard, prelude::Distribution};
 
 /// A `World` is a collection of `Block`s.
 #[derive(Debug, Clone)]
 pub struct World {
     pub blocks: Vec<Block>,
     pub size: Vector3<u32>,
+}
+
+/// A `Chunk` is a collection of `Block`s with a fixed size.
+#[derive(Debug, Clone)]
+pub struct Chunk {
+    pub blocks: Vec<Block>,
+    pub position: Option<Vector3<u32>>,
+}
+
+impl Chunk {
+    pub const SIZE: Vector3<u32> = Vector3::new(16, 256, 16);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Deserialize, serde::Serialize)]
@@ -25,19 +35,6 @@ impl std::fmt::Display for BlockType {
             BlockType::Stone => write!(f, "S"),
             BlockType::Water => write!(f, "."),
             BlockType::Wood => write!(f, "W"),
-        };
-    }
-}
-
-impl Distribution<BlockType> for Standard {
-    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> BlockType {
-        return match rng.gen_range(0..5) {
-            0 => BlockType::Air,
-            1 => BlockType::Grass,
-            2 => BlockType::Stone,
-            3 => BlockType::Water,
-            4 => BlockType::Wood,
-            _ => unreachable!(),
         };
     }
 }
