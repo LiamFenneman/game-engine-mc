@@ -48,15 +48,3 @@ pub struct Block {
     pub ty: BlockType,
     pub position: Vector3<u32>,
 }
-
-impl PartialOrd for Block {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        // compare the x, y, z of the blocks
-        return self
-            .position
-            .x
-            .partial_cmp(&other.position.x)
-            .or_else(|| return self.position.z.partial_cmp(&other.position.z))
-            .or_else(|| return self.position.y.partial_cmp(&other.position.y));
-    }
-}
