@@ -1,25 +1,55 @@
-use crate::{noise::NoiseField, Block, Chunk};
-use cgmath::{vec2, Vector3};
+use crate::{noise::NoiseField, Block, Chunk, World};
+use cgmath::{vec2, vec3, Vector2, Vector3};
+
+/// A `WorldGenerator` is a trait that generates a `World`.
+pub trait WorldGenerator {
+    fn generate(&mut self) -> World;
+}
+
+pub struct FixedWorldGenerator {
+    pub noise_field: NoiseField,
+    pub chunk_count: Vector2<u32>,
+}
+
+impl FixedWorldGenerator {
+    pub fn generate_chunk(&mut self, chunk_pos: Vector2<u32>) -> Chunk {
+        let mut chunk_gen = NoiseChunkGenerator::with_noise_field(self.noise_field.clone(), 100);
+        return chunk_gen.generate(chunk_pos);
+    }
+}
+
+impl WorldGenerator for FixedWorldGenerator {
+    fn generate(&mut self) -> World {
+        let mut chunks = vec![];
+        for x in 0..self.chunk_count.x {
+            for z in 0..self.chunk_count.y {
+                chunks.push(self.generate_chunk(vec2(x, z)));
+            }
+        }
+        return World { chunks };
+    }
+}
 
 /// A `ChunkGenerator` is a trait that generates a `Chunk`.
 pub trait ChunkGenerator {
     /// Generate a block at a specific position.
-    fn generate_at(&mut self, chunk_pos: Vector3<u32>) -> Block;
+    fn generate_at(&mut self, block_pos: Vector3<u32>) -> Block;
 
     /// Generate a `Chunk`.
-    fn generate(&mut self) -> Chunk {
+    fn generate(&mut self, chunk_pos: Vector2<u32>) -> Chunk {
         let mut blocks = vec![];
         for y in 0..Chunk::SIZE.y {
             for z in 0..Chunk::SIZE.z {
                 for x in 0..Chunk::SIZE.x {
-                    blocks.push(self.generate_at(Vector3::new(x, y, z)));
+                    let offset = vec3(chunk_pos.x * Chunk::SIZE.x, 0, chunk_pos.y * Chunk::SIZE.z);
+                    blocks.push(self.generate_at(vec3(x, y, z) + offset));
                 }
             }
         }
 
         return Chunk {
             blocks,
-            position: None,
+            position: chunk_pos,
         };
     }
 }
@@ -65,11 +95,20 @@ impl NoiseChunkGenerator {
             base_y,
         };
     }
+
+    #[must_use]
+    pub fn with_noise_field(noise_field: NoiseField, base_y: u32) -> Self {
+        return Self {
+            noise_field,
+            base_y,
+        };
+    }
 }
 
 impl Default for NoiseChunkGenerator {
     fn default() -> Self {
-        let noise_field = NoiseField::new(rand::random(), 5, 1.0, 10.0, 2.0, 0.5);
+        // let noise_field = NoiseField::new(rand::random(), 5, 1.0, 10.0, 2.0, 0.5);
+        let noise_field = NoiseField::new(0, 5, 1.0, 10.0, 2.0, 0.5);
         return Self {
             noise_field,
             base_y: 100,

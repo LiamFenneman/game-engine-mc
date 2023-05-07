@@ -4,7 +4,7 @@ use crate::{
 };
 use cgmath::vec3;
 use ge_resource::{texture::Texture, ResourceManager};
-use ge_world::gen::{NoiseWorldGenerator, WorldGenerator};
+use ge_world::gen::{NoiseChunkGenerator, ChunkGenerator};
 use std::rc::Rc;
 use wgpu::util::DeviceExt;
 
@@ -73,7 +73,7 @@ impl DrawWorld {
 
         // instances
 
-        let world = NoiseWorldGenerator::default().generate();
+        let world = NoiseChunkGenerator::default().generate(cgmath::vec2(0, 0));
         let instances = world
             .blocks
             .iter()

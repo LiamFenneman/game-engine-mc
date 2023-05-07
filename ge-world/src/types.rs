@@ -1,17 +1,16 @@
-use cgmath::Vector3;
+use cgmath::{Vector2, Vector3};
 
 /// A `World` is a collection of `Block`s.
 #[derive(Debug, Clone)]
 pub struct World {
-    pub blocks: Vec<Block>,
-    pub size: Vector3<u32>,
+    pub chunks: Vec<Chunk>,
 }
 
 /// A `Chunk` is a collection of `Block`s with a fixed size.
 #[derive(Debug, Clone)]
 pub struct Chunk {
     pub blocks: Vec<Block>,
-    pub position: Option<Vector3<u32>>,
+    pub position: Vector2<u32>,
 }
 
 impl Chunk {

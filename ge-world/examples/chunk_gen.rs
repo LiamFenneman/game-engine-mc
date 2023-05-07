@@ -1,5 +1,6 @@
 use std::ops::RangeInclusive;
 
+use cgmath::vec2;
 use ge_world::{
     gen::{ChunkGenerator, NoiseChunkGenerator},
     Chunk,
@@ -34,7 +35,9 @@ impl TestRenderer {
 }
 
 fn main() {
-    let mut chunk_gen = NoiseChunkGenerator::default();
-    let renderer = TestRenderer::new(chunk_gen.generate());
+    // let mut chunk_gen = NoiseChunkGenerator::default();
+    let noise_field = ge_world::noise::NoiseField::new(0, 5, 1.0, 10.0, 2.0, 0.5);
+    let mut chunk_gen = NoiseChunkGenerator::with_noise_field(noise_field, 100);
+    let renderer = TestRenderer::new(chunk_gen.generate(vec2(0, 0)));
     renderer.render(90..=110);
 }
