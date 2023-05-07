@@ -1,7 +1,10 @@
-use std::rc::Rc;
+use crate::{
+    block::{Block, BlockVertex},
+    renderer::{create_render_pipeline, Draw, Renderer, Vertex},
+};
 use ge_resource::{texture::Texture, ResourceManager};
+use std::rc::Rc;
 use wgpu::util::DeviceExt;
-use crate::{renderer::{Renderer, create_render_pipeline, Draw, Vertex}, block::{Block, BlockVertex}};
 
 pub struct DrawBlock {
     render_pipeline: wgpu::RenderPipeline,
@@ -23,7 +26,11 @@ impl DrawBlock {
         block: &Block,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
     ) -> Self {
-        let textures = resources.load_texture_array("grass", &renderer.device, &renderer.queue);
+        let textures = resources.load_texture_array(
+            ge_world::BlockType::Grass,
+            &renderer.device,
+            &renderer.queue,
+        );
 
         let layout = renderer
             .device

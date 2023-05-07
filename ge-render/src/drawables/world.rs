@@ -30,7 +30,11 @@ impl DrawWorld {
         block: &Block,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
     ) -> Self {
-        let textures = resources.load_texture_array("dev", &renderer.device, &renderer.queue);
+        let textures = resources.load_texture_array(
+            ge_world::BlockType::Stone,
+            &renderer.device,
+            &renderer.queue,
+        );
 
         let layout = renderer
             .device

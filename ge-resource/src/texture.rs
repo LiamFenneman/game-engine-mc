@@ -1,5 +1,7 @@
+use crate::block::BlockMeta;
+use ge_world::BlockType;
 use image::GenericImageView;
-use std::{num::NonZeroU32, rc::Rc, path::PathBuf};
+use std::{num::NonZeroU32, path::PathBuf, rc::Rc};
 
 impl crate::ResourceManager {
     /// Load a texture array from disk. If the texture array has already been loaded, it will be
@@ -9,16 +11,17 @@ impl crate::ResourceManager {
     /// Panics if the textures don't exist.
     pub fn load_texture_array(
         &mut self,
-        texture_name: &str,
+        block_type: BlockType,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
     ) -> &TextureArray {
-        if !self.map.contains_key(texture_name) {
-            let ta = self.load_from_disk(texture_name, device, queue);
-            self.map.insert(texture_name.to_string(), ta);
+        #[allow(clippy::map_entry)]
+        if !self.map.contains_key(&block_type) {
+            let ta = self.load_from_disk(block_type, device, queue);
+            self.map.insert(block_type, ta);
         }
 
-        return self.map.get(texture_name).unwrap();
+        return self.map.get(&block_type).unwrap();
     }
 
     /// Loads a texture array from disk.
@@ -28,30 +31,26 @@ impl crate::ResourceManager {
     #[must_use]
     pub fn load_from_disk(
         &self,
-        texture_name: &str,
+        block_type: BlockType,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
     ) -> TextureArray {
-        let mut array = Vec::new();
+        let block_meta = BlockMeta::load_from_disk(self, block_type).unwrap();
 
-        let dir = std::fs::read_dir(&self.asset_path).unwrap();
-        for entry in dir.flatten() {
-            // parse the file name
-            let file_name = entry.file_name();
-            let (ext, (name, _index)) =
-                crate::parse::parse_file_name(file_name.to_str().unwrap()).unwrap();
-
-            // if the texture name matches the name of the file, load the texture
-            if texture_name == name && ext == ".png" {
-                array.push(Self::load_texture(entry.path(), device, queue));
-            }
-        }
+        let textures = block_meta
+            .get_faces()
+            .iter()
+            .map(|s| {
+                let s = format!("{s}.png");
+                return Self::load_texture(self.asset_path.join(s), device, queue);
+            })
+            .collect::<Vec<_>>();
 
         assert!(
-            !array.is_empty(),
+            !textures.is_empty(),
             "the texture array must contain at least 1 texture"
         );
-        return TextureArray::new(device, array, "block_texture");
+        return TextureArray::new(device, textures, block_meta);
     }
 
     /// Loads a single texture from disk.
@@ -70,6 +69,7 @@ pub struct TextureArray {
     pub textures: Vec<Texture>,
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub bind_group: Rc<wgpu::BindGroup>,
+    pub block_meta: BlockMeta,
 }
 
 impl TextureArray {
@@ -78,7 +78,7 @@ impl TextureArray {
     /// # Panics
     /// Panics if the length of `textures` is 0.
     #[must_use]
-    pub fn new(device: &wgpu::Device, textures: Vec<Texture>, label: &str) -> Self {
+    pub fn new(device: &wgpu::Device, textures: Vec<Texture>, block_meta: BlockMeta) -> Self {
         let texture_views = textures
             .iter()
             .map(|texture| return &texture.view)
@@ -108,7 +108,7 @@ impl TextureArray {
                     count: Some(NonZeroU32::new(textures.len() as u32).unwrap()),
                 },
             ],
-            label: Some(&format!("{label}_bind_group_layout")),
+            label: Some("block_bind_group_layout"),
         });
 
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -130,6 +130,7 @@ impl TextureArray {
             textures,
             bind_group_layout,
             bind_group: Rc::new(bind_group),
+            block_meta,
         };
     }
 }

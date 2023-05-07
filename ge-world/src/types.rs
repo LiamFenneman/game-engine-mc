@@ -8,7 +8,7 @@ pub struct World {
     pub size: Vector3<u32>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Deserialize, serde::Serialize)]
 pub enum BlockType {
     Air,
     Grass,
