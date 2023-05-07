@@ -62,7 +62,7 @@ impl Spline {
         // a point was originally a u32, so negative *should*  never occur.
         #[allow(clippy::cast_sign_loss)]
         let i = util::lerp(self.min.0.into(), self.max.0.into(), t).floor() as u32;
-        return self.get(dbg!(i));
+        return self.get(i);
     }
 }
 
