@@ -6,7 +6,6 @@
 #![allow(clippy::default_trait_access)]
 
 pub mod parse;
-pub mod shader;
 pub mod texture;
 
 use std::{collections::HashMap, path::PathBuf};
