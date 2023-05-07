@@ -1,3 +1,4 @@
+use ron::ser::PrettyConfig;
 use thiserror::Error;
 
 impl crate::ResourceManager {
@@ -12,14 +13,30 @@ impl crate::ResourceManager {
         let str = std::fs::read_to_string(self.data_path.join(name))?;
         return Ok(ron::from_str(&str)?);
     }
+
+    /// Saves a RON data file to disk.
+    ///
+    /// # Errors
+    /// Errors if the file cannot be written to disk.
+    pub fn save_data<T>(&self, name: &str, data: &T) -> Result<(), DataError>
+    where
+        T: serde::Serialize,
+    {
+        let config = PrettyConfig::new();
+        let contents = ron::ser::to_string_pretty(data, config)?;
+        std::fs::write(self.data_path.join(name), contents)?;
+        return Ok(())
+    }
 }
 
 #[derive(Debug, Error)]
 pub enum DataError {
     #[error("io error: {0}")]
     Io(std::io::Error),
-    #[error("ron error: {0}")]
-    Ron(ron::de::SpannedError),
+    #[error("ron deserialize error: {0}")]
+    RonDe(ron::de::SpannedError),
+    #[error("ron serialize error: {0}")]
+    RonSer(ron::Error),
 }
 
 impl From<std::io::Error> for DataError {
@@ -30,6 +47,12 @@ impl From<std::io::Error> for DataError {
 
 impl From<ron::de::SpannedError> for DataError {
     fn from(e: ron::de::SpannedError) -> Self {
-        return Self::Ron(e);
+        return Self::RonDe(e);
+    }
+}
+
+impl From<ron::Error> for DataError {
+    fn from(e: ron::Error) -> Self {
+        return Self::RonSer(e);
     }
 }

@@ -1,1 +1,4 @@
-(boolean: true, float: 1.23)
+(
+    boolean: true,
+    float: 1.5,
+)
