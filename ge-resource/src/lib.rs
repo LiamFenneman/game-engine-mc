@@ -14,7 +14,7 @@ use texture::TextureArray;
 /// A resource manager that caches textures.
 #[derive(Debug)]
 pub struct ResourceManager {
-    root_path: PathBuf,
+    asset_path: PathBuf,
     map: HashMap<String, TextureArray>,
 }
 
@@ -22,7 +22,7 @@ impl Default for ResourceManager {
     fn default() -> Self {
         return Self {
             map: HashMap::new(),
-            root_path: std::env::current_dir().expect("failed to get current directory"),
+            asset_path: PathBuf::from("assets"),
         };
     }
 }

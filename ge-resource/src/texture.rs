@@ -34,7 +34,7 @@ impl crate::ResourceManager {
     ) -> TextureArray {
         let mut array = Vec::new();
 
-        let dir = std::fs::read_dir(self.root_path.join("assets")).unwrap();
+        let dir = std::fs::read_dir(&self.asset_path).unwrap();
         for entry in dir.flatten() {
             // parse the file name
             let file_name = entry.file_name();
