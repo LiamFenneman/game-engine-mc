@@ -33,10 +33,7 @@ impl DrawBlock {
                 push_constant_ranges: &[],
             });
 
-        let shader = wgpu::ShaderModuleDescriptor {
-            label: Some("Block Shader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("../shader.wgsl").into()),
-        };
+        let shader = wgpu::include_wgsl!("../shaders/block.wgsl");
 
         let render_pipeline = create_render_pipeline(
             renderer,
