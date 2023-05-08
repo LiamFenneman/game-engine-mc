@@ -6,28 +6,33 @@
 #![allow(clippy::default_trait_access)]
 
 pub mod block;
+pub mod config;
 pub mod data;
 pub mod parse;
 pub mod texture;
 
+use ge_world::BlockType;
 use std::{collections::HashMap, path::PathBuf};
 use texture::TextureArray;
-use ge_world::BlockType;
 
 /// A resource manager that caches textures.
 #[derive(Debug)]
 pub struct ResourceManager {
     asset_path: PathBuf,
+    config_path: PathBuf,
     data_path: PathBuf,
+
     map: HashMap<BlockType, TextureArray>,
 }
 
 impl Default for ResourceManager {
     fn default() -> Self {
         return Self {
-            map: HashMap::new(),
             asset_path: PathBuf::from("assets"),
+            config_path: PathBuf::from("config"),
             data_path: PathBuf::from("data"),
+
+            map: HashMap::new(),
         };
     }
 }
