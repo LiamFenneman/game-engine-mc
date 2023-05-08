@@ -15,6 +15,7 @@ impl crate::ResourceManager {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
     ) -> &TextureArray {
+        #[allow(clippy::map_entry, reason = "would require double mutable borrow")]
         if !self.map.contains_key(&block_type) {
             let ta = self.load_from_disk(block_type, device, queue);
             self.map.insert(block_type, ta);
@@ -98,13 +99,13 @@ impl TextureArray {
                         view_dimension: wgpu::TextureViewDimension::D2,
                         sample_type: wgpu::TextureSampleType::Float { filterable: true },
                     },
-                    count: Some(NonZeroU32::new(textures.len() as u32).unwrap()),
+                    count: Some(NonZeroU32::new(u32::try_from(textures.len()).unwrap_or(1)).unwrap()),
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 1,
                     visibility: wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                    count: Some(NonZeroU32::new(textures.len() as u32).unwrap()),
+                    count: Some(NonZeroU32::new(u32::try_from(textures.len()).unwrap_or(1)).unwrap()),
                 },
             ],
             label: Some("block_bind_group_layout"),
