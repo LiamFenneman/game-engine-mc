@@ -37,9 +37,9 @@ impl Engine {
         let projection = Projection::new(
             renderer.config.width,
             renderer.config.height,
-            cgmath::Deg(45.0),
+            cgmath::Deg(60.0),
             0.1,
-            100.0,
+            3000.0,
         );
         let camera_controller = CameraController::new(5.0, 0.5);
 
@@ -108,6 +108,7 @@ impl Engine {
 
     pub fn update(&mut self) {
         self.stats.fps();
+        tracing::trace!("FPS: {} | Delta Time: {}", self.stats.current_fps, self.stats.delta_time);
         self.camera_controller
             .update_camera(&mut self.camera, self.stats.delta_time);
         self.camera_uniform.update_view_proj(

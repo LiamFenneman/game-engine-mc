@@ -23,17 +23,7 @@ use winit::{
 /// # Panics
 /// Possible causes of panic include denied permission, incompatible system, and lack of memory.
 pub async fn run() {
-    let file_appender = tracing_appender::rolling::hourly("logs", "engine.log");
-    let subscriber = tracing_subscriber::fmt()
-        .compact()
-        .with_writer(file_appender)
-        .with_file(true)
-        .with_line_number(true)
-        .with_thread_ids(false)
-        .with_target(false)
-        .with_max_level(tracing::Level::TRACE)
-        .finish();
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    setup_logging();
 
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
@@ -100,4 +90,16 @@ pub async fn run() {
         },
         _ => {}
     });
+}
+
+fn setup_logging() {
+    let subscriber = tracing_subscriber::fmt()
+        .compact()
+        .with_file(true)
+        .with_line_number(true)
+        .with_thread_ids(false)
+        .with_target(false)
+        .with_max_level(tracing::Level::TRACE)
+        .finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 }

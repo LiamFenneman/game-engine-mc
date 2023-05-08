@@ -1,5 +1,9 @@
+use std::time::Duration;
 use ge_resource::texture::Texture;
 use winit::window::Window;
+
+const TARGET_FPS: u64 = 60;
+const TARGET_FRAME_TIME: Duration = Duration::from_micros(1_000_000 / TARGET_FPS);
 
 /// The `Draw` trait is implemented by types that can be drawn by the `Renderer`.
 pub trait Draw {
@@ -71,7 +75,8 @@ impl Renderer {
             format: surface_caps.formats[0],
             width: size.width,
             height: size.height,
-            present_mode: surface_caps.present_modes[0],
+            // present_mode: surface_caps.present_modes[0],
+            present_mode: wgpu::PresentMode::AutoNoVsync,
             alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
         };
@@ -108,6 +113,8 @@ impl Renderer {
         &mut self,
         uniform_bind_group: &wgpu::BindGroup,
     ) -> Result<(), wgpu::SurfaceError> {
+        let begin_time = std::time::Instant::now();
+
         // get the frame to draw to
         let output = self.surface.get_current_texture()?;
         let view = output
@@ -150,6 +157,12 @@ impl Renderer {
             for drawable in &mut self.drawables {
                 drawable.draw(&mut render_pass, uniform_bind_group);
             }
+        }
+
+        // limit the FPS to the target FPS
+        let frame_time = begin_time.elapsed();
+        if frame_time < TARGET_FRAME_TIME {
+            std::thread::sleep(TARGET_FRAME_TIME - frame_time);
         }
 
         // render finished, submit to the queue
