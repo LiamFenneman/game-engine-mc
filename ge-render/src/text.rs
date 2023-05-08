@@ -44,6 +44,7 @@ impl TextRenderer {
         encoder: &mut wgpu::CommandEncoder,
         view: &wgpu::TextureView,
     ) {
+        #[allow(clippy::cast_precision_loss, reason = "there is no other way")]
         self.glyph_brush.queue(Section {
             screen_position: (10.0, 10.0),
             bounds: (self.size.width as f32, self.size.height as f32),

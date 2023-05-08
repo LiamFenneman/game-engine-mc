@@ -81,6 +81,7 @@ impl DrawWorld {
             .filter(|&b| return b.ty != ge_world::BlockType::Air)
             .map(|&b| {
                 let (x, y, z) = b.position.into();
+                #[allow(clippy::cast_precision_loss, reason = "no other way")]
                 return Instance {
                     position: vec3(x as f32, y as f32 - 84.0, z as f32),
                 };
