@@ -1,5 +1,5 @@
-use std::time::Duration;
 use ge_resource::texture::Texture;
+use std::time::Duration;
 use winit::window::Window;
 
 const TARGET_FPS: u64 = 60;
@@ -24,6 +24,9 @@ pub struct Renderer {
     pub size: winit::dpi::PhysicalSize<u32>,
     pub depth_texture: Texture,
     drawables: Vec<Box<dyn Draw>>,
+
+    pub staging_belt: wgpu::util::StagingBelt,
+    pub debug_text: crate::text::TextRenderer,
 }
 
 impl Renderer {
@@ -85,6 +88,14 @@ impl Renderer {
         let depth_texture = Texture::create_depth_texture(&device, &config, "depth_texture");
         let drawables = vec![];
 
+        let staging_belt = wgpu::util::StagingBelt::new(1024);
+        let debug_text = crate::text::TextRenderer::new(
+            "Debug Info",
+            (config.width, config.height),
+            &device,
+            surface_caps.formats[0],
+        );
+
         return Self {
             surface,
             config,
@@ -93,6 +104,9 @@ impl Renderer {
             size,
             depth_texture,
             drawables,
+
+            staging_belt,
+            debug_text,
         };
     }
 
@@ -159,6 +173,10 @@ impl Renderer {
             }
         }
 
+        // render text
+        self.debug_text
+            .draw(&self.device, &mut self.staging_belt, &mut encoder, &view);
+
         // limit the FPS to the target FPS
         let frame_time = begin_time.elapsed();
         if frame_time < TARGET_FRAME_TIME {
@@ -166,6 +184,7 @@ impl Renderer {
         }
 
         // render finished, submit to the queue
+        self.staging_belt.finish();
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
         return Ok(());

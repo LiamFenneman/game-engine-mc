@@ -108,7 +108,14 @@ impl Engine {
 
     pub fn update(&mut self) {
         self.stats.fps();
-        tracing::trace!("FPS: {} | Delta Time: {}", self.stats.current_fps, self.stats.delta_time);
+        self.renderer.debug_text.add_entry(
+            "fps",
+            250,
+            format!(
+                "FPS {} DT {}",
+                self.stats.current_fps, self.stats.delta_time
+            ),
+        );
         self.camera_controller
             .update_camera(&mut self.camera, self.stats.delta_time);
         self.camera_uniform.update_view_proj(

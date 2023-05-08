@@ -11,6 +11,7 @@ pub mod drawables;
 pub mod engine;
 pub mod renderer;
 pub mod stats;
+pub mod text;
 
 use winit::{
     event::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},

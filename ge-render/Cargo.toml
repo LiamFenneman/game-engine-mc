@@ -15,6 +15,7 @@ tracing.workspace = true
 tracing-appender.workspace = true
 tracing-subscriber.workspace = true
 wgpu.workspace = true
+wgpu_glyph = "0.20"
 winit.workspace = true
 
 [build-dependencies]
