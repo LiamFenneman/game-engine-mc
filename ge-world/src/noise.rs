@@ -115,6 +115,11 @@ impl Noise {
         return self.sample_1d_with_fn(v + offset, smoothstep2);
     }
 
+    #[allow(
+        clippy::cast_sign_loss,
+        clippy::cast_possible_truncation,
+        reason = "this needs to be fixed: see #1"
+    )]
     /// Sample the noise at a given value, using a custom smooth function.
     #[must_use]
     fn sample_1d_with_fn<F>(&self, v: f64, smooth_fn: F) -> f64
@@ -145,6 +150,11 @@ impl Noise {
         return self.sample_2d_with_fn(v + offset, smoothstep2);
     }
 
+    #[allow(
+        clippy::cast_sign_loss,
+        clippy::cast_possible_truncation,
+        reason = "this needs to be fixed: see #1"
+    )]
     fn sample_2d_with_fn<F>(&self, v: Vector2<f64>, smooth_fn: F) -> f64
     where
         F: Fn(f64) -> f64,

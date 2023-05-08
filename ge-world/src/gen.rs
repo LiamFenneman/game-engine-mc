@@ -62,12 +62,14 @@ pub struct NoiseChunkGenerator {
 impl ChunkGenerator for NoiseChunkGenerator {
     fn generate_at(&mut self, position: Vector3<u32>) -> Block {
         let sample_y = self.noise_field.sample_2d(
-            vec2(position.x as f64, position.z as f64),
+            vec2(f64::from(position.x), f64::from(position.z)),
             None,
-            Some(vec2(Chunk::SIZE.x as f64, Chunk::SIZE.z as f64)),
+            Some(vec2(f64::from(Chunk::SIZE.x), f64::from(Chunk::SIZE.z))),
         );
 
-        let surface_y = (self.base_y as f64 + sample_y) as u32;
+        #[allow(clippy::cast_possible_truncation, reason = "truncation is expected")]
+        #[allow(clippy::cast_sign_loss, reason = "value should never be negative")]
+        let surface_y = (f64::from(self.base_y) + sample_y) as u32;
         let ty = match surface_y {
             y if position.y > y => crate::BlockType::Air,
             _ => crate::BlockType::Stone,

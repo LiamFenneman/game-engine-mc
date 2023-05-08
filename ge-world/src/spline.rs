@@ -44,6 +44,8 @@ impl Spline {
             let t = f64::from(point - prev.0) / f64::from(next.0 - prev.0);
             let r = util::lerp(f64::from(*prev.1), f64::from(*next.1), t);
 
+            #[allow(clippy::cast_possible_truncation, reason = "truncation is expected")]
+            #[allow(clippy::cast_sign_loss, reason = "value should never be negative")]
             // return the value as u32
             return r.floor() as u32;
         });
@@ -58,6 +60,8 @@ impl Spline {
     pub fn get_with_t(&self, t: f64) -> u32 {
         assert!((0.0..=1.0).contains(&t), "t must be between 0 and 1");
 
+        #[allow(clippy::cast_possible_truncation, reason = "truncation is expected")]
+        #[allow(clippy::cast_sign_loss, reason = "value should never be negative")]
         // a point was originally a u32, so negative *should*  never occur.
         let i = util::lerp(self.min.0.into(), self.max.0.into(), t).floor() as u32;
         return self.get(i);
