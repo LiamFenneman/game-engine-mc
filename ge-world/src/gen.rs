@@ -60,7 +60,6 @@ pub struct NoiseChunkGenerator {
 }
 
 impl ChunkGenerator for NoiseChunkGenerator {
-    #[allow(clippy::cast_lossless, clippy::cast_sign_loss)]
     fn generate_at(&mut self, position: Vector3<u32>) -> Block {
         let sample_y = self.noise_field.sample_2d(
             vec2(position.x as f64, position.z as f64),

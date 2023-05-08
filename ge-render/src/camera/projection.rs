@@ -18,7 +18,6 @@ pub struct Projection {
     zfar: f32,
 }
 
-#[allow(clippy::cast_precision_loss)]
 impl Projection {
     pub fn new<F: Into<Rad<f32>>>(width: u32, height: u32, fovy: F, znear: f32, zfar: f32) -> Self {
         return Self {

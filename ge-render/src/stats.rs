@@ -22,7 +22,6 @@ impl Default for FrameStats {
 }
 
 impl FrameStats {
-    #[allow(clippy::cast_precision_loss)]
     fn delta(&mut self) -> f64 {
         let current_time = Instant::now();
         let delta = self.last_time.elapsed().as_secs_f64();

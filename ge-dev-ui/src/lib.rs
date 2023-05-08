@@ -1,5 +1,6 @@
 #![deny(clippy::implicit_return)]
 #![allow(clippy::needless_return)]
+#![warn(clippy::pedantic)]
 
 mod noise;
 
@@ -10,12 +11,12 @@ pub struct App {
 }
 
 impl eframe::App for App {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Quit").clicked() {
-                        _frame.close();
+                        frame.close();
                     }
                 });
             });
@@ -34,7 +35,7 @@ impl eframe::App for App {
                         ui.separator();
 
                         if ui.button("Organize windows").clicked() {
-                            ui.ctx().memory_mut(|mem| mem.reset_areas());
+                            ui.ctx().memory_mut(egui::Memory::reset_areas);
                         }
                     });
                 });

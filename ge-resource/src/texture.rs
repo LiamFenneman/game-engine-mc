@@ -15,7 +15,6 @@ impl crate::ResourceManager {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
     ) -> &TextureArray {
-        #[allow(clippy::map_entry)]
         if !self.map.contains_key(&block_type) {
             let ta = self.load_from_disk(block_type, device, queue);
             self.map.insert(block_type, ta);

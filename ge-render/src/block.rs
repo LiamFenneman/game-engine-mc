@@ -99,7 +99,6 @@ impl Block {
     }
 }
 
-#[allow(clippy::upper_case_acronyms)]
 enum FaceDirection {
     TOP,
     BOTTOM,
@@ -167,7 +166,6 @@ impl Face {
         };
     }
 
-    #[allow(clippy::identity_op, clippy::unused_self)]
     pub fn get_indices(&self, i: u16) -> [u16; 6] {
         let displacement = i * 4;
         return [

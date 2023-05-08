@@ -133,7 +133,6 @@ impl Noise {
 
         let t = smooth_fn(f);
 
-        #[allow(clippy::cast_sign_loss)] // we know that i is positive
         let min = i as usize & self.mask;
         let max = (min + 1) & self.mask;
         let out = lerp(self.random_floats[min], self.random_floats[max], t);
@@ -146,7 +145,6 @@ impl Noise {
         return self.sample_2d_with_fn(v + offset, smoothstep2);
     }
 
-    #[allow(clippy::similar_names, clippy::cast_sign_loss)]
     fn sample_2d_with_fn<F>(&self, v: Vector2<f64>, smooth_fn: F) -> f64
     where
         F: Fn(f64) -> f64,
