@@ -46,6 +46,10 @@ impl Noise2D {
         let mut samples = Vec::with_capacity(self.size * self.size);
         for y in 0..self.size {
             for x in 0..self.size {
+                #[allow(
+                    clippy::cast_precision_loss,
+                    reason = "sample uses f64 so we need to cast"
+                )]
                 samples.push(self.noise_field.as_ref().unwrap().sample_2d(
                     vec2(x as f64, y as f64),
                     Some(self.offset),
@@ -57,6 +61,11 @@ impl Noise2D {
         let buffer = samples
             .iter()
             .flat_map(|s| {
+                #[allow(
+                    clippy::cast_possible_truncation,
+                    reason = "value must be within [0, 255]"
+                )]
+                #[allow(clippy::cast_sign_loss, reason = "value is shifted to be positive")]
                 let r = ((s + 1.0) / 2.0 * 255.0) as u8;
                 return [r, r, r];
             })
@@ -302,9 +311,13 @@ impl Noise1D {
             ui.separator();
 
             if let Some(nf) = &self.noise_field {
+                #[allow(
+                    clippy::cast_possible_wrap,
+                    reason = "values large enough to wrap will not be used"
+                )]
                 let points: PlotPoints = ((self.min * self.samples as i32)
                     ..=(self.max * self.samples as i32))
-                    .map(|x| return x as f64 / self.samples as f64)
+                    .map(|x| return f64::from(x) / f64::from(self.samples))
                     .map(|x| return [x, nf.sample_1d(x, Some(self.offset), None)])
                     .collect();
                 let line = Line::new(points);
