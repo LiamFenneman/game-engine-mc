@@ -69,7 +69,7 @@ impl DrawWorld {
                 usage: wgpu::BufferUsages::INDEX,
             });
 
-        let num_indices = block.get_indices().len() as u32;
+        let num_indices = u32::try_from(block.get_indices().len()).unwrap_or_default();
 
         // instances
 
@@ -96,7 +96,7 @@ impl DrawWorld {
                     contents: bytemuck::cast_slice(&instance_data),
                     usage: wgpu::BufferUsages::VERTEX,
                 });
-        let num_instances = instances.len() as u32;
+        let num_instances = u32::try_from(instances.len()).unwrap_or_default();
 
         return Self {
             render_pipeline,

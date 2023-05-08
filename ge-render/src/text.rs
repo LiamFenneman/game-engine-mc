@@ -1,5 +1,4 @@
-use std::collections::{BTreeMap};
-
+use std::collections::BTreeMap;
 use wgpu_glyph::{ab_glyph, GlyphBrushBuilder, Section, Text};
 use winit::dpi::PhysicalSize;
 

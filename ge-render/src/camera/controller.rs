@@ -69,12 +69,20 @@ impl CameraController {
         };
     }
 
+    #[allow(
+        clippy::cast_possible_truncation,
+        reason = "needs standardisation: see #2"
+    )]
     pub fn process_mouse(&mut self, dx: f64, dy: f64) {
         self.rotate_horizontal = dx as f32;
         self.rotate_vertical = dy as f32;
     }
 
     pub fn update_camera(&mut self, camera: &mut Camera, dt: f64) {
+        #[allow(
+            clippy::cast_possible_truncation,
+            reason = "needs standardisation: see #2"
+        )]
         let dt = dt as f32;
 
         // Move forward/backward and left/right

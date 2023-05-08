@@ -66,12 +66,12 @@ impl Block {
     }
 
     fn generate_faces() -> [Face; 6] {
-        let top = Face::new(FaceDirection::TOP);
-        let bottom = Face::new(FaceDirection::BOTTOM);
-        let right = Face::new(FaceDirection::RIGHT);
-        let left = Face::new(FaceDirection::LEFT);
-        let front = Face::new(FaceDirection::FRONT);
-        let back = Face::new(FaceDirection::BACK);
+        let top = Face::new(FaceDirection::Top);
+        let bottom = Face::new(FaceDirection::Bottom);
+        let right = Face::new(FaceDirection::Right);
+        let left = Face::new(FaceDirection::Left);
+        let front = Face::new(FaceDirection::Front);
+        let back = Face::new(FaceDirection::Back);
 
         return [top, bottom, right, left, front, back];
     }
@@ -91,8 +91,8 @@ impl Block {
     pub fn get_indices(&self) -> Vec<u16> {
         let mut indices = Vec::new();
 
-        for (face_counter, face) in self.faces.iter().enumerate() {
-            indices.extend_from_slice(&face.get_indices(face_counter as u16));
+        for (face_counter, _) in self.faces.iter().enumerate() {
+            indices.extend_from_slice(&Face::get_indices(u16::try_from(face_counter).unwrap_or(0)));
         }
 
         return indices;
@@ -100,49 +100,49 @@ impl Block {
 }
 
 enum FaceDirection {
-    TOP,
-    BOTTOM,
-    RIGHT,
-    LEFT,
-    FRONT,
-    BACK,
+    Top,
+    Bottom,
+    Left,
+    Right,
+    Front,
+    Back,
 }
 
 impl FaceDirection {
     pub fn get_vertices(&self) -> [BlockVertex; 4] {
         use cgmath::{vec2, vec3};
         return match self {
-            FaceDirection::TOP => [
+            FaceDirection::Top => [
                 BlockVertex::new(vec3(0.0, 1.0, 0.0), vec2(0.0, 0.0), 0),
                 BlockVertex::new(vec3(0.0, 1.0, 1.0), vec2(0.0, 1.0), 0),
                 BlockVertex::new(vec3(1.0, 1.0, 1.0), vec2(1.0, 1.0), 0),
                 BlockVertex::new(vec3(1.0, 1.0, 0.0), vec2(1.0, 0.0), 0),
             ],
-            FaceDirection::BOTTOM => [
+            FaceDirection::Bottom => [
                 BlockVertex::new(vec3(0.0, 0.0, 1.0), vec2(0.0, 0.0), 1),
                 BlockVertex::new(vec3(0.0, 0.0, 0.0), vec2(0.0, 1.0), 1),
                 BlockVertex::new(vec3(1.0, 0.0, 0.0), vec2(1.0, 1.0), 1),
                 BlockVertex::new(vec3(1.0, 0.0, 1.0), vec2(1.0, 0.0), 1),
             ],
-            FaceDirection::LEFT => [
+            FaceDirection::Left => [
                 BlockVertex::new(vec3(0.0, 1.0, 0.0), vec2(0.0, 0.0), 2),
                 BlockVertex::new(vec3(0.0, 0.0, 0.0), vec2(0.0, 1.0), 2),
                 BlockVertex::new(vec3(0.0, 0.0, 1.0), vec2(1.0, 1.0), 2),
                 BlockVertex::new(vec3(0.0, 1.0, 1.0), vec2(1.0, 0.0), 2),
             ],
-            FaceDirection::RIGHT => [
+            FaceDirection::Right => [
                 BlockVertex::new(vec3(1.0, 1.0, 1.0), vec2(0.0, 0.0), 3),
                 BlockVertex::new(vec3(1.0, 0.0, 1.0), vec2(0.0, 1.0), 3),
                 BlockVertex::new(vec3(1.0, 0.0, 0.0), vec2(1.0, 1.0), 3),
                 BlockVertex::new(vec3(1.0, 1.0, 0.0), vec2(1.0, 0.0), 3),
             ],
-            FaceDirection::FRONT => [
+            FaceDirection::Front => [
                 BlockVertex::new(vec3(0.0, 1.0, 1.0), vec2(0.0, 0.0), 4),
                 BlockVertex::new(vec3(0.0, 0.0, 1.0), vec2(0.0, 1.0), 4),
                 BlockVertex::new(vec3(1.0, 0.0, 1.0), vec2(1.0, 1.0), 4),
                 BlockVertex::new(vec3(1.0, 1.0, 1.0), vec2(1.0, 0.0), 4),
             ],
-            FaceDirection::BACK => [
+            FaceDirection::Back => [
                 BlockVertex::new(vec3(1.0, 1.0, 0.0), vec2(0.0, 0.0), 5),
                 BlockVertex::new(vec3(1.0, 0.0, 0.0), vec2(0.0, 1.0), 5),
                 BlockVertex::new(vec3(0.0, 0.0, 0.0), vec2(1.0, 1.0), 5),
@@ -166,8 +166,9 @@ impl Face {
         };
     }
 
-    pub fn get_indices(&self, i: u16) -> [u16; 6] {
+    pub fn get_indices(i: u16) -> [u16; 6] {
         let displacement = i * 4;
+        #[allow(clippy::identity_op, reason = "makes the code more readable")]
         return [
             0 + displacement,
             1 + displacement,
