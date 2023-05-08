@@ -32,27 +32,9 @@ impl crate::ResourceManager {
 #[derive(Debug, Error)]
 pub enum DataError {
     #[error("io error: {0}")]
-    Io(std::io::Error),
+    Io(#[from] std::io::Error),
     #[error("ron deserialize error: {0}")]
-    RonDe(ron::de::SpannedError),
+    RonDe(#[from] ron::de::SpannedError),
     #[error("ron serialize error: {0}")]
-    RonSer(ron::Error),
-}
-
-impl From<std::io::Error> for DataError {
-    fn from(e: std::io::Error) -> Self {
-        return Self::Io(e);
-    }
-}
-
-impl From<ron::de::SpannedError> for DataError {
-    fn from(e: ron::de::SpannedError) -> Self {
-        return Self::RonDe(e);
-    }
-}
-
-impl From<ron::Error> for DataError {
-    fn from(e: ron::Error) -> Self {
-        return Self::RonSer(e);
-    }
+    RonSer(#[from] ron::Error),
 }
