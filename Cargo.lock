@@ -937,6 +937,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "ge-macros"
+version = "0.1.0"
+dependencies = [
+ "nom",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "syn 2.0.15",
+ "toml",
+]
+
+[[package]]
 name = "ge-render"
 version = "0.1.0"
 dependencies = [

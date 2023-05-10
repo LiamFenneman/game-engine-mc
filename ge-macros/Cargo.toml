@@ -1,0 +1,16 @@
+[package]
+name = "ge-macros"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+nom = "7.1"
+proc-macro2 = "1.0"
+quote = "1.0"
+serde.workspace = true
+syn = "2.0"
+toml = "0.7"

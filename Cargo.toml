@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "ge-dev-ui",
+    "ge-macros",
     "ge-render",
     "ge-resource",
     "ge-world",
