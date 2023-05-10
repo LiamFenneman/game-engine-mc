@@ -4,7 +4,7 @@ use crate::{
 };
 use cgmath::vec3;
 use ge_resource::{texture::Texture, ResourceManager};
-use ge_world::gen::{NoiseChunkGenerator, ChunkGenerator};
+use ge_world::gen::{ChunkGenerator, NoiseChunkGenerator};
 use std::rc::Rc;
 use wgpu::util::DeviceExt;
 
@@ -73,9 +73,9 @@ impl DrawWorld {
 
         // instances
 
-        let world = NoiseChunkGenerator::default().generate(cgmath::vec2(0, 0));
-        let instances = world
-            .blocks
+        let instances = NoiseChunkGenerator::default()
+            .generate(cgmath::vec2(0, 0))
+            .visible_blocks()
             .iter()
             .filter(|&b| return b.position.y > 84)
             .filter(|&b| return b.ty != ge_world::BlockType::Air)

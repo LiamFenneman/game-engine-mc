@@ -38,8 +38,8 @@ pub trait ChunkGenerator {
     /// Generate a `Chunk`.
     fn generate(&mut self, chunk_pos: Vector2<u32>) -> Chunk {
         let mut blocks = vec![];
-        for y in 0..Chunk::SIZE.y {
-            for z in 0..Chunk::SIZE.z {
+        for z in 0..Chunk::SIZE.z {
+            for y in 0..Chunk::SIZE.y {
                 for x in 0..Chunk::SIZE.x {
                     let offset = vec3(chunk_pos.x * Chunk::SIZE.x, 0, chunk_pos.y * Chunk::SIZE.z);
                     blocks.push(self.generate_at(vec3(x, y, z) + offset));

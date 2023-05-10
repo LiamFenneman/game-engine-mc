@@ -5,6 +5,13 @@ use winit::window::Window;
 const TARGET_FPS: u64 = 60;
 const TARGET_FRAME_TIME: Duration = Duration::from_micros(1_000_000 / TARGET_FPS);
 
+const WIREFRAME_MODE: bool = false;
+const POLYGON_MODE: wgpu::PolygonMode = if WIREFRAME_MODE {
+    wgpu::PolygonMode::Line
+} else {
+    wgpu::PolygonMode::Fill
+};
+
 /// The `Draw` trait is implemented by types that can be drawn by the `Renderer`.
 pub trait Draw {
     fn draw<'a>(&'a self, render_pass: &mut wgpu::RenderPass<'a>, uniforms: &'a wgpu::BindGroup);
@@ -35,6 +42,7 @@ impl Renderer {
         use wgpu::Features;
         Features::TEXTURE_BINDING_ARRAY
             | Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING
+            | Features::POLYGON_MODE_LINE
     }
 
     pub async fn new(window: &Window, size: winit::dpi::PhysicalSize<u32>) -> Self {
@@ -231,11 +239,8 @@ pub fn create_render_pipeline(
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
                 cull_mode: Some(wgpu::Face::Back),
-                // Setting this to anything other than Fill requires Features::NON_FILL_POLYGON_MODE
-                polygon_mode: wgpu::PolygonMode::Fill,
-                // Requires Features::DEPTH_CLIP_CONTROL
+                polygon_mode: POLYGON_MODE,
                 unclipped_depth: false,
-                // Requires Features::CONSERVATIVE_RASTERIZATION
                 conservative: false,
             },
             depth_stencil: depth_format.map(|format| {
