@@ -2,7 +2,7 @@ use crate::{
     block::{Block, BlockVertex},
     renderer::{create_render_pipeline, Draw, Renderer, Vertex},
 };
-use cgmath::vec3;
+use cgmath::{vec3, Vector2};
 use ge_resource::{
     texture::{Texture, TextureArray},
     ResourceManager,
@@ -18,6 +18,7 @@ const SEA_LEVEL: u32 = 90;
 
 pub struct DrawChunk {
     instances: Vec<DrawInstancedBlocks>,
+    pub offset: Vector2<u32>,
 }
 
 impl DrawChunk {
@@ -31,10 +32,24 @@ impl DrawChunk {
         resources: &mut ResourceManager,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
     ) -> Self {
+        return Self::with_offset(
+            Vector2::new(0, 0),
+            renderer,
+            resources,
+            uniform_bind_group_layout,
+        );
+    }
+
+    pub fn with_offset(
+        offset: Vector2<u32>,
+        renderer: &Renderer,
+        resources: &mut ResourceManager,
+        uniform_bind_group_layout: &wgpu::BindGroupLayout,
+    ) -> Self {
         let mut sea_level = ge_world::sea_level::SeaLevel::new(SEA_LEVEL);
         let mut surface_painter = ge_world::surface_painting::SimpleSurfacePainter;
         let chunk_gen = NoiseChunkGenerator::default()
-            .generate(cgmath::vec2(0, 0))
+            .generate(offset)
             .apply_transformation(&mut sea_level)
             .apply_transformation(&mut surface_painter);
 
@@ -64,7 +79,7 @@ impl DrawChunk {
             ));
         }
 
-        return Self { instances };
+        return Self { instances, offset };
     }
 }
 

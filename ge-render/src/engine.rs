@@ -4,8 +4,10 @@ use crate::{
     },
     renderer::Renderer,
     stats::FrameStats,
+    world::World,
 };
 use ge_resource::ResourceManager;
+use std::{rc::Rc, cell::RefCell};
 use wgpu::util::DeviceExt;
 use winit::{
     event::{KeyboardInput, WindowEvent},
@@ -17,6 +19,8 @@ pub struct Engine {
     pub window: Window,
     pub renderer: Renderer,
     pub resources: ResourceManager,
+
+    pub world: Rc<RefCell<World>>,
     pub camera: Camera,
     pub projection: Projection,
     pub camera_controller: CameraController,
@@ -30,10 +34,10 @@ pub struct Engine {
 }
 
 impl Engine {
-    pub fn new(window: Window, renderer: Renderer) -> Self {
+    pub fn new(window: Window, mut renderer: Renderer) -> Self {
         let resources = ResourceManager::default();
 
-        let camera = Camera::new((0.0, 5.0, 10.0), cgmath::Deg(-90.0), cgmath::Deg(-20.0));
+        let camera = Camera::new((0.0, 10.0, 0.0), cgmath::Deg(-90.0), cgmath::Deg(-20.0));
         let projection = Projection::new(
             renderer.config.width,
             renderer.config.height,
@@ -42,6 +46,8 @@ impl Engine {
             3000.0,
         );
         let camera_controller = CameraController::new(5.0, 0.5);
+        let world = Rc::new(RefCell::new(World::new(cgmath::vec2(0, 0))));
+        renderer.set_world(Rc::clone(&world));
 
         let uniform_bind_group_layout =
             renderer
@@ -93,6 +99,8 @@ impl Engine {
             window,
             renderer,
             resources,
+
+            world,
             camera,
             projection,
             camera_controller,
@@ -116,6 +124,9 @@ impl Engine {
                 self.stats.current_fps, self.stats.delta_time
             ),
         );
+        self.renderer
+            .debug_text
+            .add_entry("pos", 200, format!("POS {:?}", self.camera.position));
         self.camera_controller
             .update_camera(&mut self.camera, self.stats.delta_time);
         self.camera_uniform.update_view_proj(
@@ -127,6 +138,12 @@ impl Engine {
             &self.uniform_buffer,
             0,
             bytemuck::cast_slice(&[self.camera_uniform]),
+        );
+        self.world.borrow_mut().update(
+            self.camera.position,
+            &self.renderer,
+            &mut self.resources,
+            &self.uniform_bind_group_layout,
         );
     }
 

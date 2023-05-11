@@ -9,18 +9,14 @@ impl ChunkTransformation for SimpleSurfacePainter {
         // the first non air block we encounter is the top layer
         for x in 0..crate::Chunk::SIZE.x {
             for z in 0..crate::Chunk::SIZE.z {
-                let blk = chunk
-                    .blocks
-                    .iter_mut()
-                    .rev()
-                    .find(|block| {
-                        return block.position.x == x
-                            && block.position.z == z
-                            && block.ty != crate::BlockType::Air
-                            && block.ty != crate::BlockType::Water;
-                    })
-                    .unwrap();
-                blk.ty = crate::BlockType::Grass;
+                if let Some(blk) = chunk.blocks.iter_mut().rev().find(|block| {
+                    return block.position.x == x
+                        && block.position.z == z
+                        && block.ty != crate::BlockType::Air
+                        && block.ty != crate::BlockType::Water;
+                }) {
+                    blk.ty = crate::BlockType::Grass;
+                }
             }
         }
     }

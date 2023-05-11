@@ -1,5 +1,6 @@
+use crate::world::World;
 use ge_resource::texture::Texture;
-use std::time::Duration;
+use std::{cell::RefCell, rc::Rc, time::Duration};
 use winit::window::Window;
 
 const TARGET_FPS: u64 = 60;
@@ -31,6 +32,7 @@ pub struct Renderer {
     pub size: winit::dpi::PhysicalSize<u32>,
     pub depth_texture: Texture,
     drawables: Vec<Box<dyn Draw>>,
+    world: Option<Rc<RefCell<World>>>, // TODO: remove this and only use drawable
 
     pub staging_belt: wgpu::util::StagingBelt,
     pub debug_text: crate::text::TextRenderer,
@@ -112,6 +114,7 @@ impl Renderer {
             size,
             depth_texture,
             drawables,
+            world: None,
 
             staging_belt,
             debug_text,
@@ -149,6 +152,8 @@ impl Renderer {
                 label: Some("Render Encoder"),
             });
 
+        let world = self.world.as_ref().unwrap().borrow();
+
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("Render Pass"),
@@ -179,6 +184,9 @@ impl Renderer {
             for drawable in &mut self.drawables {
                 drawable.draw(&mut render_pass, uniform_bind_group);
             }
+
+            // render the world
+            world.draw(&mut render_pass, uniform_bind_group);
         }
 
         // render text
@@ -200,6 +208,10 @@ impl Renderer {
 
     pub fn add_drawable(&mut self, drawable: Box<dyn Draw>) {
         self.drawables.push(drawable);
+    }
+
+    pub fn set_world(&mut self, world: Rc<RefCell<World>>) {
+        self.world = Some(world);
     }
 }
 

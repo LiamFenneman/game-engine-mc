@@ -15,6 +15,7 @@ pub mod renderer;
 pub mod stats;
 pub mod text;
 pub mod util;
+pub mod world;
 
 use winit::{
     event::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
@@ -39,13 +40,6 @@ pub async fn run() {
 
     let renderer = renderer::Renderer::new(&window, window.inner_size()).await;
     let mut engine = engine::Engine::new(window, renderer);
-
-    let world = drawables::chunk::DrawChunk::new(
-        &engine.renderer,
-        &mut engine.resources,
-        &engine.uniform_bind_group_layout,
-    );
-    engine.renderer.add_drawable(Box::new(world));
 
     event_loop.run(move |event, _, control_flow| match event {
         Event::MainEventsCleared => {
