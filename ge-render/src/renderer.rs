@@ -135,6 +135,9 @@ impl Renderer {
     ///
     /// # Errors
     /// Errors if the surface is lost. Which should never happen.
+    ///
+    /// # Panics
+    /// TODO: avoid panicking
     pub fn render(
         &mut self,
         uniform_bind_group: &wgpu::BindGroup,

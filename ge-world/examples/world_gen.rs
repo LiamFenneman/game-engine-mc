@@ -16,19 +16,14 @@ impl TestRenderer {
         for z in z_range {
             for y in 0..(CHUNK_COUNT.1 * CHUNK_SIZE) {
                 for x in 0..(CHUNK_COUNT.0 * CHUNK_SIZE) {
-                    let block =
-                        self.0
-                            .chunks
-                            .iter()
-                            .flat_map(|chunk| &chunk.blocks)
-                            .find(|block| {
-                                block.position.x() == x
-                                    && block.position.y() == y
-                                    && block.position.z() == z
-                            });
-                    match block {
-                        Some(block) => print!("{}", block.ty),
-                        None => print!(" "),
+                    if let Some((_, block)) = self
+                        .0
+                        .chunks
+                        .iter()
+                        .flat_map(|chunk| &chunk.blocks)
+                        .find(|(p, _)| p.x() == x && p.y() == y && p.z() == z)
+                    {
+                        print!("{}", block.ty);
                     }
                 }
                 println!();

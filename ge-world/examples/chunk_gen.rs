@@ -1,9 +1,9 @@
-use std::ops::RangeInclusive;
 use ge_util::coords::CHUNK_SIZE;
 use ge_world::{
     gen::{ChunkGenerator, NoiseChunkGenerator},
     Chunk,
 };
+use std::ops::RangeInclusive;
 
 #[derive(Debug, Clone)]
 pub struct TestRenderer(Chunk);
@@ -18,14 +18,13 @@ impl TestRenderer {
         for z in z_range {
             for y in 0..CHUNK_SIZE {
                 for x in 0..CHUNK_SIZE {
-                    let block = self.0.blocks.iter().find(|block| {
-                        block.position.x() == x
-                            && block.position.y() == y
-                            && block.position.z() == z
-                    });
-                    match block {
-                        Some(block) => print!("{}", block.ty),
-                        None => print!(" "),
+                    if let Some((_, block)) = self
+                        .0
+                        .blocks
+                        .iter()
+                        .find(|(p, _)| p.x() == x && p.y() == y && p.z() == z)
+                    {
+                        print!("{}", block.ty)
                     }
                 }
                 println!();
@@ -43,8 +42,11 @@ fn main() {
     let renderer = TestRenderer::new(
         chunk_gen
             .generate((0, 0, 0))
-            .apply_transformation(&mut sea_level)
-            .apply_transformation(&mut ge_world::surface_painting::SimpleSurfacePainter),
+            .apply_transformation(&mut sea_level, "sea level")
+            .apply_transformation(
+                &mut ge_world::surface_painting::SimpleSurfacePainter,
+                "surface painting",
+            ),
     );
     renderer.render(90..=100);
 }
