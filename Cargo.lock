@@ -997,6 +997,7 @@ name = "ge-world"
 version = "0.1.0"
 dependencies = [
  "cgmath",
+ "ge-util",
  "image",
  "plotters",
  "rand",

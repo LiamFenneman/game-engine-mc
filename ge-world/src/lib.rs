@@ -11,7 +11,6 @@
 pub mod gen;
 pub mod noise;
 pub mod spline;
-pub mod util;
 pub mod surface_painting;
 pub mod sea_level;
 

@@ -1,5 +1,5 @@
-use crate::util;
 use std::{collections::BTreeMap, ops::Bound};
+use ge_util::lerp;
 
 /// A spline is a set of points that can be interpolated between.
 ///
@@ -42,7 +42,7 @@ impl Spline {
 
             // lerp between the two points
             let t = f64::from(point - prev.0) / f64::from(next.0 - prev.0);
-            let r = util::lerp(f64::from(*prev.1), f64::from(*next.1), t);
+            let r = lerp(f64::from(*prev.1), f64::from(*next.1), t);
 
             #[allow(clippy::cast_possible_truncation, reason = "truncation is expected")]
             #[allow(clippy::cast_sign_loss, reason = "value should never be negative")]
@@ -63,7 +63,7 @@ impl Spline {
         #[allow(clippy::cast_possible_truncation, reason = "truncation is expected")]
         #[allow(clippy::cast_sign_loss, reason = "value should never be negative")]
         // a point was originally a u32, so negative *should*  never occur.
-        let i = util::lerp(self.min.0.into(), self.max.0.into(), t).floor() as u32;
+        let i = lerp(self.min.0.into(), self.max.0.into(), t).floor() as u32;
         return self.get(i);
     }
 }

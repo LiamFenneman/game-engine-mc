@@ -1,4 +1,5 @@
 use cgmath::{vec3, Vector2, Vector3};
+use ge_util::three_to_one;
 
 const CULLING: bool = true;
 
@@ -20,7 +21,6 @@ impl Chunk {
 
     #[allow(clippy::pedantic)] // TODO: remove this
     pub fn visible_blocks(&self) -> Vec<&Block> {
-        use crate::util::*;
         let neighbour_offsets: [Vector3<i32>; 6] = [
             vec3(0, 0, 1),
             vec3(0, 0, -1),
