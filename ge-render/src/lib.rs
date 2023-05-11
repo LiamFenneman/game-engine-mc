@@ -40,7 +40,7 @@ pub async fn run() {
     let renderer = renderer::Renderer::new(&window, window.inner_size()).await;
     let mut engine = engine::Engine::new(window, renderer);
 
-    let world = drawables::world::DrawWorld::new(
+    let world = drawables::chunk::DrawChunk::new(
         &engine.renderer,
         &mut engine.resources,
         &engine.uniform_bind_group_layout,
