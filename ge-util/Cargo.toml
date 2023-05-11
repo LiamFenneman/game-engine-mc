@@ -1,0 +1,9 @@
+[package]
+name = "ge-util"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+cgmath.workspace = true
+serde.workspace = true

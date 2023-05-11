@@ -4,6 +4,7 @@ members = [
     "ge-macros",
     "ge-render",
     "ge-resource",
+    "ge-util",
     "ge-world",
 ]
 

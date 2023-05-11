@@ -985,6 +985,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ge-util"
+version = "0.1.0"
+dependencies = [
+ "cgmath",
+ "serde",
+]
+
+[[package]]
 name = "ge-world"
 version = "0.1.0"
 dependencies = [
