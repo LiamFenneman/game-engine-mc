@@ -1,0 +1,3 @@
+[world_gen]
+culling = true
+chunk_size = [16, 256, 16]

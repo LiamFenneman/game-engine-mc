@@ -972,6 +972,8 @@ name = "ge-resource"
 version = "0.1.0"
 dependencies = [
  "beul",
+ "cgmath",
+ "ge-macros",
  "ge-world",
  "image",
  "nom",

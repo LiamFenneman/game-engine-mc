@@ -1,68 +1,39 @@
 extern crate proc_macro;
 
-use nom::bytes::complete::{take_till, take_while};
 use proc_macro::TokenStream;
-use proc_macro2::{Ident, Span};
-use quote::quote;
-use std::path::Path;
+use proc_macro2::Ident;
+use quote::{quote, format_ident};
 use syn::*;
 
-struct ConfigTokens {
+struct AttrTokens {
     file: Ident,
-    _sep: Token![.],
-    field: Ident,
-    _as: Token![as],
-    ty: Type,
 }
 
-impl syn::parse::Parse for ConfigTokens {
+impl syn::parse::Parse for AttrTokens {
     fn parse(input: syn::parse::ParseStream) -> Result<Self> {
         let file = input.parse()?;
-        let _sep = input.parse()?;
-        let field = input.parse()?;
-        let _as = input.parse()?;
-        let ty = input.parse()?;
-
-        Ok(ConfigTokens {
-            file,
-            _sep,
-            field,
-            _as,
-            ty,
-        })
+        Ok(AttrTokens { file })
     }
 }
 
-fn parse(s: &str) -> nom::IResult<&str, &str> {
-    let (i, _) = take_till(|c| c == '=')(s)?;
-    let (i, o) = take_while(|c: char| c == '=' || c == ' ')(i)?;
-    Ok((i, o))
-}
+#[proc_macro_attribute]
+pub fn config(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let attr = parse_macro_input!(attr as AttrTokens);
+    let item = parse_macro_input!(item as DeriveInput);
 
-#[proc_macro]
-pub fn load_config(tokens: TokenStream) -> TokenStream {
-    // get the field and file names from token stream
-    let tokens = parse_macro_input!(tokens as ConfigTokens);
-    let field = tokens.field.to_string();
-    let file = tokens.file.to_string();
+    let const_name = format_ident!("{}_CONFIG", attr.file.to_string().to_uppercase());
+    let file_name = format!("{}.toml", attr.file);
+    let ty = format_ident!("{}", item.ident);
 
-    // load file and get the value
-    let binding = std::fs::read_to_string(Path::new("config").join(format!("{file}.cfg"))).unwrap();
-    let line = binding.lines().find(|l| l.starts_with(&field)).unwrap();
-    let (value, _) = parse(line).unwrap();
-    let value = value.trim();
-
-    // make field name uppercase and generate const
-    let fun = Ident::new(&field, Span::call_site());
-    let str = Ident::new(&format!("__CONFIG_{}_{}__", file.to_uppercase(), field.to_uppercase()), Span::call_site());
-    let ty = tokens.ty;
-
-    dbg!(&file);
     quote! {
-        const #str: &'static str = #value;
-        pub fn #fun() -> #ty {
-            return #str.parse::<#ty>().unwrap();
-        }
+        #item
+
+        #[allow(clippy::declare_interior_mutable_const)]
+        pub const #const_name: std::cell::LazyCell<#ty> = std::cell::LazyCell::new(|| {
+            let file = std::path::Path::new("config").join(#file_name);
+            let binding = std::fs::read_to_string(file).unwrap();
+            return toml::from_str(&binding).unwrap();
+        });
     }
     .into()
 }

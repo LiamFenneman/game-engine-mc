@@ -1,5 +1,17 @@
 use thiserror::Error;
 
+#[ge_macros::config(engine)]
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct EngineConfig {
+    world_gen: WorldGenConfig,
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct WorldGenConfig {
+    culling: bool,
+    chunk_size: cgmath::Vector3<u32>,
+}
+
 impl crate::ResourceManager {
     /// Loads a TOML config file from disk.
     ///
@@ -23,7 +35,7 @@ impl crate::ResourceManager {
     {
         let contents = toml::to_string_pretty(data)?;
         std::fs::write(self.config_path.join(name), contents)?;
-        return Ok(())
+        return Ok(());
     }
 }
 

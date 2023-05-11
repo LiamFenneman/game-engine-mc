@@ -5,6 +5,8 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+cgmath.workspace = true
+ge-macros = { path = "../ge-macros" }
 ge-world = { path = "../ge-world" }
 image.workspace = true
 nom = "7.1"

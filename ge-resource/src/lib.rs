@@ -6,6 +6,7 @@
 #![allow(clippy::default_trait_access)]
 //
 #![feature(lint_reasons)]
+#![feature(once_cell)]
 
 pub mod block;
 pub mod config;
