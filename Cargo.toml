@@ -14,7 +14,6 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace.dependencies]
-beul = "1.0"
 cgmath = { version = "0.18.0", features = ["serde"] }
 image = { version = "0.24.6", default-features = false, features = ["png"] }
 serde = { version = "1.0", features = ["derive"] }

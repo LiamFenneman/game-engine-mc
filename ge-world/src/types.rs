@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use ge_util::{ChunkOffset, WorldPos};
+use std::collections::HashMap;
 
 const CULLING: bool = true;
 
@@ -36,7 +36,7 @@ impl Chunk {
         }
 
         let mut visible_blocks = Vec::with_capacity(self.blocks.len());
-        for (_, (_, blk)) in self.blocks.iter().enumerate() {
+        for blk in self.blocks.values() {
             // if the block is air then it is not visible
             if blk.ty == BlockType::Air {
                 continue;

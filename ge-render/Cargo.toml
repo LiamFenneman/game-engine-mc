@@ -6,7 +6,7 @@ version.workspace = true
 default-run = "ge-render"
 
 [dependencies]
-beul.workspace = true
+tokio = { version = "1.28", features = [ "full" ] }
 bytemuck = { version = "1.13", features = [ "derive" ] }
 cgmath.workspace = true
 ge-resource = { path = "../ge-resource" }
