@@ -42,7 +42,6 @@ pub async fn run() {
     let world = drawables::world::DrawWorld::new(
         &engine.renderer,
         &mut engine.resources,
-        &block::Block::new(),
         &engine.uniform_bind_group_layout,
     );
     engine.renderer.add_drawable(Box::new(world));

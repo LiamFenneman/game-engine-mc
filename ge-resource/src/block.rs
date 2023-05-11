@@ -42,6 +42,7 @@ pub fn block_type_to_path(ty: BlockType) -> String {
         BlockType::Air => unreachable!("air doesn't have textures"),
         BlockType::Grass => "grass.ron".to_owned(),
         BlockType::Stone => "stone.ron".to_owned(),
-        _ => todo!(),
+        BlockType::Water => "water.ron".to_owned(),
+        BlockType::Wood => "wood.ron".to_owned(),
     };
 }

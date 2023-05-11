@@ -3,21 +3,21 @@ use crate::{
     renderer::{create_render_pipeline, Draw, Renderer, Vertex},
 };
 use cgmath::vec3;
-use ge_resource::{texture::Texture, ResourceManager};
-use ge_world::gen::{ChunkGenerator, NoiseChunkGenerator};
-use std::rc::Rc;
+use ge_resource::{
+    texture::{Texture, TextureArray},
+    ResourceManager,
+};
+use ge_world::{
+    gen::{ChunkGenerator, NoiseChunkGenerator},
+    BlockType,
+};
+use std::{collections::HashSet, rc::Rc};
 use wgpu::util::DeviceExt;
 
 const SEA_LEVEL: u32 = 90;
 
 pub struct DrawWorld {
-    render_pipeline: wgpu::RenderPipeline,
-    bind_group: Rc<wgpu::BindGroup>,
-    vertex_buffer: wgpu::Buffer,
-    index_buffer: wgpu::Buffer,
-    num_indices: u32,
-    instance_buffer: wgpu::Buffer,
-    num_instances: u32,
+    instances: Vec<DrawInstancedBlocks>,
 }
 
 impl DrawWorld {
@@ -29,14 +29,86 @@ impl DrawWorld {
     pub fn new(
         renderer: &Renderer,
         resources: &mut ResourceManager,
-        block: &Block,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
     ) -> Self {
-        let textures = resources.load_texture_array(
-            ge_world::BlockType::Stone,
-            &renderer.device,
-            &renderer.queue,
-        );
+        let mut sea_level = ge_world::sea_level::SeaLevel::new(SEA_LEVEL);
+        let mut surface_painter = ge_world::surface_painting::SimpleSurfacePainter;
+        let chunk_gen = NoiseChunkGenerator::default()
+            .generate(cgmath::vec2(0, 0))
+            .apply_transformation(&mut sea_level)
+            .apply_transformation(&mut surface_painter);
+
+        let visible = chunk_gen.visible_blocks();
+
+        // block types present in the chunk
+        let present_blk_ty = visible
+            .iter()
+            .map(|blk| return blk.ty)
+            .collect::<HashSet<BlockType>>();
+
+        // create instance buffer for each block type
+        let mut instances: Vec<DrawInstancedBlocks> = Vec::with_capacity(present_blk_ty.len());
+        for ty in present_blk_ty {
+            let textures = resources.load_texture_array(ty, &renderer.device, &renderer.queue);
+            let blocks = visible
+                .iter()
+                .filter(|blk| return blk.ty == ty)
+                .map(|blk| return **blk)
+                .collect::<Vec<_>>();
+            instances.push(DrawInstancedBlocks::new(
+                renderer,
+                &blocks,
+                textures,
+                uniform_bind_group_layout,
+            ));
+        }
+
+        return Self { instances };
+    }
+}
+
+impl Draw for DrawWorld {
+    fn draw<'a>(&'a self, render_pass: &mut wgpu::RenderPass<'a>, uniforms: &'a wgpu::BindGroup) {
+        self.instances.iter().for_each(|i| {
+            i.draw(render_pass, uniforms);
+        });
+    }
+}
+
+pub struct DrawInstancedBlocks {
+    render_pipeline: wgpu::RenderPipeline,
+    bind_group: Rc<wgpu::BindGroup>,
+    vertex_buffer: wgpu::Buffer,
+    index_buffer: wgpu::Buffer,
+    num_indices: u32,
+    instance_buffer: wgpu::Buffer,
+    num_instances: u32,
+}
+
+impl DrawInstancedBlocks {
+    pub fn new(
+        renderer: &Renderer,
+        blocks: &[ge_world::Block],
+        textures: &TextureArray,
+        uniform_bind_group_layout: &wgpu::BindGroupLayout,
+    ) -> Self {
+        let block = Block::new();
+        let vertex_buffer = renderer
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: bytemuck::cast_slice(&block.get_vertices()),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+        let index_buffer = renderer
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Index Buffer"),
+                contents: bytemuck::cast_slice(&block.get_indices()),
+                usage: wgpu::BufferUsages::INDEX,
+            });
+
+        let num_indices = u32::try_from(block.get_indices().len()).unwrap_or_default();
 
         let layout = renderer
             .device
@@ -56,30 +128,7 @@ impl DrawWorld {
             shader,
         );
 
-        let vertex_buffer = renderer
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(&block.get_vertices()),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-        let index_buffer = renderer
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(&block.get_indices()),
-                usage: wgpu::BufferUsages::INDEX,
-            });
-
-        let num_indices = u32::try_from(block.get_indices().len()).unwrap_or_default();
-
-        let mut sea_level = ge_world::sea_level::SeaLevel::new(SEA_LEVEL);
-        let mut surface_painter = ge_world::surface_painting::SimpleSurfacePainter;
-        let instances = NoiseChunkGenerator::default()
-            .generate(cgmath::vec2(0, 0))
-            .apply_transformation(&mut sea_level)
-            .apply_transformation(&mut surface_painter)
-            .visible_blocks()
+        let instances = blocks
             .iter()
             .filter(|&b| return b.position.y > 84)
             .filter(|&b| return b.ty != ge_world::BlockType::Air)
@@ -115,7 +164,7 @@ impl DrawWorld {
     }
 }
 
-impl Draw for DrawWorld {
+impl Draw for DrawInstancedBlocks {
     fn draw<'a>(&'a self, render_pass: &mut wgpu::RenderPass<'a>, uniforms: &'a wgpu::BindGroup) {
         render_pass.set_pipeline(&self.render_pipeline);
         render_pass.set_bind_group(0, &self.bind_group, &[]);
