@@ -14,7 +14,6 @@ pub mod engine;
 pub mod renderer;
 pub mod stats;
 pub mod text;
-pub mod util;
 pub mod world;
 
 use winit::{
