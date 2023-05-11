@@ -2,11 +2,12 @@ use crate::{
     block::{Block, BlockVertex},
     renderer::{create_render_pipeline, Draw, Renderer, Vertex},
 };
-use cgmath::{vec3, Vector2};
+use cgmath::vec3;
 use ge_resource::{
     texture::{Texture, TextureArray},
     ResourceManager,
 };
+use ge_util::ChunkOffset;
 use ge_world::{
     gen::{ChunkGenerator, NoiseChunkGenerator},
     BlockType,
@@ -14,11 +15,11 @@ use ge_world::{
 use std::{collections::HashSet, rc::Rc};
 use wgpu::util::DeviceExt;
 
-const SEA_LEVEL: u32 = 90;
+const SEA_LEVEL: i32 = 90;
 
 pub struct DrawChunk {
     instances: Vec<DrawInstancedBlocks>,
-    pub offset: Vector2<u32>,
+    pub offset: ChunkOffset,
 }
 
 impl DrawChunk {
@@ -32,20 +33,16 @@ impl DrawChunk {
         resources: &mut ResourceManager,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
     ) -> Self {
-        return Self::with_offset(
-            Vector2::new(0, 0),
-            renderer,
-            resources,
-            uniform_bind_group_layout,
-        );
+        return Self::with_offset((0, 0, 0), renderer, resources, uniform_bind_group_layout);
     }
 
     pub fn with_offset(
-        offset: Vector2<u32>,
+        offset: impl Into<ChunkOffset> + Copy,
         renderer: &Renderer,
         resources: &mut ResourceManager,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
     ) -> Self {
+        let offset = offset.into();
         let mut sea_level = ge_world::sea_level::SeaLevel::new(SEA_LEVEL);
         let mut surface_painter = ge_world::surface_painting::SimpleSurfacePainter;
         let chunk_gen = NoiseChunkGenerator::default()
@@ -146,13 +143,16 @@ impl DrawInstancedBlocks {
 
         let instances = blocks
             .iter()
-            .filter(|&b| return b.position.y > 84)
+            .filter(|&b| return b.position.z() > 84)
             .filter(|&b| return b.ty != ge_world::BlockType::Air)
             .map(|&b| {
-                let (x, y, z) = b.position.into();
                 #[allow(clippy::cast_precision_loss, reason = "no other way")]
                 return Instance {
-                    position: vec3(x as f32, y as f32 - 84.0, z as f32),
+                    position: vec3(
+                        b.position.x() as f32,
+                        b.position.y() as f32,
+                        b.position.z() as f32 - 84.0,
+                    ),
                 };
             })
             .collect::<Vec<_>>();

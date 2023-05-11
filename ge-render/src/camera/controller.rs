@@ -3,6 +3,8 @@ use cgmath::{InnerSpace, Rad, Vector3};
 use std::f32::consts::FRAC_PI_2;
 use winit::event::{ElementState, VirtualKeyCode};
 
+const SAFE_FRAC_PI_2: f32 = FRAC_PI_2 - 0.0001;
+
 #[derive(Debug)]
 pub struct CameraController {
     amount_left: f32,
@@ -87,18 +89,18 @@ impl CameraController {
 
         // Move forward/backward and left/right
         let (yaw_sin, yaw_cos) = camera.yaw.0.sin_cos();
-        let forward = Vector3::new(yaw_cos, 0.0, yaw_sin).normalize();
-        let right = Vector3::new(-yaw_sin, 0.0, yaw_cos).normalize();
+        let forward = Vector3::new(yaw_cos, yaw_sin, 0.0).normalize();
+        let right = Vector3::new(yaw_sin, -yaw_cos, 0.0).normalize();
         camera.position += forward * (self.amount_forward - self.amount_backward) * self.speed * dt;
         camera.position += right * (self.amount_right - self.amount_left) * self.speed * dt;
 
         // Move up/down. Since we don't use roll, we can just
         // modify the y coordinate directly.
-        camera.position.y += (self.amount_up - self.amount_down) * self.speed * dt;
+        camera.position.z += (self.amount_up - self.amount_down) * self.speed * dt;
 
         // Rotate
-        camera.yaw += Rad(self.rotate_horizontal) * self.sensitivity * dt;
-        camera.pitch += Rad(-self.rotate_vertical) * self.sensitivity * dt;
+        camera.yaw += Rad(-self.rotate_horizontal) * self.sensitivity * dt;
+        camera.pitch += Rad(self.rotate_vertical) * self.sensitivity * dt;
 
         // If process_mouse isn't called every frame, these values
         // will not get set to zero, and the camera will rotate
@@ -107,10 +109,10 @@ impl CameraController {
         self.rotate_vertical = 0.0;
 
         // Keep the camera's angle from going too high/low.
-        if camera.pitch < -Rad(FRAC_PI_2) {
-            camera.pitch = -Rad(FRAC_PI_2);
-        } else if camera.pitch > Rad(FRAC_PI_2) {
-            camera.pitch = Rad(FRAC_PI_2);
+        if camera.pitch < -Rad(SAFE_FRAC_PI_2) {
+            camera.pitch = -Rad(SAFE_FRAC_PI_2);
+        } else if camera.pitch > Rad(SAFE_FRAC_PI_2) {
+            camera.pitch = Rad(SAFE_FRAC_PI_2);
         }
     }
 }

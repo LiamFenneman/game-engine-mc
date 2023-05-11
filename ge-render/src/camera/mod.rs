@@ -29,10 +29,10 @@ impl Camera {
         let (sin_pitch, cos_pitch) = self.pitch.0.sin_cos();
         let (sin_yaw, cos_yaw) = self.yaw.0.sin_cos();
 
-        return Matrix4::look_to_rh(
+        return Matrix4::look_to_lh(
             self.position,
-            Vector3::new(cos_pitch * cos_yaw, sin_pitch, cos_pitch * sin_yaw).normalize(),
-            Vector3::unit_y(),
+            Vector3::new(-cos_pitch * cos_yaw, -cos_pitch * sin_yaw, sin_pitch).normalize(),
+            Vector3::unit_z(),
         );
     }
 }

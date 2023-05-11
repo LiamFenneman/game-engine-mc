@@ -50,7 +50,7 @@ impl Chunk {
                 //     });
                 // })
                 // .map(|p| return three_to_one(p.x(), p.y(), p.z(), Self::SIZE))
-                .map(|p| return 0)
+                .map(|_| return 0)
                 .filter_map(|o| return self.blocks.get(o))
                 .collect::<Vec<_>>();
 
@@ -83,6 +83,7 @@ pub trait ChunkTransformation {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Deserialize, serde::Serialize)]
 pub enum BlockType {
     Air,
+    Dirt,
     Grass,
     Stone,
     Water,
@@ -93,6 +94,7 @@ impl std::fmt::Display for BlockType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         return match self {
             BlockType::Air => write!(f, " "),
+            BlockType::Dirt => write!(f, "D"),
             BlockType::Grass => write!(f, "G"),
             BlockType::Stone => write!(f, "S"),
             BlockType::Water => write!(f, "."),

@@ -35,7 +35,7 @@ impl World {
         self.chunks.entry((0, 0)).or_insert_with(|| {
             return {
                 DrawChunk::with_offset(
-                    (0, 0).into(),
+                    (0, 0, 0),
                     renderer,
                     resources,
                     uniform_bind_group_layout,

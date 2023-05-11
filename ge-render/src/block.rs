@@ -108,45 +108,50 @@ enum FaceDirection {
     Back,
 }
 
+macro_rules! vert {
+    ($x:literal $y:literal $z:literal, $u:literal $v:literal, $i:literal) => {
+        BlockVertex::new(cgmath::vec3($x, $y, $z), cgmath::vec2($u, $v), $i)
+    };
+}
+
 impl FaceDirection {
     pub fn get_vertices(&self) -> [BlockVertex; 4] {
-        use cgmath::{vec2, vec3};
         return match self {
             FaceDirection::Top => [
-                BlockVertex::new(vec3(0.0, 1.0, 0.0), vec2(0.0, 0.0), 0),
-                BlockVertex::new(vec3(0.0, 1.0, 1.0), vec2(0.0, 1.0), 0),
-                BlockVertex::new(vec3(1.0, 1.0, 1.0), vec2(1.0, 1.0), 0),
-                BlockVertex::new(vec3(1.0, 1.0, 0.0), vec2(1.0, 0.0), 0),
+                vert!(1.0 0.0 1.0, 1.0 0.0, 0),
+                vert!(1.0 1.0 1.0, 1.0 1.0, 0),
+                vert!(0.0 1.0 1.0, 0.0 1.0, 0),
+                vert!(0.0 0.0 1.0, 0.0 0.0, 0),
             ],
             FaceDirection::Bottom => [
-                BlockVertex::new(vec3(0.0, 0.0, 1.0), vec2(0.0, 0.0), 1),
-                BlockVertex::new(vec3(0.0, 0.0, 0.0), vec2(0.0, 1.0), 1),
-                BlockVertex::new(vec3(1.0, 0.0, 0.0), vec2(1.0, 1.0), 1),
-                BlockVertex::new(vec3(1.0, 0.0, 1.0), vec2(1.0, 0.0), 1),
+                vert!(0.0 0.0 0.0, 1.0 1.0, 1),
+                vert!(0.0 1.0 0.0, 1.0 0.0, 1),
+                vert!(1.0 1.0 0.0, 0.0 0.0, 1),
+                vert!(1.0 0.0 0.0, 0.0 1.0, 1),
             ],
             FaceDirection::Left => [
-                BlockVertex::new(vec3(0.0, 1.0, 0.0), vec2(0.0, 0.0), 2),
-                BlockVertex::new(vec3(0.0, 0.0, 0.0), vec2(0.0, 1.0), 2),
-                BlockVertex::new(vec3(0.0, 0.0, 1.0), vec2(1.0, 1.0), 2),
-                BlockVertex::new(vec3(0.0, 1.0, 1.0), vec2(1.0, 0.0), 2),
+                vert!(0.0 1.0 0.0, 0.0 1.0, 2),
+                vert!(0.0 0.0 0.0, 1.0 1.0, 2),
+                vert!(0.0 0.0 1.0, 1.0 0.0, 2),
+                vert!(0.0 1.0 1.0, 0.0 0.0, 2),
             ],
             FaceDirection::Right => [
-                BlockVertex::new(vec3(1.0, 1.0, 1.0), vec2(0.0, 0.0), 3),
-                BlockVertex::new(vec3(1.0, 0.0, 1.0), vec2(0.0, 1.0), 3),
-                BlockVertex::new(vec3(1.0, 0.0, 0.0), vec2(1.0, 1.0), 3),
-                BlockVertex::new(vec3(1.0, 1.0, 0.0), vec2(1.0, 0.0), 3),
+                vert!(1.0 1.0 1.0, 1.0 0.0, 3),
+                vert!(1.0 0.0 1.0, 0.0 0.0, 3),
+                vert!(1.0 0.0 0.0, 0.0 1.0, 3),
+                vert!(1.0 1.0 0.0, 1.0 1.0, 3),
             ],
             FaceDirection::Front => [
-                BlockVertex::new(vec3(0.0, 1.0, 1.0), vec2(0.0, 0.0), 4),
-                BlockVertex::new(vec3(0.0, 0.0, 1.0), vec2(0.0, 1.0), 4),
-                BlockVertex::new(vec3(1.0, 0.0, 1.0), vec2(1.0, 1.0), 4),
-                BlockVertex::new(vec3(1.0, 1.0, 1.0), vec2(1.0, 0.0), 4),
+                vert!(0.0 1.0 0.0, 1.0 1.0, 4),
+                vert!(0.0 1.0 1.0, 1.0 0.0, 4),
+                vert!(1.0 1.0 1.0, 0.0 0.0, 4),
+                vert!(1.0 1.0 0.0, 0.0 1.0, 4),
             ],
             FaceDirection::Back => [
-                BlockVertex::new(vec3(1.0, 1.0, 0.0), vec2(0.0, 0.0), 5),
-                BlockVertex::new(vec3(1.0, 0.0, 0.0), vec2(0.0, 1.0), 5),
-                BlockVertex::new(vec3(0.0, 0.0, 0.0), vec2(1.0, 1.0), 5),
-                BlockVertex::new(vec3(0.0, 1.0, 0.0), vec2(1.0, 0.0), 5),
+                vert!(0.0 0.0 1.0, 0.0 0.0, 5),
+                vert!(0.0 0.0 0.0, 0.0 1.0, 5),
+                vert!(1.0 0.0 0.0, 1.0 1.0, 5),
+                vert!(1.0 0.0 1.0, 1.0 0.0, 5),
             ],
         };
     }

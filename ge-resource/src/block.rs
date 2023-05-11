@@ -40,6 +40,7 @@ impl BlockMeta {
 pub fn block_type_to_path(ty: BlockType) -> String {
     return match ty {
         BlockType::Air => unreachable!("air doesn't have textures"),
+        BlockType::Dirt => "dirt.ron".to_owned(),
         BlockType::Grass => "grass.ron".to_owned(),
         BlockType::Stone => "stone.ron".to_owned(),
         BlockType::Water => "water.ron".to_owned(),
