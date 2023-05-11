@@ -74,7 +74,7 @@ impl DrawWorld {
         let mut surface_painter = ge_world::surface_painting::SimpleSurfacePainter;
         let instances = NoiseChunkGenerator::default()
             .generate(cgmath::vec2(0, 0))
-            .apply_surface_painter(&mut surface_painter)
+            .apply_transformation(&mut surface_painter)
             .visible_blocks()
             .iter()
             .filter(|&b| return b.position.y > 84)

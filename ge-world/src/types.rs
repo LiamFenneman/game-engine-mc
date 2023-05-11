@@ -1,4 +1,3 @@
-use crate::surface_painting::SurfacePainter;
 use cgmath::{vec3, Vector2, Vector3};
 
 const CULLING: bool = true;
@@ -76,10 +75,14 @@ impl Chunk {
     }
 
     #[must_use]
-    pub fn apply_surface_painter(mut self, painter: &mut dyn SurfacePainter) -> Self {
-        painter.paint(&mut self);
+    pub fn apply_transformation(mut self, transform: &mut dyn ChunkTransformation) -> Self {
+        transform.transform(&mut self);
         return self;
     }
+}
+
+pub trait ChunkTransformation {
+    fn transform(&mut self, chunk: &mut Chunk);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Deserialize, serde::Serialize)]

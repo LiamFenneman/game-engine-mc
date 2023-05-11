@@ -41,7 +41,7 @@ fn main() {
     let renderer = TestRenderer::new(
         chunk_gen
             .generate(vec2(0, 0))
-            .apply_surface_painter(&mut ge_world::surface_painting::SimpleSurfacePainter),
+            .apply_transformation(&mut ge_world::surface_painting::SimpleSurfacePainter),
     );
     renderer.render(90..=100);
 }

@@ -1,13 +1,10 @@
-/// Surface painting is the process of generating the surface of a chunk.
-pub trait SurfacePainter {
-    fn paint(&mut self, chunk: &mut crate::Chunk);
-}
+use crate::ChunkTransformation;
 
 /// A naive surface painter that paints the top layer of blocks.
 pub struct SimpleSurfacePainter;
 
-impl SurfacePainter for SimpleSurfacePainter {
-    fn paint(&mut self, chunk: &mut crate::Chunk) {
+impl ChunkTransformation for SimpleSurfacePainter {
+    fn transform(&mut self, chunk: &mut crate::Chunk) {
         // start at the top of the chunk, and work our way down
         // the first non air block we encounter is the top layer
         for x in 0..crate::Chunk::SIZE.x {
