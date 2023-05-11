@@ -3,7 +3,6 @@ use ge_util::{
     coords::{CHUNK_HEIGHT, CHUNK_SIZE},
     ChunkOffset, ChunkPos, WorldPos,
 };
-// use cgmath::{vec2, vec3, Vector2, Vector3};
 
 /// A `WorldGenerator` is a trait that generates a `World`.
 pub trait WorldGenerator {
@@ -41,13 +40,14 @@ pub trait ChunkGenerator {
 
     /// Generate a `Chunk`.
     fn generate(&mut self, chunk_offset: impl Into<ChunkOffset> + Copy) -> Chunk {
-        let mut blocks = vec![];
+        let mut blocks = std::collections::HashMap::new();
         for z in 0i32..CHUNK_HEIGHT {
             for y in 0i32..CHUNK_SIZE {
                 for x in 0i32..CHUNK_SIZE {
                     let offset: ChunkOffset = chunk_offset.into() * CHUNK_SIZE;
                     let chunk_pos: ChunkPos = (x, y, z).into();
-                    blocks.push(self.generate_at(chunk_pos.to_world_pos(offset)));
+                    let world_pos = chunk_pos.to_world_pos(offset);
+                    blocks.insert(world_pos, self.generate_at(world_pos));
                 }
             }
         }

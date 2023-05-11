@@ -45,6 +45,7 @@ impl DrawChunk {
         let offset = offset.into();
         let mut sea_level = ge_world::sea_level::SeaLevel::new(SEA_LEVEL);
         let mut surface_painter = ge_world::surface_painting::SimpleSurfacePainter;
+
         let chunk_gen = NoiseChunkGenerator::default()
             .generate(offset)
             .apply_transformation(&mut sea_level)

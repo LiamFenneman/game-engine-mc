@@ -1,5 +1,5 @@
-use ge_util::coords::CHUNK_SIZE;
 use crate::ChunkTransformation;
+use ge_util::{coords::CHUNK_SIZE, WorldPos, ChunkPos};
 
 /// A naive surface painter that paints the top layer of blocks.
 pub struct SimpleSurfacePainter;
@@ -10,14 +10,23 @@ impl ChunkTransformation for SimpleSurfacePainter {
         // the first non air block we encounter is the top layer
         for x in 0..CHUNK_SIZE {
             for y in 0..CHUNK_SIZE {
-                if let Some(blk) = chunk.blocks.iter_mut().rev().find(|block| {
-                    return block.position.x() == x
-                        && block.position.y() == y
-                        && block.ty != crate::BlockType::Air
-                        && block.ty != crate::BlockType::Water;
-                }) {
-                    blk.ty = crate::BlockType::Grass;
-                }
+                let z = chunk
+                    .blocks
+                    .iter()
+                    .filter(|(p, _)| return p.x() == x && p.y() == y)
+                    .filter(|(_, b)| {
+                        return b.ty != crate::BlockType::Air && b.ty != crate::BlockType::Water;
+                    })
+                    .map(|(p, _)| return p.z())
+                    .max()
+                    .unwrap_or(0);
+                chunk.blocks.insert(
+                    WorldPos::new(x, y, z),
+                    crate::Block {
+                        ty: crate::BlockType::Grass,
+                        position: ChunkPos::new(x, y, z).to_world_pos(chunk.position),
+                    }
+                );
             }
         }
     }
