@@ -33,11 +33,11 @@ impl Chunk {
         if !CULLING {
             // if culling is disabled then return all blocks
             // return self.blocks.iter().collect();
-            return self.blocks.iter().map(|(_, b)| return b).collect();
+            return self.blocks.values().collect();
         }
 
         let mut visible_blocks = Vec::with_capacity(self.blocks.len());
-        for (i, (_, blk)) in self.blocks.iter().enumerate() {
+        for (_, (_, blk)) in self.blocks.iter().enumerate() {
             // if the block is air then it is not visible
             if blk.ty == BlockType::Air {
                 continue;
