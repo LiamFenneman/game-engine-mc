@@ -71,10 +71,10 @@ impl DrawWorld {
 
         let num_indices = u32::try_from(block.get_indices().len()).unwrap_or_default();
 
-        // instances
-
+        let mut surface_painter = ge_world::surface_painting::SimpleSurfacePainter;
         let instances = NoiseChunkGenerator::default()
             .generate(cgmath::vec2(0, 0))
+            .apply_surface_painter(&mut surface_painter)
             .visible_blocks()
             .iter()
             .filter(|&b| return b.position.y > 84)

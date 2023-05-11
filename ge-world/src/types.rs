@@ -1,3 +1,4 @@
+use crate::surface_painting::SurfacePainter;
 use cgmath::{vec3, Vector2, Vector3};
 
 const CULLING: bool = true;
@@ -72,6 +73,12 @@ impl Chunk {
         }
 
         return visible_blocks;
+    }
+
+    #[must_use]
+    pub fn apply_surface_painter(mut self, painter: &mut dyn SurfacePainter) -> Self {
+        painter.paint(&mut self);
+        return self;
     }
 }
 
