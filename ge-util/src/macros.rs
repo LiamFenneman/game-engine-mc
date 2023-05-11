@@ -114,6 +114,27 @@ macro_rules! impl_common {
                 return Self::new(-self.x, -self.y, -self.z);
             }
         }
+
+        impl std::ops::Mul for $ty
+        {
+            type Output = Self;
+
+            fn mul(self, rhs: Self) -> Self::Output {
+                return Self::new(self.x * rhs.x, self.y * rhs.y, self.z * rhs.z);
+            }
+        }
+
+        impl<T> std::ops::Mul<T> for $ty
+        where
+            T: Into<i32>,
+        {
+            type Output = Self;
+
+            fn mul(self, rhs: T) -> Self::Output {
+                let rhs = rhs.into();
+                return Self::new(self.x * rhs, self.y * rhs, self.z * rhs);
+            }
+        }
     };
 }
 

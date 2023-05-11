@@ -1,30 +1,30 @@
 use std::ops::RangeInclusive;
 
-use cgmath::{vec2, Vector2};
+use ge_util::coords::CHUNK_SIZE;
 use ge_world::{
     gen::{FixedWorldGenerator, WorldGenerator},
-    Chunk, World,
+    World,
 };
 
-const CHUNK_COUNT: Vector2<u32> = vec2(2, 2);
+const CHUNK_COUNT: (i32, i32) = (2, 2);
 
 #[derive(Debug, Clone)]
 pub struct TestRenderer(World);
 
 impl TestRenderer {
-    pub fn render(&self, y_range: RangeInclusive<u32>) {
-        for y in y_range {
-            for z in 0..(CHUNK_COUNT.y * Chunk::SIZE.z) {
-                for x in 0..(CHUNK_COUNT.x * Chunk::SIZE.x) {
+    pub fn render(&self, z_range: RangeInclusive<i32>) {
+        for z in z_range {
+            for y in 0..(CHUNK_COUNT.1 * CHUNK_SIZE) {
+                for x in 0..(CHUNK_COUNT.0 * CHUNK_SIZE) {
                     let block =
                         self.0
                             .chunks
                             .iter()
                             .flat_map(|chunk| &chunk.blocks)
                             .find(|block| {
-                                block.position.x == x
-                                    && block.position.y == y
-                                    && block.position.z == z
+                                block.position.x() == x
+                                    && block.position.y() == y
+                                    && block.position.z() == z
                             });
                     match block {
                         Some(block) => print!("{}", block.ty),
@@ -45,5 +45,5 @@ fn main() {
         chunk_count: CHUNK_COUNT,
     }
     .generate();
-    TestRenderer(world).render(90..=110);
+    TestRenderer(world).render(90..=100);
 }

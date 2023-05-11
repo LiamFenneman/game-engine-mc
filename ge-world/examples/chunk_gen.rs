@@ -1,6 +1,5 @@
 use std::ops::RangeInclusive;
-
-use cgmath::vec2;
+use ge_util::coords::CHUNK_SIZE;
 use ge_world::{
     gen::{ChunkGenerator, NoiseChunkGenerator},
     Chunk,
@@ -15,12 +14,14 @@ impl TestRenderer {
         Self(chunk)
     }
 
-    pub fn render(&self, y_range: RangeInclusive<u32>) {
-        for y in y_range {
-            for z in 0..Chunk::SIZE.z {
-                for x in 0..Chunk::SIZE.x {
+    pub fn render(&self, z_range: RangeInclusive<i32>) {
+        for z in z_range {
+            for y in 0..CHUNK_SIZE {
+                for x in 0..CHUNK_SIZE {
                     let block = self.0.blocks.iter().find(|block| {
-                        block.position.x == x && block.position.y == y && block.position.z == z
+                        block.position.x() == x
+                            && block.position.y() == y
+                            && block.position.z() == z
                     });
                     match block {
                         Some(block) => print!("{}", block.ty),
@@ -41,7 +42,7 @@ fn main() {
     let mut sea_level = ge_world::sea_level::SeaLevel::new(95);
     let renderer = TestRenderer::new(
         chunk_gen
-            .generate(vec2(0, 0))
+            .generate((0, 0, 0))
             .apply_transformation(&mut sea_level)
             .apply_transformation(&mut ge_world::surface_painting::SimpleSurfacePainter),
     );

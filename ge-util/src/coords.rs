@@ -1,5 +1,7 @@
 pub const CHUNK_SIZE: i32 = 16;
 pub const CHUNK_SIZE_MASK: i32 = CHUNK_SIZE - 1;
+pub const CHUNK_HEIGHT: i32 = 256;
+pub const CHUNK_HEIGHT_MASK: i32 = CHUNK_HEIGHT - 1;
 
 /// A coordinate position in the world.
 #[derive(
@@ -13,7 +15,8 @@ pub struct WorldPos {
 
 /// A coordinate position within the chunk.
 ///
-/// This is a relative position, so `x`, `y`, and `z` are always in the range `0..16`.
+/// This is a relative position, so `x` and `y` are always in the range `0..16`. However,
+/// `z` is always in the range `0..256`.
 ///
 /// # Panics
 /// If the position is out of range.
@@ -29,7 +32,8 @@ pub struct ChunkPos {
 /// A coordinate position of a chunk in the world.
 ///
 /// This is effectively a `WorldPos` that has been rounded down to the nearest chunk.
-/// The valid range of `x`, `y`, and `z` values is `-2^28..2^28`.
+/// The valid range of `x`, `y`, values is `-2^28..2^28`. The `z` value must always be `0`.
+/// This is due to the fact chunks are only concerned with the `x` and `y` axes.
 ///
 /// # Panics
 /// If the position is out of range.
@@ -55,7 +59,7 @@ impl WorldPos {
         return ChunkPos::new(
             self.x & CHUNK_SIZE_MASK,
             self.y & CHUNK_SIZE_MASK,
-            self.z & CHUNK_SIZE_MASK,
+            self.z & CHUNK_HEIGHT_MASK,
         );
     }
 
@@ -85,7 +89,8 @@ impl ChunkPos {
         return WorldPos::new(
             chunk_offset.x * CHUNK_SIZE + self.x,
             chunk_offset.y * CHUNK_SIZE + self.y,
-            chunk_offset.z * CHUNK_SIZE + self.z,
+            // chunk_offset.z * CHUNK_HEIGHT + self.z, -- offset.z should always be 0
+            self.z,
         );
     }
 
@@ -95,7 +100,7 @@ impl ChunkPos {
     pub fn is_valid(&self) -> bool {
         return (0..CHUNK_SIZE).contains(&self.x)
             && (0..CHUNK_SIZE).contains(&self.y)
-            && (0..CHUNK_SIZE).contains(&self.z);
+            && (0..CHUNK_HEIGHT).contains(&self.z);
     }
 }
 
@@ -105,8 +110,8 @@ impl ChunkOffset {
     /// # Panics
     /// If the position is out of range.
     #[must_use]
-    pub fn new(x: i32, y: i32, z: i32) -> Self {
-        let s = Self { x, y, z };
+    pub fn new(x: i32, y: i32, _: i32) -> Self {
+        let s = Self { x, y, z: 0 };
         assert!(s.is_valid(), "chunk offset out of range");
         return s;
     }
@@ -117,7 +122,7 @@ impl ChunkOffset {
     pub fn is_valid(&self) -> bool {
         return (-(2i32.pow(28))..2i32.pow(28)).contains(&self.x)
             && (-(2i32.pow(28))..2i32.pow(28)).contains(&self.y)
-            && (-(2i32.pow(28))..2i32.pow(28)).contains(&self.z);
+            && (self.z == 0);
     }
 }
 
@@ -147,10 +152,10 @@ mod tests {
             assert_eq!(pos.to_world_pos((0, 0, 0)), wpos!(1, 2, 3));
 
             let pos = cpos!(15, 15, 15);
-            assert_eq!(pos.to_world_pos((1, 1, 1)), wpos!(31, 31, 31));
+            assert_eq!(pos.to_world_pos((1, 1, 0)), wpos!(31, 31, 15));
 
             let pos = cpos!(5, 5, 5);
-            assert_eq!(pos.to_world_pos((-1, -1, -1)), wpos!(-11, -11, -11));
+            assert_eq!(pos.to_world_pos((-1, -1, 0)), wpos!(-11, -11, 5));
         }
     }
 

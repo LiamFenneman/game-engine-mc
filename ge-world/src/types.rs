@@ -1,7 +1,6 @@
-use cgmath::{vec3, Vector2, Vector3};
-use ge_util::three_to_one;
+use ge_util::{ChunkOffset, WorldPos};
 
-const CULLING: bool = true;
+const CULLING: bool = false;
 
 /// A `World` is a collection of `Block`s.
 #[derive(Debug, Clone)]
@@ -13,21 +12,21 @@ pub struct World {
 #[derive(Debug, Clone)]
 pub struct Chunk {
     pub blocks: Vec<Block>,
-    pub position: Vector2<u32>,
+    pub position: ChunkOffset,
 }
 
 impl Chunk {
-    pub const SIZE: Vector3<u32> = Vector3::new(16, 256, 16);
+    pub const SIZE: cgmath::Vector3<u32> = cgmath::Vector3::new(16, 256, 16);
 
     #[allow(clippy::pedantic)] // TODO: remove this
     pub fn visible_blocks(&self) -> Vec<&Block> {
-        let neighbour_offsets: [Vector3<i32>; 6] = [
-            vec3(0, 0, 1),
-            vec3(0, 0, -1),
-            vec3(1, 0, 0),
-            vec3(-1, 0, 0),
-            vec3(0, 1, 0),
-            vec3(0, -1, 0),
+        let neighbour_offsets: [(i32, i32, i32); 6] = [
+            (0, 0, 1),
+            (0, 0, -1),
+            (1, 0, 0),
+            (-1, 0, 0),
+            (0, 1, 0),
+            (0, -1, 0),
         ];
 
         if !CULLING {
@@ -43,19 +42,15 @@ impl Chunk {
             }
             let neighbours = neighbour_offsets
                 .iter()
-                .map(|o| {
-                    return (
-                        u32::try_from(blk.position.x as i32 + o.x).ok(),
-                        u32::try_from(blk.position.y as i32 + o.y).ok(),
-                        u32::try_from(blk.position.z as i32 + o.z).ok(),
-                    );
-                })
-                .filter_map(|o| {
-                    return o.0.and_then(|x| {
-                        return o.1.and_then(|y| return o.2.map(|z| return (x, y, z)));
-                    });
-                })
-                .map(|p| return three_to_one(p.0, p.1, p.2, Self::SIZE))
+                // TODO: fix culling
+                // .map(|o| return blk.position + o)
+                // .filter_map(|o| {
+                //     return o.0.and_then(|x| {
+                //         return o.1.and_then(|y| return o.2.map(|z| return (x, y, z)));
+                //     });
+                // })
+                // .map(|p| return three_to_one(p.x(), p.y(), p.z(), Self::SIZE))
+                .map(|p| return 0)
                 .filter_map(|o| return self.blocks.get(o))
                 .collect::<Vec<_>>();
 
@@ -110,5 +105,5 @@ impl std::fmt::Display for BlockType {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Block {
     pub ty: BlockType,
-    pub position: Vector3<u32>,
+    pub position: WorldPos,
 }
