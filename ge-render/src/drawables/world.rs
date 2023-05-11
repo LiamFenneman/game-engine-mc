@@ -44,6 +44,7 @@ impl DrawWorld {
         let present_blk_ty = visible
             .iter()
             .map(|blk| return blk.ty)
+            .filter(|&ty| return ty != BlockType::Air)
             .collect::<HashSet<BlockType>>();
 
         // create instance buffer for each block type
