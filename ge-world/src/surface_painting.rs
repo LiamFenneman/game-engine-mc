@@ -16,7 +16,8 @@ impl ChunkTransformation for SimpleSurfacePainter {
                     .find(|block| {
                         return block.position.x == x
                             && block.position.z == z
-                            && block.ty != crate::BlockType::Air;
+                            && block.ty != crate::BlockType::Air
+                            && block.ty != crate::BlockType::Water;
                     })
                     .unwrap();
                 blk.ty = crate::BlockType::Grass;

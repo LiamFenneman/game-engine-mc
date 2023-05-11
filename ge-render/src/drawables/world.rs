@@ -8,6 +8,8 @@ use ge_world::gen::{ChunkGenerator, NoiseChunkGenerator};
 use std::rc::Rc;
 use wgpu::util::DeviceExt;
 
+const SEA_LEVEL: u32 = 90;
+
 pub struct DrawWorld {
     render_pipeline: wgpu::RenderPipeline,
     bind_group: Rc<wgpu::BindGroup>,
@@ -71,9 +73,11 @@ impl DrawWorld {
 
         let num_indices = u32::try_from(block.get_indices().len()).unwrap_or_default();
 
+        let mut sea_level = ge_world::sea_level::SeaLevel::new(SEA_LEVEL);
         let mut surface_painter = ge_world::surface_painting::SimpleSurfacePainter;
         let instances = NoiseChunkGenerator::default()
             .generate(cgmath::vec2(0, 0))
+            .apply_transformation(&mut sea_level)
             .apply_transformation(&mut surface_painter)
             .visible_blocks()
             .iter()
