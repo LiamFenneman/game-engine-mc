@@ -19,7 +19,7 @@ pub struct Chunk {
 impl Chunk {
     pub const SIZE: cgmath::Vector3<u32> = cgmath::Vector3::new(16, 256, 16);
 
-    #[allow(clippy::pedantic)] // TODO: remove this
+    #[must_use]
     pub fn visible_blocks(&self) -> Vec<&Block> {
         let neighbour_offsets: [(i32, i32, i32); 6] = [
             (0, 0, 1),
@@ -32,7 +32,6 @@ impl Chunk {
 
         if !CULLING {
             // if culling is disabled then return all blocks
-            // return self.blocks.iter().collect();
             return self.blocks.values().collect();
         }
 
@@ -44,14 +43,6 @@ impl Chunk {
             }
             let neighbours = neighbour_offsets
                 .iter()
-                // TODO: fix culling
-                // .map(|o| return blk.position + o)
-                // .filter_map(|o| {
-                //     return o.0.and_then(|x| {
-                //         return o.1.and_then(|y| return o.2.map(|z| return (x, y, z)));
-                //     });
-                // })
-                // .map(|p| return three_to_one(p.x(), p.y(), p.z(), Self::SIZE))
                 .map(|&o| return blk.position + WorldPos::from(o))
                 .filter_map(|o| return self.blocks.get(&o))
                 .collect::<Vec<_>>();
