@@ -2,7 +2,7 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
-use quote::{quote, format_ident};
+use quote::{format_ident, quote};
 use syn::*;
 
 struct AttrTokens {
@@ -34,6 +34,17 @@ pub fn config(attr: TokenStream, item: TokenStream) -> TokenStream {
             let binding = std::fs::read_to_string(file).unwrap();
             return toml::from_str(&binding).unwrap();
         });
+    }
+    .into()
+}
+
+#[proc_macro]
+pub fn dbg_time(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as proc_macro2::TokenStream);
+    quote! {
+        let dbg_time_start = std::time::Instant::now();
+        #input
+        tracing::debug!("elapsed: {:?}", dbg_time_start.elapsed());
     }
     .into()
 }

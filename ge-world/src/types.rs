@@ -63,14 +63,28 @@ impl Chunk {
     }
 
     #[must_use]
-    pub fn apply_transformation(mut self, transform: &mut dyn ChunkTransformation) -> Self {
-        transform.transform(&mut self);
+    pub fn apply_transformation(
+        mut self,
+        transform: &mut dyn ChunkTransformation,
+        trace_name: &str,
+    ) -> Self {
+        transform.transform_timed(&mut self, trace_name);
         return self;
     }
 }
 
 pub trait ChunkTransformation {
     fn transform(&mut self, chunk: &mut Chunk);
+
+    fn transform_timed(&mut self, chunk: &mut Chunk, trace_name: &str) {
+        let start = std::time::Instant::now();
+        self.transform(chunk);
+        tracing::trace!(
+            "{}: transform took {:?} ms",
+            trace_name,
+            start.elapsed().as_millis()
+        );
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Deserialize, serde::Serialize)]

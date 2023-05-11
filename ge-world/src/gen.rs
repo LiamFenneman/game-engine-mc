@@ -40,7 +40,9 @@ pub trait ChunkGenerator {
 
     /// Generate a `Chunk`.
     fn generate(&mut self, chunk_offset: impl Into<ChunkOffset> + Copy) -> Chunk {
+        let start = std::time::Instant::now();
         let mut blocks = std::collections::HashMap::new();
+        // TODO: parallelize this
         for z in 0i32..CHUNK_HEIGHT {
             for y in 0i32..CHUNK_SIZE {
                 for x in 0i32..CHUNK_SIZE {
@@ -52,6 +54,11 @@ pub trait ChunkGenerator {
             }
         }
 
+        tracing::trace!(
+            "generated chunk at {:?} in {}ms",
+            chunk_offset.into(),
+            start.elapsed().as_millis()
+        );
         return Chunk {
             blocks,
             position: chunk_offset.into(),

@@ -1,4 +1,3 @@
-#[tokio::main]
-async fn main() {
-    ge_render::run().await;
+fn main() {
+    beul::execute(ge_render::run());
 }

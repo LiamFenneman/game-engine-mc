@@ -7,7 +7,7 @@ use crate::{
     world::World,
 };
 use ge_resource::ResourceManager;
-use std::{rc::Rc, cell::RefCell};
+use std::{cell::RefCell, rc::Rc};
 use wgpu::util::DeviceExt;
 use winit::{
     event::{KeyboardInput, WindowEvent},
@@ -37,7 +37,7 @@ impl Engine {
     pub fn new(window: Window, mut renderer: Renderer) -> Self {
         let resources = ResourceManager::default();
 
-        let camera = Camera::new((0.0, 0.0, 10.0), cgmath::Deg(-90.0), cgmath::Deg(-20.0));
+        let camera = Camera::new((0.0, 15.0, 20.0), cgmath::Deg(-45.0), cgmath::Deg(45.0));
         let projection = Projection::new(
             renderer.config.width,
             renderer.config.height,
@@ -46,9 +46,10 @@ impl Engine {
             3000.0,
         );
         let camera_controller = CameraController::new(5.0, 0.5);
+
         let world = Rc::new(RefCell::new(World::new(cgmath::vec2(0, 0))));
         renderer.set_world(Rc::clone(&world));
-
+        
         let uniform_bind_group_layout =
             renderer
                 .device
@@ -95,6 +96,7 @@ impl Engine {
 
         let stats = FrameStats::default();
 
+        tracing::trace!("created engine");
         return Self {
             window,
             renderer,
@@ -126,7 +128,7 @@ impl Engine {
         );
         self.renderer
             .debug_text
-            .add_entry("pos", 200, format!("POS {:?}", self.camera.position));
+            .add_entry("camera", 200, format!("{}", self.camera));
         self.camera_controller
             .update_camera(&mut self.camera, self.stats.delta_time);
         self.camera_uniform.update_view_proj(

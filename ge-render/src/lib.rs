@@ -36,6 +36,7 @@ pub async fn run() {
         .set_cursor_grab(CursorGrabMode::Confined)
         .or_else(|_e| return window.set_cursor_grab(CursorGrabMode::Locked))
         .expect("could not grab cursor");
+    tracing::trace!("created window");
 
     let renderer = renderer::Renderer::new(&window, window.inner_size()).await;
     let mut engine = engine::Engine::new(window, renderer);
@@ -85,7 +86,7 @@ fn setup_logging() {
         .compact()
         .with_file(true)
         .with_line_number(true)
-        .with_thread_ids(false)
+        .with_thread_ids(true)
         .with_target(false)
         .with_max_level(tracing::Level::TRACE)
         .finish();

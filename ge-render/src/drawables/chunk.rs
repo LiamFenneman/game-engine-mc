@@ -48,8 +48,8 @@ impl DrawChunk {
 
         let chunk_gen = NoiseChunkGenerator::default()
             .generate(offset)
-            .apply_transformation(&mut sea_level)
-            .apply_transformation(&mut surface_painter);
+            .apply_transformation(&mut sea_level, "sea level")
+            .apply_transformation(&mut surface_painter, "surface painter");
 
         let visible = chunk_gen.visible_blocks();
 

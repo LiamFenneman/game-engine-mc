@@ -36,3 +36,13 @@ impl Camera {
         );
     }
 }
+
+impl std::fmt::Display for Camera {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        return write!(
+            f,
+            "P: {:?} Y: {:?} P: {:?}",
+            self.position, self.yaw, self.pitch
+        );
+    }
+}
