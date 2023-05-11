@@ -1,5 +1,5 @@
-const CHUNK_SIZE: i32 = 16;
-const CHUNK_SIZE_MASK: i32 = CHUNK_SIZE - 1;
+pub const CHUNK_SIZE: i32 = 16;
+pub const CHUNK_SIZE_MASK: i32 = CHUNK_SIZE - 1;
 
 /// A coordinate position in the world.
 #[derive(

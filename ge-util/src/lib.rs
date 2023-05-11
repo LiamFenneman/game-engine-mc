@@ -9,7 +9,7 @@
 
 mod circle;
 mod convert;
-mod coords;
+pub mod coords;
 mod lerp;
 mod macros;
 mod smooth;
