@@ -33,13 +33,24 @@ impl World {
         let new_pos = world_pos_to_chunk_pos(new_pos);
         self.position = new_pos;
 
-        self.chunks.entry((0, 0)).or_insert_with(|| {
-            let offset = ChunkOffset::default();
-            return {
-                DrawChunk::with_offset(offset, renderer, resources, uniform_bind_group_layout)
-            };
-        });
+        for y in 0..=2 {
+            for x in 0..=2 {
+                self.chunks.entry((x, y)).or_insert_with(|| {
+                    return create_chunk((x, y), renderer, resources, uniform_bind_group_layout);
+                });
+            }
+        }
     }
+}
+
+fn create_chunk(
+    offset: (i32, i32),
+    renderer: &Renderer,
+    resources: &mut ResourceManager,
+    uniform_bind_group_layout: &wgpu::BindGroupLayout,
+) -> DrawChunk {
+    let offset = ChunkOffset::new(offset.0, offset.1, 0).unwrap();
+    return DrawChunk::with_offset(offset, renderer, resources, uniform_bind_group_layout);
 }
 
 impl Draw for World {
@@ -55,5 +66,5 @@ fn world_pos_to_chunk_pos(pos: cgmath::Point3<f32>) -> Vector2<i32> {
         clippy::cast_possible_truncation,
         reason = "we don't need exact position"
     )]
-    return Vector2::new((pos.x / 16.0).floor() as i32, (pos.z / 16.0).floor() as i32);
+    return Vector2::new((pos.x / 16.0).floor() as i32, (pos.y / 16.0).floor() as i32);
 }
