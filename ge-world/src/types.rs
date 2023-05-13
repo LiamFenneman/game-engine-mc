@@ -98,6 +98,20 @@ pub enum BlockType {
     Wood,
 }
 
+impl BlockType {
+    /// Returns `true` if the block is (at least partially) transparent.
+    #[must_use]
+    pub fn is_transparent(&self) -> bool {
+        return matches!(self, BlockType::Air | BlockType::Water);
+    }
+
+    /// Returns `true` if the block is fully opaque.
+    #[must_use]
+    pub fn is_opaque(&self) -> bool {
+        return !self.is_transparent();
+    }
+}
+
 impl std::fmt::Display for BlockType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         return match self {

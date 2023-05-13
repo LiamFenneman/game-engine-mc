@@ -22,9 +22,7 @@ impl ChunkTransformation for SimpleSurfacePainter {
                     .blocks
                     .iter()
                     .filter(|(p, _)| return p.x() == x && p.y() == y)
-                    .filter(|(_, b)| {
-                        return b.ty != crate::BlockType::Air && b.ty != crate::BlockType::Water;
-                    })
+                    .filter(|(_, b)| return b.ty.is_opaque())
                     .map(|(p, _)| return p.z())
                     .max()
                     .unwrap_or(0);
