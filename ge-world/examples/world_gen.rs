@@ -12,20 +12,16 @@ pub struct TestRenderer(World);
 
 impl TestRenderer {
     pub fn render(&self, z_range: RangeInclusive<i32>) {
-        let blocks = self
-            .0
-            .chunks
-            .iter()
-            .flat_map(|chunk| &chunk.blocks)
-            .collect::<Vec<_>>();
+        let blocks = self.0.into_world_blocks();
         for z in z_range {
             for y in 0..(CHUNK_COUNT.1 * CHUNK_SIZE) {
                 for x in 0..(CHUNK_COUNT.0 * CHUNK_SIZE) {
-                    if let Some((_, block)) = blocks
-                        .iter()
-                        .find(|(p, _)| p.x() == x && p.y() == y && p.z() == z)
-                    {
-                        print!("{}", block.ty);
+                    if let Some(blk) = blocks.iter().find(|blk| {
+                        blk.world_pos().x() == x
+                            && blk.world_pos().y() == y
+                            && blk.world_pos().z() == z
+                    }) {
+                        print!("{}", blk.ty());
                     }
                 }
                 println!();

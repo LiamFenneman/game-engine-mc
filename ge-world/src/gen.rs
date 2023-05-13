@@ -1,7 +1,7 @@
 use crate::{noise::NoiseField, Block, Chunk, ChunkTransformation, World};
 use ge_util::{
     coords::{CHUNK_HEIGHT, CHUNK_SIZE},
-    ChunkOffset, ChunkPos, WorldPos,
+    ChunkOffset, ChunkPos,
 };
 
 /// A `WorldGenerator` is a trait that generates a `World`.
@@ -11,7 +11,7 @@ pub trait WorldGenerator {
 
 pub struct FixedWorldGenerator {
     gen: NoiseChunkGenerator,
-    chunk_count: (i32, i32),
+    pub chunk_count: (i32, i32),
     transformations: Vec<Box<dyn ChunkTransformation>>,
 }
 
@@ -60,21 +60,23 @@ impl WorldGenerator for FixedWorldGenerator {
 /// A `ChunkGenerator` is a trait that generates a `Chunk`.
 pub trait ChunkGenerator {
     /// Generate a block at a specific position.
-    fn generate_at(&mut self, pos: impl Into<WorldPos>) -> Block;
+    fn generate_at(
+        &mut self,
+        chunk_pos: impl Into<ChunkPos>,
+        chunk_offset: impl Into<ChunkOffset> + Copy,
+    ) -> Block;
 
     /// Generate a `Chunk`.
     fn generate(&mut self, chunk_offset: impl Into<ChunkOffset> + Copy) -> Chunk {
         let start = std::time::Instant::now();
         let mut blocks = std::collections::HashMap::new();
-        let offset: ChunkOffset = chunk_offset.into();
         // TODO: parallelize this
         for z in 0i32..CHUNK_HEIGHT {
             for y in 0i32..CHUNK_SIZE {
                 for x in 0i32..CHUNK_SIZE {
                     let chunk_pos = ChunkPos::new(x, y, z).unwrap();
-                    let world_pos = chunk_pos.to_world_pos(offset);
-                    let blk = self.generate_at(world_pos);
-                    blocks.insert(world_pos, blk);
+                    let blk = self.generate_at(chunk_pos, chunk_offset);
+                    blocks.insert(chunk_pos, blk);
                 }
             }
         }
@@ -97,10 +99,15 @@ pub struct NoiseChunkGenerator {
 }
 
 impl ChunkGenerator for NoiseChunkGenerator {
-    fn generate_at(&mut self, pos: impl Into<WorldPos>) -> Block {
-        let position: WorldPos = pos.into();
+    fn generate_at(
+        &mut self,
+        chunk_pos: impl Into<ChunkPos>,
+        chunk_offset: impl Into<ChunkOffset> + Copy,
+    ) -> Block {
+        let chunk_pos: ChunkPos = chunk_pos.into();
+        let world_pos = chunk_pos.to_world_pos(chunk_offset);
         let sample_z = self.noise_field.sample_2d(
-            cgmath::vec2(f64::from(position.x()), f64::from(position.y())),
+            cgmath::vec2(f64::from(world_pos.x()), f64::from(world_pos.y())),
             None,
             Some(cgmath::vec2(f64::from(CHUNK_SIZE), f64::from(CHUNK_SIZE))),
         );
@@ -109,11 +116,11 @@ impl ChunkGenerator for NoiseChunkGenerator {
         #[allow(clippy::cast_sign_loss, reason = "value should never be negative")]
         let surface_z = (f64::from(self.base_z) + sample_z) as i32;
         let ty = match surface_z {
-            z if position.z() > z => crate::BlockType::Air,
+            z if chunk_pos.z() > z => crate::BlockType::Air,
             _ => crate::BlockType::Stone,
         };
 
-        return Block { ty, position };
+        return Block::new(ty, chunk_pos, chunk_offset);
     }
 }
 

@@ -24,7 +24,7 @@ impl TestRenderer {
                         .iter()
                         .find(|(p, _)| p.x() == x && p.y() == y && p.z() == z)
                     {
-                        print!("{}", block.ty)
+                        print!("{}", block.ty())
                     }
                 }
                 println!();

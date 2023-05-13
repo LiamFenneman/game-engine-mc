@@ -1,4 +1,4 @@
-use ge_util::{ChunkOffset, WorldPos};
+use ge_util::{ChunkOffset, ChunkPos, WorldPos};
 use std::collections::HashMap;
 
 const CULLING: bool = true;
@@ -9,10 +9,25 @@ pub struct World {
     pub chunks: Vec<Chunk>,
 }
 
+impl World {
+    /// Flatten all the chunks into a list of blocks using `WorldPos`.
+    #[must_use]
+    pub fn into_world_blocks(&self) -> Vec<Block> {
+        return self
+            .chunks
+            .iter()
+            .flat_map(|c| {
+                // dbg!(c.position);
+                return c.blocks.values().map(|b| return *b);
+            })
+            .collect();
+    }
+}
+
 /// A `Chunk` is a collection of `Block`s with a fixed size.
 #[derive(Debug, Clone)]
 pub struct Chunk {
-    pub blocks: HashMap<WorldPos, Block>,
+    pub blocks: HashMap<ChunkPos, Block>,
     pub position: ChunkOffset,
 }
 
@@ -44,10 +59,10 @@ impl Chunk {
             let neighbours = neighbour_offsets
                 .iter()
                 .filter_map(|&o| {
-                    return WorldPos::new(
-                        blk.position.x() + o.0,
-                        blk.position.y() + o.1,
-                        blk.position.z() + o.2,
+                    return ChunkPos::new(
+                        blk.chunk_pos.x() + o.0,
+                        blk.chunk_pos.y() + o.1,
+                        blk.chunk_pos.z() + o.2,
                     )
                     .ok();
                 })
@@ -134,6 +149,51 @@ impl std::fmt::Display for BlockType {
 /// A `Block` is a single cube in the world.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Block {
-    pub ty: BlockType,
-    pub position: WorldPos,
+    ty: BlockType,
+    chunk_pos: ChunkPos,
+    chunk_offset: ChunkOffset,
+}
+
+impl Block {
+    /// Create a new block.
+    pub fn new(
+        ty: BlockType,
+        chunk_pos: impl Into<ChunkPos>,
+        chunk_offset: impl Into<ChunkOffset>,
+    ) -> Self {
+        return Self {
+            ty,
+            chunk_pos: chunk_pos.into(),
+            chunk_offset: chunk_offset.into(),
+        };
+    }
+
+    /// Get the type of this block.
+    #[must_use]
+    pub fn ty(&self) -> BlockType {
+        return self.ty;
+    }
+
+    /// Get the chunk-relative position of this block.
+    #[must_use]
+    pub fn chunk_pos(&self) -> ChunkPos {
+        return self.chunk_pos;
+    }
+
+    /// Get the world-relative position of this block.
+    #[must_use]
+    pub fn world_pos(&self) -> WorldPos {
+        return self.chunk_pos.to_world_pos(self.chunk_offset);
+    }
+
+    /// Get the chunk offset this block belongs to.
+    #[must_use]
+    pub fn chunk_offset(&self) -> ChunkOffset {
+        return self.chunk_offset;
+    }
+
+    /// Update the block type of this block.
+    pub fn update(&mut self, ty: BlockType) {
+        self.ty = ty;
+    }
 }

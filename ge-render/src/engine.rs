@@ -37,7 +37,7 @@ impl Engine {
     pub fn new(window: Window, mut renderer: Renderer) -> Self {
         let resources = ResourceManager::default();
 
-        let camera = Camera::new((0.0, 15.0, 20.0), cgmath::Deg(-45.0), cgmath::Deg(45.0));
+        let camera = Camera::new((0.0, 15.0, 105.0), cgmath::Deg(0.0), cgmath::Deg(15.0));
         let projection = Projection::new(
             renderer.config.width,
             renderer.config.height,

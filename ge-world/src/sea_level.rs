@@ -21,8 +21,8 @@ impl ChunkTransformation for SeaLevel {
         chunk
             .blocks
             .iter_mut()
-            .filter(|(_, blk)| return blk.ty == crate::BlockType::Air)
-            .filter(|(_, blk)| return blk.position.z() <= self.sea_level)
-            .for_each(|(_, blk)| blk.ty = crate::BlockType::Water);
+            .filter(|(_, blk)| return blk.ty() == crate::BlockType::Air)
+            .filter(|(_, blk)| return blk.chunk_pos().z() <= self.sea_level)
+            .for_each(|(_, blk)| blk.update(crate::BlockType::Water));
     }
 }

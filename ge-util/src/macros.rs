@@ -44,6 +44,7 @@ macro_rules! impl_common {
                 return Self::new(value.x.into(), value.y.into(), value.z.into());
             }
         }
+
         impl<T> TryFrom<(T, T, T)> for $ty
         where
             T: Into<i32>,
@@ -118,6 +119,14 @@ macro_rules! impl_common {
 
             fn mul(self, rhs: Self) -> Self::Output {
                 return Self::new(self.x * rhs.x, self.y * rhs.y, self.z * rhs.z);
+            }
+        }
+        
+        impl std::ops::Div for $ty {
+            type Output = crate::coords::Result<Self>;
+
+            fn div(self, rhs: Self) -> Self::Output {
+                return Self::new(self.x / rhs.x, self.y / rhs.y, self.z / rhs.z);
             }
         }
 

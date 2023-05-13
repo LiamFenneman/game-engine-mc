@@ -10,7 +10,7 @@ use ge_resource::{
 use ge_util::ChunkOffset;
 use ge_world::{
     gen::{ChunkGenerator, NoiseChunkGenerator},
-    BlockType,
+    BlockType, Chunk,
 };
 use std::{collections::HashSet, rc::Rc};
 use wgpu::util::DeviceExt;
@@ -19,7 +19,8 @@ const SEA_LEVEL: i32 = 90;
 
 pub struct DrawChunk {
     instances: Vec<DrawInstancedBlocks>,
-    pub offset: ChunkOffset,
+    #[allow(dead_code, reason = "TODO: add to debug info")]
+    chunk: Chunk,
 }
 
 impl DrawChunk {
@@ -47,17 +48,26 @@ impl DrawChunk {
         let sea_level = ge_world::sea_level::SeaLevel::new(SEA_LEVEL);
         let surface_painter = ge_world::surface_painting::SimpleSurfacePainter;
 
-        let chunk_gen = NoiseChunkGenerator::default()
+        let chunk = NoiseChunkGenerator::default()
             .generate(offset)
             .apply_transformation(&sea_level)
             .apply_transformation(&surface_painter);
 
-        let visible = chunk_gen.visible_blocks();
+        return Self::with_chunk(chunk, renderer, resources, uniform_bind_group_layout);
+    }
+
+    pub fn with_chunk(
+        chunk: Chunk,
+        renderer: &Renderer,
+        resources: &mut ResourceManager,
+        uniform_bind_group_layout: &wgpu::BindGroupLayout,
+    ) -> Self {
+        let visible = chunk.visible_blocks();
 
         // block types present in the chunk
         let present_blk_ty = visible
             .iter()
-            .map(|blk| return blk.ty)
+            .map(|blk| return blk.ty())
             .filter(|&ty| return ty != BlockType::Air)
             .collect::<HashSet<BlockType>>();
 
@@ -67,7 +77,7 @@ impl DrawChunk {
             let textures = resources.load_texture_array(ty, &renderer.device, &renderer.queue);
             let blocks = visible
                 .iter()
-                .filter(|blk| return blk.ty == ty)
+                .filter(|blk| return blk.ty() == ty)
                 .map(|blk| return **blk)
                 .collect::<Vec<_>>();
             instances.push(DrawInstancedBlocks::new(
@@ -78,7 +88,7 @@ impl DrawChunk {
             ));
         }
 
-        return Self { instances, offset };
+        return Self { instances, chunk };
     }
 }
 
@@ -145,15 +155,14 @@ impl DrawInstancedBlocks {
 
         let instances = blocks
             .iter()
-            .filter(|&b| return b.position.z() > 84)
-            .filter(|&b| return b.ty != ge_world::BlockType::Air)
+            .filter(|&b| return b.ty() != ge_world::BlockType::Air)
             .map(|&b| {
                 #[allow(clippy::cast_precision_loss, reason = "no other way")]
                 return Instance {
                     position: vec3(
-                        b.position.x() as f32,
-                        b.position.y() as f32,
-                        b.position.z() as f32 - 84.0,
+                        b.world_pos().x() as f32,
+                        b.world_pos().y() as f32,
+                        b.world_pos().z() as f32,
                     ),
                 };
             })

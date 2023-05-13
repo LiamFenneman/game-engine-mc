@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     drawables::chunk::DrawChunk,
     renderer::{Draw, Renderer},
@@ -5,24 +7,46 @@ use crate::{
 use cgmath::Vector2;
 use ge_resource::ResourceManager;
 use ge_util::ChunkOffset;
-use std::collections::BTreeMap;
+use ge_world::{
+    gen::FixedWorldGenerator, noise::NoiseField, sea_level::SeaLevel,
+    surface_painting::SimpleSurfacePainter,
+};
 
-// const RENDER_DISTANCE: u32 = 2;
+const RENDER_DISTANCE: i32 = 2;
 
 pub struct World {
-    pub position: Vector2<i32>,
-    pub chunks: BTreeMap<(i32, i32), DrawChunk>,
+    position: Vector2<i32>,
+    world_gen: FixedWorldGenerator,
+    instances: HashMap<ChunkOffset, DrawChunk>,
+    dirty: bool,
 }
 
 impl World {
     #[must_use]
     pub fn new(position: Vector2<i32>) -> Self {
+        let chunk_count = (RENDER_DISTANCE, RENDER_DISTANCE);
+        let noise_field = NoiseField::new(0, 5, 1.0, 10.0, 2.0, 0.5);
+        let sea_level = Box::new(SeaLevel::new(90));
+        let surface_painter = Box::new(SimpleSurfacePainter);
+        let world_gen = FixedWorldGenerator::with_transformations(
+            noise_field,
+            chunk_count,
+            vec![sea_level, surface_painter],
+        );
+        let instances = HashMap::with_capacity(4);
+
         return Self {
             position,
-            chunks: BTreeMap::new(),
+            world_gen,
+            instances,
+            dirty: true,
         };
     }
 
+    /// Update the world!
+    ///
+    /// # Panics
+    /// If the chunk offset is invalid.
     pub fn update(
         &mut self,
         new_pos: cgmath::Point3<f32>,
@@ -30,34 +54,48 @@ impl World {
         resources: &mut ResourceManager,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
     ) {
-        let new_pos = world_pos_to_chunk_pos(new_pos);
-        self.position = new_pos;
+        self.position = world_pos_to_chunk_pos(new_pos);
+        if !self.dirty {
+            // TODO: replace self.dirty with a check if the pos is the same chunk as last frame
+            return;
+        }
 
-        for y in 0..=2 {
-            for x in 0..=2 {
-                self.chunks.entry((x, y)).or_insert_with(|| {
-                    return create_chunk((x, y), renderer, resources, uniform_bind_group_layout);
-                });
+        for y in 0..self.world_gen.chunk_count.1 {
+            for x in 0..self.world_gen.chunk_count.0 {
+                let chunk_offset = ChunkOffset::new(x, y, 0).unwrap();
+                #[allow(clippy::map_entry, reason = "double mutate is required")]
+                if !self.instances.contains_key(&chunk_offset) {
+                    let chunk = self.create_instance(
+                        chunk_offset,
+                        renderer,
+                        resources,
+                        uniform_bind_group_layout,
+                    );
+                    self.instances.insert(chunk_offset, chunk);
+                }
             }
         }
-    }
-}
 
-fn create_chunk(
-    offset: (i32, i32),
-    renderer: &Renderer,
-    resources: &mut ResourceManager,
-    uniform_bind_group_layout: &wgpu::BindGroupLayout,
-) -> DrawChunk {
-    let offset = ChunkOffset::new(offset.0, offset.1, 0).unwrap();
-    return DrawChunk::with_offset(offset, renderer, resources, uniform_bind_group_layout);
+        self.dirty = false;
+    }
+
+    pub fn create_instance(
+        &mut self,
+        chunk_offset: ChunkOffset,
+        renderer: &Renderer,
+        resources: &mut ResourceManager,
+        uniform_bind_group_layout: &wgpu::BindGroupLayout,
+    ) -> DrawChunk {
+        let chunk = self.world_gen.generate_chunk(chunk_offset);
+        return DrawChunk::with_chunk(chunk, renderer, resources, uniform_bind_group_layout);
+    }
 }
 
 impl Draw for World {
     fn draw<'a>(&'a self, render_pass: &mut wgpu::RenderPass<'a>, uniforms: &'a wgpu::BindGroup) {
-        self.chunks
+        self.instances
             .iter()
-            .for_each(|(_, c)| c.draw(render_pass, uniforms));
+            .for_each(|(_, d)| d.draw(render_pass, uniforms));
     }
 }
 

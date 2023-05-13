@@ -1,5 +1,5 @@
-use crate::ChunkTransformation;
-use ge_util::{coords::CHUNK_SIZE, ChunkPos, WorldPos};
+use crate::{Block, ChunkTransformation};
+use ge_util::{coords::CHUNK_SIZE, ChunkPos};
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
 /// A naive surface painter that paints the top layer of blocks.
@@ -26,16 +26,14 @@ impl ChunkTransformation for SimpleSurfacePainter {
                     .blocks
                     .iter()
                     .filter(|(p, _)| return p.x() == x && p.y() == y)
-                    .filter(|(_, b)| return b.ty.is_opaque())
+                    .filter(|(_, b)| return b.ty().is_opaque())
                     .map(|(p, _)| return p.z())
                     .max()
                     .unwrap_or(0);
+                let chunk_pos = ChunkPos::new(x, y, z).unwrap();
                 return (
-                    WorldPos::new(x, y, z).unwrap(),
-                    crate::Block {
-                        ty: crate::BlockType::Grass,
-                        position: ChunkPos::new(x, y, z).unwrap().to_world_pos(chunk.position),
-                    },
+                    chunk_pos,
+                    Block::new(crate::BlockType::Grass, chunk_pos, chunk.position),
                 );
             })
             .collect::<Vec<_>>();
