@@ -33,7 +33,8 @@ impl DrawChunk {
         resources: &mut ResourceManager,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
     ) -> Self {
-        return Self::with_offset((0, 0, 0), renderer, resources, uniform_bind_group_layout);
+        let off = ChunkOffset::default();
+        return Self::with_offset(off, renderer, resources, uniform_bind_group_layout);
     }
 
     pub fn with_offset(
@@ -43,13 +44,13 @@ impl DrawChunk {
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
     ) -> Self {
         let offset = offset.into();
-        let mut sea_level = ge_world::sea_level::SeaLevel::new(SEA_LEVEL);
-        let mut surface_painter = ge_world::surface_painting::SimpleSurfacePainter;
+        let sea_level = ge_world::sea_level::SeaLevel::new(SEA_LEVEL);
+        let surface_painter = ge_world::surface_painting::SimpleSurfacePainter;
 
         let chunk_gen = NoiseChunkGenerator::default()
             .generate(offset)
-            .apply_transformation(&mut sea_level, "sea level")
-            .apply_transformation(&mut surface_painter, "surface painter");
+            .apply_transformation(&sea_level)
+            .apply_transformation(&surface_painter);
 
         let visible = chunk_gen.visible_blocks();
 

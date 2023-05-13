@@ -7,3 +7,7 @@ version.workspace = true
 [dependencies]
 cgmath.workspace = true
 serde.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+rstest = "0.17"

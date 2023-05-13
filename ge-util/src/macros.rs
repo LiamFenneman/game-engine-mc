@@ -23,36 +23,34 @@ macro_rules! impl_common {
             }
         }
 
-        impl<T> From<cgmath::Vector3<T>> for $ty
+        impl<T> TryFrom<cgmath::Vector3<T>> for $ty
         where
             T: Into<i32>,
         {
-            fn from(value: cgmath::Vector3<T>) -> Self {
-                return Self {
-                    x: value.x.into(),
-                    y: value.y.into(),
-                    z: value.z.into(),
-                };
+            type Error = crate::coords::CoordError;
+
+            fn try_from(value: cgmath::Vector3<T>) -> crate::coords::Result<Self> {
+                return Self::new(value.x.into(), value.y.into(), value.z.into());
             }
         }
 
-        impl<T> From<cgmath::Point3<T>> for $ty
+        impl<T> TryFrom<cgmath::Point3<T>> for $ty
         where
             T: Into<i32>,
         {
-            fn from(value: cgmath::Point3<T>) -> Self {
-                return Self {
-                    x: value.x.into(),
-                    y: value.y.into(),
-                    z: value.z.into(),
-                };
+            type Error = crate::coords::CoordError;
+
+            fn try_from(value: cgmath::Point3<T>) -> crate::coords::Result<Self> {
+                return Self::new(value.x.into(), value.y.into(), value.z.into());
             }
         }
-        impl<T> From<(T, T, T)> for $ty
+        impl<T> TryFrom<(T, T, T)> for $ty
         where
             T: Into<i32>,
         {
-            fn from(value: (T, T, T)) -> Self {
+            type Error = crate::coords::CoordError;
+
+            fn try_from(value: (T, T, T)) -> crate::coords::Result<Self> {
                 return Self::new(value.0.into(), value.1.into(), value.2.into());
             }
         }
@@ -61,7 +59,7 @@ macro_rules! impl_common {
         where
             T: Into<Self>,
         {
-            type Output = Self;
+            type Output = crate::coords::Result<Self>;
 
             fn add(self, rhs: T) -> Self::Output {
                 let rhs = rhs.into();
@@ -86,7 +84,7 @@ macro_rules! impl_common {
         where
             T: Into<Self>,
         {
-            type Output = Self;
+            type Output = crate::coords::Result<Self>;
 
             fn sub(self, rhs: T) -> Self::Output {
                 let rhs = rhs.into();
@@ -108,16 +106,15 @@ macro_rules! impl_common {
         }
 
         impl std::ops::Neg for $ty {
-            type Output = Self;
+            type Output = crate::coords::Result<Self>;
 
             fn neg(self) -> Self::Output {
                 return Self::new(-self.x, -self.y, -self.z);
             }
         }
 
-        impl std::ops::Mul for $ty
-        {
-            type Output = Self;
+        impl std::ops::Mul for $ty {
+            type Output = crate::coords::Result<Self>;
 
             fn mul(self, rhs: Self) -> Self::Output {
                 return Self::new(self.x * rhs.x, self.y * rhs.y, self.z * rhs.z);
@@ -128,11 +125,23 @@ macro_rules! impl_common {
         where
             T: Into<i32>,
         {
-            type Output = Self;
+            type Output = crate::coords::Result<Self>;
 
             fn mul(self, rhs: T) -> Self::Output {
                 let rhs = rhs.into();
                 return Self::new(self.x * rhs, self.y * rhs, self.z * rhs);
+            }
+        }
+
+        impl std::fmt::Display for $ty {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                return write!(f, "({}, {}, {})", self.x, self.y, self.z);
+            }
+        }
+
+        impl Default for $ty {
+            fn default() -> Self {
+                return Self { x: 0, y: 0, z: 0 };
             }
         }
     };

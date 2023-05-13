@@ -4,6 +4,7 @@ use crate::{
 };
 use cgmath::Vector2;
 use ge_resource::ResourceManager;
+use ge_util::ChunkOffset;
 use std::collections::BTreeMap;
 
 // const RENDER_DISTANCE: u32 = 2;
@@ -33,13 +34,9 @@ impl World {
         self.position = new_pos;
 
         self.chunks.entry((0, 0)).or_insert_with(|| {
+            let offset = ChunkOffset::default();
             return {
-                DrawChunk::with_offset(
-                    (0, 0, 0),
-                    renderer,
-                    resources,
-                    uniform_bind_group_layout,
-                )
+                DrawChunk::with_offset(offset, renderer, resources, uniform_bind_group_layout)
             };
         });
     }

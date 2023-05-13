@@ -43,7 +43,14 @@ impl Chunk {
             }
             let neighbours = neighbour_offsets
                 .iter()
-                .map(|&o| return blk.position + WorldPos::from(o))
+                .filter_map(|&o| {
+                    return WorldPos::new(
+                        blk.position.x() + o.0,
+                        blk.position.y() + o.1,
+                        blk.position.z() + o.2,
+                    )
+                    .ok();
+                })
                 .filter_map(|o| return self.blocks.get(&o))
                 .collect::<Vec<_>>();
 
@@ -63,20 +70,18 @@ impl Chunk {
     }
 
     #[must_use]
-    pub fn apply_transformation(
-        mut self,
-        transform: &mut dyn ChunkTransformation,
-        trace_name: &str,
-    ) -> Self {
-        transform.transform_timed(&mut self, trace_name);
+    pub fn apply_transformation(mut self, transform: &dyn ChunkTransformation) -> Self {
+        transform.transform_timed(&mut self, transform.name());
         return self;
     }
 }
 
 pub trait ChunkTransformation {
-    fn transform(&mut self, chunk: &mut Chunk);
+    fn name(&self) -> &'static str;
 
-    fn transform_timed(&mut self, chunk: &mut Chunk, trace_name: &str) {
+    fn transform(&self, chunk: &mut Chunk);
+
+    fn transform_timed(&self, chunk: &mut Chunk, trace_name: &str) {
         let start = std::time::Instant::now();
         self.transform(chunk);
         tracing::trace!(

@@ -13,7 +13,11 @@ impl SeaLevel {
 }
 
 impl ChunkTransformation for SeaLevel {
-    fn transform(&mut self, chunk: &mut crate::Chunk) {
+    fn name(&self) -> &'static str {
+        return "sea level";
+    }
+
+    fn transform(&self, chunk: &mut crate::Chunk) {
         chunk
             .blocks
             .iter_mut()

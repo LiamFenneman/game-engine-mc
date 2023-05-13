@@ -18,6 +18,7 @@ cgmath = { version = "0.18.0", features = ["serde"] }
 image = { version = "0.24.6", default-features = false, features = ["png"] }
 rayon = "1.7"
 serde = { version = "1.0", features = ["derive"] }
+thiserror = "1.0"
 tracing = "0.1.37"
 tracing-appender = "0.2.2"
 tracing-subscriber = "0.3.17"

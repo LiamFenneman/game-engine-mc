@@ -6,7 +6,11 @@ use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 pub struct SimpleSurfacePainter;
 
 impl ChunkTransformation for SimpleSurfacePainter {
-    fn transform(&mut self, chunk: &mut crate::Chunk) {
+    fn name(&self) -> &'static str {
+        return "surface painting";
+    }
+
+    fn transform(&self, chunk: &mut crate::Chunk) {
         // loop over all x and z coordinates, take find the highest block at that x and z
         // coordinate, paint the block above that block
         let chunks = (0..CHUNK_SIZE)
@@ -27,10 +31,10 @@ impl ChunkTransformation for SimpleSurfacePainter {
                     .max()
                     .unwrap_or(0);
                 return (
-                    WorldPos::new(x, y, z),
+                    WorldPos::new(x, y, z).unwrap(),
                     crate::Block {
                         ty: crate::BlockType::Grass,
-                        position: ChunkPos::new(x, y, z).to_world_pos(chunk.position),
+                        position: ChunkPos::new(x, y, z).unwrap().to_world_pos(chunk.position),
                     },
                 );
             })

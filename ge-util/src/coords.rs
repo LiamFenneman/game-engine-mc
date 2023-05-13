@@ -1,9 +1,15 @@
+use thiserror::Error;
+
+pub(crate) type Result<T> = std::result::Result<T, CoordError>;
+
 pub const CHUNK_SIZE: i32 = 16;
 pub const CHUNK_SIZE_MASK: i32 = CHUNK_SIZE - 1;
 pub const CHUNK_HEIGHT: i32 = 256;
 pub const CHUNK_HEIGHT_MASK: i32 = CHUNK_HEIGHT - 1;
 
 /// A coordinate position in the world.
+///
+/// Note: `x` and `y` can contain any value, but `z` must be always in the range `0..256`.
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
 )]
@@ -15,8 +21,8 @@ pub struct WorldPos {
 
 /// A coordinate position within the chunk.
 ///
-/// This is a relative position, so `x` and `y` are always in the range `0..16`. However,
-/// `z` is always in the range `0..256`.
+/// Note: This is a relative position, so `x` and `y` are always in the range `0..16`.
+/// However, `z` is always in the range `0..256`.
 ///
 /// # Panics
 /// If the position is out of range.
@@ -48,9 +54,15 @@ pub struct ChunkOffset {
 
 impl WorldPos {
     /// Creates a new `WorldPos`.
-    #[must_use]
-    pub fn new(x: i32, y: i32, z: i32) -> Self {
-        return Self { x, y, z };
+    ///
+    /// # Errors
+    /// If the `z` axis is not in the range `0..=255`.
+    pub fn new(x: i32, y: i32, z: i32) -> Result<Self> {
+        let s = Self { x, y, z };
+        if !s.is_valid() {
+            return Err(CoordError::WorldPosRange(s));
+        }
+        return Ok(s);
     }
 
     /// Converts this `WorldPos` to a `ChunkPos`.
@@ -60,38 +72,42 @@ impl WorldPos {
             self.x & CHUNK_SIZE_MASK,
             self.y & CHUNK_SIZE_MASK,
             self.z & CHUNK_HEIGHT_MASK,
-        );
+        )
+        .expect("chunk pos domain should be smaller than world pos");
     }
 
     #[inline]
     #[must_use]
     pub fn is_valid(&self) -> bool {
-        return true;
+        return (0..CHUNK_HEIGHT).contains(&self.z);
     }
 }
 
 impl ChunkPos {
     /// Creates a new `ChunkPos`.
     ///
-    /// # Panics
+    /// # Errors
     /// If the position is out of range.
-    #[must_use]
-    pub fn new(x: i32, y: i32, z: i32) -> Self {
+    pub fn new(x: i32, y: i32, z: i32) -> Result<Self> {
         let s = Self { x, y, z };
-        assert!(s.is_valid(), "chunk position out of range");
-        return s;
+        if !s.is_valid() {
+            return Err(CoordError::ChunkPosRange(s));
+        }
+        return Ok(s);
     }
 
     /// Converts this `ChunkPos` to a `WorldPos` using a `ChunkOffset`.
-    #[must_use]
+    ///
+    /// # Errors
+    /// If the position is out of range.
     pub fn to_world_pos(&self, chunk_offset: impl Into<ChunkOffset>) -> WorldPos {
         let chunk_offset = chunk_offset.into();
         return WorldPos::new(
             chunk_offset.x * CHUNK_SIZE + self.x,
             chunk_offset.y * CHUNK_SIZE + self.y,
-            // chunk_offset.z * CHUNK_HEIGHT + self.z, -- offset.z should always be 0
-            self.z,
-        );
+            self.z, // offset.z should always be 0
+        )
+        .expect("world pos constraints should be met");
     }
 
     /// Returns whether this `ChunkPos` is valid.
@@ -107,13 +123,14 @@ impl ChunkPos {
 impl ChunkOffset {
     /// Creates a new `ChunkPos`.
     ///
-    /// # Panics
+    /// # Errors
     /// If the position is out of range.
-    #[must_use]
-    pub fn new(x: i32, y: i32, _: i32) -> Self {
-        let s = Self { x, y, z: 0 };
-        assert!(s.is_valid(), "chunk offset out of range");
-        return s;
+    pub fn new(x: i32, y: i32, z: i32) -> Result<Self> {
+        let s = Self { x, y, z };
+        if !s.is_valid() {
+            return Err(CoordError::ChunkOffsetRange(s));
+        }
+        return Ok(s);
     }
 
     /// Returns whether this `ChunkOffset` is valid.
@@ -126,81 +143,125 @@ impl ChunkOffset {
     }
 }
 
+#[derive(Debug, Error, PartialEq)]
+pub enum CoordError {
+    #[error("world position out of bounds: {0}")]
+    WorldPosRange(WorldPos),
+    #[error("chunk position out of bounds: {0}")]
+    ChunkPosRange(ChunkPos),
+    #[error("chunk offset out of bounds: {0}")]
+    ChunkOffsetRange(ChunkOffset),
+}
+
+#[allow(clippy::pedantic)]
 #[cfg(test)]
 mod tests {
     mod convert {
-        use crate::{cpos, wpos};
+        use crate::*;
+        use rstest::rstest;
 
-        #[test]
-        fn to_chunk_pos() {
-            let pos = wpos!(1, 2, 3);
-            assert_eq!(pos.to_chunk_pos(), cpos!(1, 2, 3));
-
-            let pos = wpos!(15, 15, 15);
-            assert_eq!(pos.to_chunk_pos(), cpos!(15, 15, 15));
-
-            let pos = wpos!(16, 16, 16);
-            assert_eq!(pos.to_chunk_pos(), cpos!(0, 0, 0));
-
-            let pos = wpos!(-1, -1, -1);
-            assert_eq!(pos.to_chunk_pos(), cpos!(15, 15, 15));
+        #[rstest]
+        #[case(wpos!(1, 2, 3)?, cpos!(1, 2, 3)?)]
+        #[case(wpos!(15, 15, 15)?, cpos!(15, 15, 15)?)]
+        #[case(wpos!(16, 16, 16)?, cpos!(0, 0, 16)?)]
+        #[case(wpos!(-1, -1, 0)?, cpos!(15, 15, 0)?)]
+        fn to_chunk_pos(
+            #[case] pos: WorldPos,
+            #[case] expected: ChunkPos,
+        ) -> Result<(), crate::coords::CoordError> {
+            assert_eq!(pos.to_chunk_pos(), expected);
+            Ok(())
         }
 
-        #[test]
-        fn to_world_pos() {
-            let pos = cpos!(1, 2, 3);
-            assert_eq!(pos.to_world_pos((0, 0, 0)), wpos!(1, 2, 3));
+        #[rstest]
+        #[case(cpos!(1, 2, 3)?, wpos!(1, 2, 3)?, (0, 0))]
+        #[case(cpos!(15, 15, 15)?, wpos!(31, 31, 15)?, (1, 1))]
+        #[case(cpos!(5, 5, 5)?, wpos!(-11, -11, 5)?, (-1, -1))]
+        #[case(cpos!(1, 1, 90)?, wpos!(49, 49, 90)?, (3, 3))]
+        fn to_world_pos(
+            #[case] pos: ChunkPos,
+            #[case] expected: WorldPos,
+            #[case] offset: (i32, i32),
+        ) -> Result<(), crate::coords::CoordError> {
+            let off = ChunkOffset::new(offset.0, offset.1, 0)?;
+            assert_eq!(pos.to_world_pos(off), expected);
+            Ok(())
+        }
+    }
 
-            let pos = cpos!(15, 15, 15);
-            assert_eq!(pos.to_world_pos((1, 1, 0)), wpos!(31, 31, 15));
+    mod world_pos {
+        #[allow(clippy::wildcard_imports)]
+        use crate::coords::*;
+        use rstest::rstest;
 
-            let pos = cpos!(5, 5, 5);
-            assert_eq!(pos.to_world_pos((-1, -1, 0)), wpos!(-11, -11, 5));
+        #[rstest]
+        #[case(0, 0, 0)]
+        #[case(i32::MAX, i32::MAX, CHUNK_HEIGHT_MASK)]
+        #[case(i32::MIN, i32::MIN, 0)]
+        fn valid(#[case] x: i32, #[case] y: i32, #[case] z: i32) {
+            assert!(WorldPos::new(x, y, z).unwrap().is_valid());
+        }
+
+        #[rstest]
+        #[should_panic]
+        #[case(0, 0, -1)]
+        #[should_panic]
+        #[case(0, 0, CHUNK_HEIGHT)]
+        fn invalid(#[case] x: i32, #[case] y: i32, #[case] z: i32) {
+            assert!(!WorldPos::new(x, y, z).unwrap().is_valid());
         }
     }
 
     mod chunk_pos {
-        use crate::cpos;
-        #[test]
-        fn valid() {
-            _ = cpos!(0, 0, 0);
-            _ = cpos!(1, 2, 3);
-            _ = cpos!(15, 15, 15);
+        #[allow(clippy::wildcard_imports)]
+        use crate::coords::*;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case(0, 0, 0)]
+        #[case(CHUNK_SIZE_MASK, CHUNK_SIZE_MASK, CHUNK_HEIGHT_MASK)]
+        fn valid(#[case] x: i32, #[case] y: i32, #[case] z: i32) {
+            assert!(ChunkPos::new(x, y, z).unwrap().is_valid());
         }
 
-        #[test]
+        #[rstest]
         #[should_panic]
-        fn panic_large() {
-            _ = cpos!(16, 16, 16);
-        }
-
-        #[test]
+        #[case(-1, 0, 0)]
         #[should_panic]
-        fn panic_negative() {
-            _ = cpos!(-1, -1, -1);
+        #[case(0, -1, 0)]
+        #[should_panic]
+        #[case(0, 0, -1)]
+        #[should_panic]
+        #[case(CHUNK_SIZE, 0, 0)]
+        #[should_panic]
+        #[case(0, CHUNK_SIZE, 0)]
+        #[should_panic]
+        #[case(0, 0, CHUNK_HEIGHT)]
+        fn invalid(#[case] x: i32, #[case] y: i32, #[case] z: i32) {
+            assert!(!ChunkPos::new(x, y, z).unwrap().is_valid());
         }
     }
 
     mod chunk_off {
-        use crate::{coff, ChunkOffset};
-        #[test]
-        fn valid() {
-            _ = coff!(-100, -10_000, -1_000_000);
-            _ = coff!(0, 0, 0);
-            _ = coff!(1, 2, 3);
-            _ = coff!(15, 15, 15);
+        #[allow(clippy::wildcard_imports)]
+        use crate::coords::*;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case(0, 0, 0)]
+        #[case(i32::MAX/16, i32::MAX/16, 0)]
+        #[case(i32::MIN/16, i32::MIN/16, 0)]
+        fn valid(#[case] x: i32, #[case] y: i32, #[case] z: i32) {
+            assert!(ChunkOffset::new(x, y, z).unwrap().is_valid());
         }
 
-        #[test]
+        #[rstest]
         #[should_panic]
-        fn panic_large() {
-            _ = ChunkOffset::new(i32::MAX, i32::MAX, i32::MAX);
-        }
-
-        #[test]
+        #[case(0, 0, -1)]
         #[should_panic]
-        fn panic_negative() {
-            _ = ChunkOffset::new(i32::MIN, i32::MIN, i32::MIN);
+        #[case(0, 0, CHUNK_HEIGHT)]
+        fn invalid(#[case] x: i32, #[case] y: i32, #[case] z: i32) {
+            assert!(!ChunkOffset::new(x, y, z).unwrap().is_valid());
         }
     }
 }

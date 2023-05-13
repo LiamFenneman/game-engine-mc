@@ -1,4 +1,4 @@
-use crate::{noise::NoiseField, Block, Chunk, World};
+use crate::{noise::NoiseField, Block, Chunk, ChunkTransformation, World};
 use ge_util::{
     coords::{CHUNK_HEIGHT, CHUNK_SIZE},
     ChunkOffset, ChunkPos, WorldPos,
@@ -10,14 +10,37 @@ pub trait WorldGenerator {
 }
 
 pub struct FixedWorldGenerator {
-    pub noise_field: NoiseField,
-    pub chunk_count: (i32, i32),
+    gen: NoiseChunkGenerator,
+    chunk_count: (i32, i32),
+    transformations: Vec<Box<dyn ChunkTransformation>>,
 }
 
 impl FixedWorldGenerator {
+    #[must_use]
+    pub fn new(noise_field: NoiseField, chunk_count: (i32, i32)) -> Self {
+        return Self::with_transformations(noise_field, chunk_count, Vec::new());
+    }
+
+    #[must_use]
+    pub fn with_transformations(
+        noise_field: NoiseField,
+        chunk_count: (i32, i32),
+        transformations: Vec<Box<dyn ChunkTransformation>>,
+    ) -> Self {
+        let gen = NoiseChunkGenerator::with_noise_field(noise_field, 100);
+        return Self {
+            gen,
+            chunk_count,
+            transformations,
+        };
+    }
+
     pub fn generate_chunk(&mut self, chunk_offset: impl Into<ChunkOffset> + Copy) -> Chunk {
-        let mut chunk_gen = NoiseChunkGenerator::with_noise_field(self.noise_field.clone(), 100);
-        return chunk_gen.generate(chunk_offset);
+        let mut chunk = self.gen.generate(chunk_offset);
+        for trns in &self.transformations {
+            trns.transform(&mut chunk);
+        }
+        return chunk;
     }
 }
 
@@ -26,7 +49,8 @@ impl WorldGenerator for FixedWorldGenerator {
         let mut chunks = vec![];
         for x in 0..self.chunk_count.0 {
             for y in 0..self.chunk_count.1 {
-                chunks.push(self.generate_chunk((x, y, 0)));
+                let off = ChunkOffset::new(x, y, 0).unwrap();
+                chunks.push(self.generate_chunk(off));
             }
         }
         return World { chunks };
@@ -42,14 +66,15 @@ pub trait ChunkGenerator {
     fn generate(&mut self, chunk_offset: impl Into<ChunkOffset> + Copy) -> Chunk {
         let start = std::time::Instant::now();
         let mut blocks = std::collections::HashMap::new();
+        let offset: ChunkOffset = chunk_offset.into();
         // TODO: parallelize this
         for z in 0i32..CHUNK_HEIGHT {
             for y in 0i32..CHUNK_SIZE {
                 for x in 0i32..CHUNK_SIZE {
-                    let offset: ChunkOffset = chunk_offset.into() * CHUNK_SIZE;
-                    let chunk_pos: ChunkPos = (x, y, z).into();
+                    let chunk_pos = ChunkPos::new(x, y, z).unwrap();
                     let world_pos = chunk_pos.to_world_pos(offset);
-                    blocks.insert(world_pos, self.generate_at(world_pos));
+                    let blk = self.generate_at(world_pos);
+                    blocks.insert(world_pos, blk);
                 }
             }
         }

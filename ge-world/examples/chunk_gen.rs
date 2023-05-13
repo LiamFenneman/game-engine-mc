@@ -1,4 +1,4 @@
-use ge_util::coords::CHUNK_SIZE;
+use ge_util::{coords::CHUNK_SIZE, ChunkOffset};
 use ge_world::{
     gen::{ChunkGenerator, NoiseChunkGenerator},
     Chunk,
@@ -35,18 +35,13 @@ impl TestRenderer {
 }
 
 fn main() {
-    // let mut chunk_gen = NoiseChunkGenerator::default();
     let noise_field = ge_world::noise::NoiseField::new(1, 5, 1.0, 10.0, 2.0, 0.5);
     let mut chunk_gen = NoiseChunkGenerator::with_noise_field(noise_field, 100);
-    let mut sea_level = ge_world::sea_level::SeaLevel::new(95);
     let renderer = TestRenderer::new(
         chunk_gen
-            .generate((0, 0, 0))
-            .apply_transformation(&mut sea_level, "sea level")
-            .apply_transformation(
-                &mut ge_world::surface_painting::SimpleSurfacePainter,
-                "surface painting",
-            ),
+            .generate(ChunkOffset::default())
+            .apply_transformation(&ge_world::sea_level::SeaLevel::new(95))
+            .apply_transformation(&ge_world::surface_painting::SimpleSurfacePainter),
     );
     renderer.render(90..=100);
 }
