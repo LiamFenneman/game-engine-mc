@@ -73,7 +73,7 @@ impl Chunk {
             // or if the block neighbours an air block
             let num_visible = neighbours
                 .iter()
-                .filter(|b| return b.ty != BlockType::Air)
+                .filter(|b| return b.ty.is_opaque())
                 .count();
 
             if num_visible < neighbours.len() {
