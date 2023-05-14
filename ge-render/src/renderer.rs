@@ -1,4 +1,4 @@
-use crate::world::World;
+use crate::drawables::world::World;
 use ge_resource::texture::Texture;
 use std::{cell::RefCell, rc::Rc, time::Duration};
 use winit::window::Window;

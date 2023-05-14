@@ -8,8 +8,11 @@ use cgmath::Vector2;
 use ge_resource::ResourceManager;
 use ge_util::ChunkOffset;
 use ge_world::{
-    gen::FixedWorldGenerator, noise::NoiseField, sea_level::SeaLevel,
+    gen::{FixedWorldGenerator, WorldGenerator},
+    noise::NoiseField,
+    sea_level::SeaLevel,
     surface_painting::SimpleSurfacePainter,
+    Chunk,
 };
 
 const RENDER_DISTANCE: i32 = 2;
@@ -60,33 +63,24 @@ impl World {
             return;
         }
 
-        for y in 0..self.world_gen.chunk_count.1 {
-            for x in 0..self.world_gen.chunk_count.0 {
-                let chunk_offset = ChunkOffset::new(x, y, 0).unwrap();
-                #[allow(clippy::map_entry, reason = "double mutate is required")]
-                if !self.instances.contains_key(&chunk_offset) {
-                    let chunk = self.create_instance(
-                        chunk_offset,
-                        renderer,
-                        resources,
-                        uniform_bind_group_layout,
-                    );
-                    self.instances.insert(chunk_offset, chunk);
-                }
-            }
-        }
+        let instances = self.world_gen.generate().chunks.into_iter().map(|chunk| {
+            return (
+                chunk.position,
+                self.create_instance(chunk, renderer, resources, uniform_bind_group_layout),
+            );
+        }).collect::<HashMap<_, _>>();
+        self.instances.extend(instances);
 
         self.dirty = false;
     }
 
     pub fn create_instance(
         &mut self,
-        chunk_offset: ChunkOffset,
+        chunk: Chunk,
         renderer: &Renderer,
         resources: &mut ResourceManager,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
     ) -> DrawChunk {
-        let chunk = self.world_gen.generate_chunk(chunk_offset);
         return DrawChunk::with_chunk(chunk, renderer, resources, uniform_bind_group_layout);
     }
 }

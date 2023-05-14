@@ -35,12 +35,8 @@ impl FixedWorldGenerator {
         };
     }
 
-    pub fn generate_chunk(&mut self, chunk_offset: impl Into<ChunkOffset> + Copy) -> Chunk {
-        let mut chunk = self.gen.generate(chunk_offset);
-        for trns in &self.transformations {
-            trns.transform(&mut chunk);
-        }
-        return chunk;
+    fn generate_chunk(&mut self, chunk_offset: impl Into<ChunkOffset> + Copy) -> Chunk {
+        return self.gen.generate(chunk_offset);
     }
 }
 
@@ -50,7 +46,11 @@ impl WorldGenerator for FixedWorldGenerator {
         for x in 0..self.chunk_count.0 {
             for y in 0..self.chunk_count.1 {
                 let off = ChunkOffset::new(x, y, 0).unwrap();
-                chunks.push(self.generate_chunk(off));
+                let mut chunk = self.generate_chunk(off);
+                for trns in &self.transformations {
+                    trns.transform(&mut chunk);
+                }
+                chunks.push(chunk);
             }
         }
         return World { chunks };

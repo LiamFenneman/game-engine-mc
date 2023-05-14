@@ -2,9 +2,9 @@ use crate::{
     camera::{
         controller::CameraController, projection::Projection, uniform::CameraUniform, Camera,
     },
+    drawables::world::World,
     renderer::Renderer,
     stats::FrameStats,
-    world::World,
 };
 use ge_resource::ResourceManager;
 use std::{cell::RefCell, rc::Rc};
@@ -49,7 +49,7 @@ impl Engine {
 
         let world = Rc::new(RefCell::new(World::new(cgmath::vec2(0, 0))));
         renderer.set_world(Rc::clone(&world));
-        
+
         let uniform_bind_group_layout =
             renderer
                 .device
