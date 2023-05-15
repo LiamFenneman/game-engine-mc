@@ -1,5 +1,5 @@
 use cgmath::{vec2, Vector2};
-use ge_util::{smoothstep2, lerp};
+use ge_util::{lerp, smoothstep2};
 use rand::{seq::SliceRandom, Rng, SeedableRng};
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]

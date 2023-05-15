@@ -36,7 +36,7 @@ impl World {
             chunk_count,
             vec![sea_level, surface_painter],
         );
-        let instances = HashMap::with_capacity(4);
+        let instances = HashMap::with_capacity((RENDER_DISTANCE as usize).pow(2));
 
         return Self {
             position,
@@ -63,12 +63,18 @@ impl World {
             return;
         }
 
-        let instances = self.world_gen.generate().chunks.into_iter().map(|chunk| {
-            return (
-                chunk.position,
-                self.create_instance(chunk, renderer, resources, uniform_bind_group_layout),
-            );
-        }).collect::<HashMap<_, _>>();
+        let instances = self
+            .world_gen
+            .generate()
+            .chunks
+            .into_iter()
+            .map(|chunk| {
+                return (
+                    chunk.position,
+                    self.create_instance(chunk, renderer, resources, uniform_bind_group_layout),
+                );
+            })
+            .collect::<HashMap<_, _>>();
         self.instances.extend(instances);
 
         self.dirty = false;

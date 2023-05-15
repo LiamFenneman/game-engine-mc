@@ -43,8 +43,8 @@ impl FixedWorldGenerator {
 impl WorldGenerator for FixedWorldGenerator {
     fn generate(&mut self) -> World {
         let mut chunks = vec![];
-        for x in 0..self.chunk_count.0 {
-            for y in 0..self.chunk_count.1 {
+        for x in (1 - self.chunk_count.0)..self.chunk_count.0 {
+            for y in (1 - self.chunk_count.1)..self.chunk_count.1 {
                 let off = ChunkOffset::new(x, y, 0).unwrap();
                 let mut chunk = self.generate_chunk(off);
                 for trns in &self.transformations {

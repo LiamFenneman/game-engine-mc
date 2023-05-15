@@ -13,9 +13,11 @@ pub struct TestRenderer(World);
 impl TestRenderer {
     pub fn render(&self, z_range: RangeInclusive<i32>) {
         let blocks = self.0.into_world_blocks();
+        let n = CHUNK_COUNT.1 * CHUNK_SIZE;
+        let m = CHUNK_COUNT.0 * CHUNK_SIZE;
         for z in z_range {
-            for y in 0..(CHUNK_COUNT.1 * CHUNK_SIZE) {
-                for x in 0..(CHUNK_COUNT.0 * CHUNK_SIZE) {
+            for y in -n..n {
+                for x in -m..m {
                     if let Some(blk) = blocks.iter().find(|blk| {
                         blk.world_pos().x() == x
                             && blk.world_pos().y() == y
@@ -41,5 +43,5 @@ fn main() {
         vec![sea_level, surface_painter],
     )
     .generate();
-    TestRenderer(world).render(90..=100);
+    TestRenderer(world).render(90..=90);
 }

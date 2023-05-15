@@ -154,12 +154,12 @@ impl Noise2D {
                     .text("Gain"),
             );
             let r_offx = ui.add(
-                egui::Slider::new(&mut self.offset.x, 0.0..=1000.0)
+                egui::Slider::new(&mut self.offset.x, -1000.0..=1000.0)
                     .step_by(1.0)
                     .text("Offset X"),
             );
             let r_offy = ui.add(
-                egui::Slider::new(&mut self.offset.y, 0.0..=1000.0)
+                egui::Slider::new(&mut self.offset.y, -1000.0..=1000.0)
                     .step_by(1.0)
                     .text("Offset Y"),
             );
