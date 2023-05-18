@@ -28,5 +28,6 @@ fn main() {
     chart.draw_series(LineSeries::new(samples, &RED)).unwrap();
 
     root.present().unwrap();
+    println!("Seed: {seed}");
     println!("Saved image to 'images/perlin_1d.png'");
 }

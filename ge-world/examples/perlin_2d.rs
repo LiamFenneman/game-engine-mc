@@ -10,7 +10,7 @@ fn main() {
     for y in 0..SIZE {
         for x in 0..SIZE {
             samples.push(noise_field.sample_2d(
-                vec2(x as f64, y as f64),
+                vec2(x as f64 - 256.0, y as f64 - 256.0),
                 None,
                 Some(vec2(SIZE as f64 / 2.0, SIZE as f64 / 2.0)),
             ));
@@ -34,5 +34,6 @@ fn main() {
     )
     .unwrap();
 
+    println!("Seed: {seed}");
     println!("Saved image to 'images/perlin_2d.png'");
 }

@@ -76,35 +76,34 @@ impl Default for NoiseField {
 pub struct Noise {
     frequency: f64,
     amplitude: f64,
-    random_floats: Vec<f64>,
-    mask: usize,
-    permutation_table: Vec<usize>,
+    values: Vec<f64>,
+    perm: Vec<usize>,
 }
 
 impl Noise {
+    const MASK: i32 = 255;
+
     /// Create a new noise generator.
     #[must_use]
     pub fn new(seed: u64, frequency: f64, amplitude: f64) -> Self {
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed);
-        let mut random_floats = Vec::with_capacity(256);
-        let mut permutation_table = Vec::with_capacity(512);
+        let mut values = Vec::with_capacity(256);
+        let mut perm = Vec::with_capacity(512);
         for k in 0..256 {
-            random_floats.push(rng.gen_range(-1f64..=1f64));
-            permutation_table.push(k);
+            values.push(rng.gen_range(-1f64..=1f64));
+            perm.push(k);
         }
-        let mask = random_floats.len() - 1;
 
-        permutation_table.shuffle(&mut rng);
+        perm.shuffle(&mut rng);
         for k in 0..256 {
-            permutation_table.push(k);
+            perm.push(k);
         }
 
         return Self {
             frequency,
             amplitude,
-            random_floats,
-            mask,
-            permutation_table,
+            values,
+            perm,
         };
     }
 
@@ -127,7 +126,7 @@ impl Noise {
         F: Fn(f64) -> f64,
     {
         let v = v * self.frequency;
-        let i = v.floor() as isize;
+        let i = v.floor() as i32;
 
         // get the frational part of v, if it is negative, then add 1
         // so that it is always positive and in the range (0..=1)
@@ -138,9 +137,9 @@ impl Noise {
 
         let t = smooth_fn(f);
 
-        let min = i as usize & self.mask;
-        let max = (min + 1) & self.mask;
-        let out = lerp(self.random_floats[min], self.random_floats[max], t);
+        let min = (i & Self::MASK) as usize;
+        let max = min + 1;
+        let out = lerp(self.values[min], self.values[max], t);
         return out * self.amplitude;
     }
 
@@ -161,20 +160,35 @@ impl Noise {
     {
         let v = v * self.frequency;
 
-        let ix = v.x.floor() as isize;
-        let iy = v.y.floor() as isize;
-        let fx = v.x.fract();
-        let fy = v.y.fract();
+        let ix = v.x.floor() as i32;
+        let iy = v.y.floor() as i32;
+        
+        let fx = {
+            let f = v.x.fract();
+            if f < 0.0 {
+                f + 1.0
+            } else {
+                f
+            }
+        };
+        let fy = {
+            let f = v.y.fract();
+            if f < 0.0 {
+                f + 1.0
+            } else {
+                f
+            }
+        };
 
-        let rx0 = ix as usize & self.mask;
-        let rx1 = (rx0 + 1) & self.mask;
-        let ry0 = iy as usize & self.mask;
-        let ry1 = (ry0 + 1) & self.mask;
+        let rx0 = (ix & Self::MASK) as usize;
+        let rx1 = rx0 + 1;
+        let ry0 = (iy & Self::MASK) as usize;
+        let ry1 = ry0 + 1;
 
-        let c00 = self.random_floats[self.permutation_table[self.permutation_table[rx0] + ry0]];
-        let c10 = self.random_floats[self.permutation_table[self.permutation_table[rx1] + ry0]];
-        let c01 = self.random_floats[self.permutation_table[self.permutation_table[rx0] + ry1]];
-        let c11 = self.random_floats[self.permutation_table[self.permutation_table[rx1] + ry1]];
+        let c00 = self.values[self.perm[self.perm[rx0] + ry0]];
+        let c10 = self.values[self.perm[self.perm[rx1] + ry0]];
+        let c01 = self.values[self.perm[self.perm[rx0] + ry1]];
+        let c11 = self.values[self.perm[self.perm[rx1] + ry1]];
 
         let sx = smooth_fn(fx);
         let sy = smooth_fn(fy);
