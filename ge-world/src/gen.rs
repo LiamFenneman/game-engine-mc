@@ -1,4 +1,4 @@
-use crate::{noise::Noise, Block, Chunk, ChunkTransformation, World};
+use crate::{noise::Noise, Block, Chunk, ChunkTransformation, World, trns::Transformation};
 use ge_util::{
     coords::{CHUNK_HEIGHT, CHUNK_SIZE},
     ChunkOffset, ChunkPos, EngineConfig,
@@ -12,7 +12,7 @@ pub trait WorldGenerator {
 pub struct FixedWorldGenerator {
     gen: NoiseChunkGenerator,
     pub count: (i32, i32),
-    trns: Vec<Box<dyn ChunkTransformation>>,
+    trns: Vec<Transformation>,
 }
 
 impl FixedWorldGenerator {
@@ -20,7 +20,7 @@ impl FixedWorldGenerator {
     pub fn new(
         noise: Noise,
         count: (i32, i32),
-        trns: Vec<Box<dyn ChunkTransformation>>,
+        trns: Vec<Transformation>,
         config: &EngineConfig,
     ) -> Self {
         let gen = NoiseChunkGenerator::with_noise(noise, config.world_gen.base_height);
