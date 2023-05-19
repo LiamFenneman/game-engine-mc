@@ -3,6 +3,14 @@ target_fps = 120
 wireframe_mode = false
 render_distance = 5
 
+[camera]
+initial_position = [ 0.0, 15.0, 105.0 ]
+initial_yaw_pitch = [ 0.0, 10.0 ]
+znear_zfar = [ 0.1, 3000.0 ]
+vertical_fov = 60.0
+speed = 10.0
+sensitivity = 0.5
+
 [world_gen]
 base_height = 100
 sea_level = 100

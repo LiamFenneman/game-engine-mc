@@ -3,6 +3,7 @@ use std::time::Duration;
 #[derive(Default, Debug, Clone, Copy, serde::Deserialize, serde::Serialize)]
 pub struct EngineConfig {
     pub renderer: RendererConfig,
+    pub camera: CameraConfig,
     pub world_gen: WorldGenConfig,
 }
 
@@ -11,6 +12,16 @@ pub struct RendererConfig {
     pub target_fps: u32,
     pub wireframe_mode: bool,
     pub render_distance: u32,
+}
+
+#[derive(Debug, Clone, Copy, serde::Deserialize, serde::Serialize)]
+pub struct CameraConfig {
+    pub initial_position: [f32; 3],
+    pub initial_yaw_pitch: [f32; 2],
+    pub znear_zfar: [f32; 2],
+    pub vertical_fov: f32,
+    pub speed: f32,
+    pub sensitivity: f32,
 }
 
 #[derive(Debug, Clone, Copy, serde::Deserialize, serde::Serialize)]
@@ -50,6 +61,19 @@ impl Default for RendererConfig {
             target_fps: 60,
             wireframe_mode: false,
             render_distance: 3,
+        };
+    }
+}
+
+impl Default for CameraConfig {
+    fn default() -> Self {
+        return Self {
+            initial_position: [0.0, 15.0, 105.0],
+            initial_yaw_pitch: [0.0, 15.0],
+            znear_zfar: [0.1, 3000.0],
+            vertical_fov: 60.0,
+            speed: 5.0,
+            sensitivity: 0.5,
         };
     }
 }

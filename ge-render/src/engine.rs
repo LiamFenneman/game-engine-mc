@@ -39,17 +39,22 @@ pub struct Engine {
 impl Engine {
     pub fn new(window: Window, mut renderer: Renderer) -> Self {
         let resources = ResourceManager::default();
-        let config = resources.load_config("engine.toml").unwrap_or_default();
+        let config: EngineConfig = resources.load_config("engine.toml").unwrap_or_default();
 
-        let camera = Camera::new((0.0, 15.0, 105.0), cgmath::Deg(0.0), cgmath::Deg(15.0));
+        let camera = Camera::new(
+            config.camera.initial_position,
+            cgmath::Deg(config.camera.initial_yaw_pitch[0]),
+            cgmath::Deg(config.camera.initial_yaw_pitch[1]),
+        );
         let projection = Projection::new(
             renderer.config.width,
             renderer.config.height,
-            cgmath::Deg(60.0),
-            0.1,
-            3000.0,
+            cgmath::Deg(config.camera.vertical_fov),
+            config.camera.znear_zfar[0],
+            config.camera.znear_zfar[1],
         );
-        let camera_controller = CameraController::new(5.0, 0.5);
+        let camera_controller =
+            CameraController::new(config.camera.speed, config.camera.sensitivity);
 
         let world = Rc::new(RefCell::new(World::new(cgmath::vec2(0, 0), &config)));
         renderer.set_world(Rc::clone(&world));
