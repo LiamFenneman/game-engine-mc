@@ -12,7 +12,7 @@ pub trait WorldGenerator {
 pub struct FixedWorldGenerator {
     gen: NoiseChunkGenerator,
     pub count: (i32, i32),
-    transformations: Vec<Box<dyn ChunkTransformation>>,
+    trns: Vec<Box<dyn ChunkTransformation>>,
 }
 
 impl FixedWorldGenerator {
@@ -20,14 +20,14 @@ impl FixedWorldGenerator {
     pub fn new(
         noise: Noise,
         count: (i32, i32),
-        transformations: Vec<Box<dyn ChunkTransformation>>,
+        trns: Vec<Box<dyn ChunkTransformation>>,
         config: &EngineConfig,
     ) -> Self {
         let gen = NoiseChunkGenerator::with_noise(noise, config.world_gen.base_height);
         return Self {
             gen,
             count,
-            transformations,
+            trns,
         };
     }
 
@@ -43,7 +43,7 @@ impl WorldGenerator for FixedWorldGenerator {
             for y in (1 - self.count.1)..self.count.1 {
                 let off = ChunkOffset::new(x, y, 0).unwrap();
                 let mut chunk = self.generate_chunk(off);
-                for trns in &self.transformations {
+                for trns in &self.trns {
                     trns.transform(&mut chunk);
                 }
                 chunks.push(chunk);
