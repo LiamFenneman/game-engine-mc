@@ -1,12 +1,7 @@
 // use rand::{Rng, SeedableRng};
+use ge_util::EngineConfig;
 
 pub const MAX_OCTAVES: usize = 32;
-pub const DEFAULT_OCTAVES: usize = 1;
-pub const DEFAULT_FREQUENCY: f32 = 1.0;
-pub const DEFAULT_AMPLITUDE: f32 = 1.0;
-pub const DEFAULT_LACUNARITY: f32 = 2.0;
-pub const DEFAULT_PERSISTENCE: f32 = 0.5;
-
 pub const SIZE: usize = 256;
 pub const MASK: usize = SIZE - 1;
 pub const PERM: [u8; 512] = [
@@ -45,18 +40,6 @@ pub struct Noise {
     amplitude: f32,
     lacunarity: f32,
     persistence: f32,
-}
-
-impl Default for Noise {
-    fn default() -> Self {
-        return Self::new(
-            DEFAULT_OCTAVES,
-            DEFAULT_FREQUENCY,
-            DEFAULT_AMPLITUDE,
-            DEFAULT_LACUNARITY,
-            DEFAULT_PERSISTENCE,
-        );
-    }
 }
 
 impl Noise {
@@ -183,5 +166,17 @@ impl Noise {
         }
 
         return sum;
+    }
+}
+
+impl From<&EngineConfig> for Noise {
+    fn from(value: &EngineConfig) -> Self {
+        return Self::new(
+            value.world_gen.noise.octaves,
+            value.world_gen.noise.frequency,
+            value.world_gen.noise.amplitude,
+            value.world_gen.noise.lacunarity,
+            value.world_gen.noise.persistence,
+        );
     }
 }

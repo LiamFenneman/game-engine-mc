@@ -7,15 +7,9 @@ use ge_resource::{
     texture::{Texture, TextureArray},
     ResourceManager,
 };
-use ge_util::ChunkOffset;
-use ge_world::{
-    gen::{ChunkGenerator, NoiseChunkGenerator},
-    BlockType, Chunk,
-};
+use ge_world::{BlockType, Chunk};
 use std::{collections::HashSet, rc::Rc};
 use wgpu::util::DeviceExt;
-
-const SEA_LEVEL: i32 = 90;
 
 pub struct DrawChunk {
     instances: Vec<DrawInstancedBlocks>,
@@ -24,45 +18,14 @@ pub struct DrawChunk {
 }
 
 impl DrawChunk {
-    /// Creates a new [`DrawWorld`].
-    ///
-    /// # Panics
-    ///
-    /// Panics if a [`Texture`] fails to parse bytes.
     pub fn new(
-        renderer: &Renderer,
-        resources: &mut ResourceManager,
-        uniform_bind_group_layout: &wgpu::BindGroupLayout,
-    ) -> Self {
-        let off = ChunkOffset::default();
-        return Self::with_offset(off, renderer, resources, uniform_bind_group_layout);
-    }
-
-    pub fn with_offset(
-        offset: impl Into<ChunkOffset> + Copy,
-        renderer: &Renderer,
-        resources: &mut ResourceManager,
-        uniform_bind_group_layout: &wgpu::BindGroupLayout,
-    ) -> Self {
-        let offset = offset.into();
-        let sea_level = ge_world::sea_level::SeaLevel::new(SEA_LEVEL);
-        let surface_painter = ge_world::surface_painting::SimpleSurfacePainter;
-
-        let chunk = NoiseChunkGenerator::default()
-            .generate(offset)
-            .apply_transformation(&sea_level)
-            .apply_transformation(&surface_painter);
-
-        return Self::with_chunk(chunk, renderer, resources, uniform_bind_group_layout);
-    }
-
-    pub fn with_chunk(
         chunk: Chunk,
         renderer: &Renderer,
         resources: &mut ResourceManager,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
+        config: &ge_util::EngineConfig,
     ) -> Self {
-        let visible = chunk.visible_blocks();
+        let visible = chunk.visible_blocks(config);
 
         // block types present in the chunk
         let present_blk_ty = visible
@@ -85,6 +48,7 @@ impl DrawChunk {
                 &blocks,
                 textures,
                 uniform_bind_group_layout,
+                config,
             ));
         }
 
@@ -116,6 +80,7 @@ impl DrawInstancedBlocks {
         blocks: &[ge_world::Block],
         textures: &TextureArray,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
+        config: &ge_util::EngineConfig,
     ) -> Self {
         let block = Block::new();
         let vertex_buffer = renderer
@@ -151,6 +116,7 @@ impl DrawInstancedBlocks {
             Some(Texture::DEPTH_FORMAT),
             &[BlockVertex::desc(), InstanceRaw::desc()],
             shader,
+            config,
         );
 
         let instances = blocks

@@ -8,6 +8,7 @@ version.workspace = true
 cgmath.workspace = true
 serde.workspace = true
 thiserror.workspace = true
+wgpu.workspace = true
 
 [dev-dependencies]
 rstest = "0.17"

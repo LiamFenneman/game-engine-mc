@@ -8,6 +8,7 @@
 #![feature(lint_reasons)]
 
 mod circle;
+mod config;
 mod convert;
 pub mod coords;
 mod lerp;
@@ -15,6 +16,7 @@ mod macros;
 mod smooth;
 
 pub use circle::points_in_circle;
+pub use config::{EngineConfig, WorldGenConfig};
 pub use convert::{one_to_three, three_to_one};
 pub use coords::{ChunkOffset, ChunkPos, WorldPos};
 pub use lerp::{inverse_lerp, lerp, remap};

@@ -27,7 +27,7 @@ impl FixedWorldGenerator {
         chunk_count: (i32, i32),
         transformations: Vec<Box<dyn ChunkTransformation>>,
     ) -> Self {
-        let gen = NoiseChunkGenerator::with_noise(noise, 100);
+        let gen = NoiseChunkGenerator::with_noise(noise, 100);//TODO: add to config
         return Self {
             gen,
             chunk_count,
@@ -98,6 +98,7 @@ pub struct NoiseChunkGenerator {
     base_z: i32,
 }
 
+#[allow(clippy::cast_precision_loss, reason = "precisions is not important")]
 impl ChunkGenerator for NoiseChunkGenerator {
     fn generate_at(
         &mut self,
@@ -125,6 +126,7 @@ impl ChunkGenerator for NoiseChunkGenerator {
 impl NoiseChunkGenerator {
     #[must_use]
     pub fn new(
+        #[allow(unused)]
         seed: u64,
         base_z: i32,
         octaves: usize,
@@ -145,15 +147,6 @@ impl NoiseChunkGenerator {
         return Self {
             noise,
             base_z,
-        };
-    }
-}
-
-impl Default for NoiseChunkGenerator {
-    fn default() -> Self {
-        return Self {
-            noise: Noise::default(),
-            base_z: 100,
         };
     }
 }

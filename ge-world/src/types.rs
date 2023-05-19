@@ -1,7 +1,5 @@
-use ge_util::{ChunkOffset, ChunkPos, WorldPos};
+use ge_util::{ChunkOffset, ChunkPos, EngineConfig, WorldPos};
 use std::collections::HashMap;
-
-const CULLING: bool = true;
 
 /// A `World` is a collection of `Block`s.
 #[derive(Debug, Clone)]
@@ -32,10 +30,8 @@ pub struct Chunk {
 }
 
 impl Chunk {
-    pub const SIZE: cgmath::Vector3<u32> = cgmath::Vector3::new(16, 256, 16);
-
     #[must_use]
-    pub fn visible_blocks(&self) -> Vec<&Block> {
+    pub fn visible_blocks(&self, config: &EngineConfig) -> Vec<&Block> {
         let neighbour_offsets: [(i32, i32, i32); 6] = [
             (0, 0, 1),
             (0, 0, -1),
@@ -45,7 +41,7 @@ impl Chunk {
             (0, -1, 0),
         ];
 
-        if !CULLING {
+        if !config.world_gen.culling {
             // if culling is disabled then return all blocks
             return self.blocks.values().collect();
         }

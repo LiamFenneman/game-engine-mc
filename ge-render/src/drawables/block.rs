@@ -25,6 +25,7 @@ impl DrawBlock {
         resources: &mut ResourceManager,
         block: &Block,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
+        config: &ge_util::EngineConfig,
     ) -> Self {
         let textures = resources.load_texture_array(
             ge_world::BlockType::Grass,
@@ -48,6 +49,7 @@ impl DrawBlock {
             Some(Texture::DEPTH_FORMAT),
             &[BlockVertex::desc()],
             shader,
+            config,
         );
 
         let vertex_buffer = renderer

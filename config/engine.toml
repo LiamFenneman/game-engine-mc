@@ -1,3 +1,16 @@
+[renderer]
+target_fps = 120
+wireframe_mode = false
+render_distance = 5
+
 [world_gen]
+base_height = 100
+sea_level = 100
 culling = true
-chunk_size = [16, 256, 16]
+
+[world_gen.noise]
+octaves = 5
+frequency = 0.0625
+amplitude = 8.0
+lacunarity = 2.0
+persistence = 0.5

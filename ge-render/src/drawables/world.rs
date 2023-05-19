@@ -6,7 +6,7 @@ use crate::{
 };
 use cgmath::Vector2;
 use ge_resource::ResourceManager;
-use ge_util::ChunkOffset;
+use ge_util::{ChunkOffset, EngineConfig};
 use ge_world::{
     gen::{FixedWorldGenerator, WorldGenerator},
     noise::Noise,
@@ -14,8 +14,6 @@ use ge_world::{
     surface_painting::SimpleSurfacePainter,
     Chunk,
 };
-
-const RENDER_DISTANCE: i32 = 2;
 
 pub struct World {
     position: Vector2<i32>,
@@ -26,17 +24,25 @@ pub struct World {
 
 impl World {
     #[must_use]
-    pub fn new(position: Vector2<i32>) -> Self {
-        let chunk_count = (RENDER_DISTANCE, RENDER_DISTANCE);
-        let noise_field = Noise::new(5, 1.0 / 16.0, 10.0, 2.0, 0.5);
-        let sea_level = Box::new(SeaLevel::new(90));
+    pub fn new(position: Vector2<i32>, config: &EngineConfig) -> Self {
+        let chunk_count = {
+            #[allow(
+                clippy::cast_possible_wrap,
+                reason = "value should not be large enought to wrap"
+            )]
+            let rd = config.renderer.render_distance as i32;
+            (rd, rd)
+        };
+        let noise = Noise::from(config);
+        let sea_level = Box::new(SeaLevel::new(config.world_gen.sea_level));
         let surface_painter = Box::new(SimpleSurfacePainter);
         let world_gen = FixedWorldGenerator::with_transformations(
-            noise_field,
+            noise,
             chunk_count,
             vec![sea_level, surface_painter],
         );
-        let instances = HashMap::with_capacity((RENDER_DISTANCE as usize).pow(2));
+
+        let instances = HashMap::with_capacity((config.renderer.render_distance as usize).pow(2));
 
         return Self {
             position,
@@ -56,6 +62,7 @@ impl World {
         renderer: &Renderer,
         resources: &mut ResourceManager,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
+        config: &ge_util::EngineConfig,
     ) {
         self.position = world_pos_to_chunk_pos(new_pos);
         if !self.dirty {
@@ -71,7 +78,13 @@ impl World {
             .map(|chunk| {
                 return (
                     chunk.position,
-                    self.create_instance(chunk, renderer, resources, uniform_bind_group_layout),
+                    self.create_instance(
+                        chunk,
+                        renderer,
+                        resources,
+                        uniform_bind_group_layout,
+                        config,
+                    ),
                 );
             })
             .collect::<HashMap<_, _>>();
@@ -86,8 +99,15 @@ impl World {
         renderer: &Renderer,
         resources: &mut ResourceManager,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
+        config: &ge_util::EngineConfig,
     ) -> DrawChunk {
-        return DrawChunk::with_chunk(chunk, renderer, resources, uniform_bind_group_layout);
+        return DrawChunk::new(
+            chunk,
+            renderer,
+            resources,
+            uniform_bind_group_layout,
+            config,
+        );
     }
 }
 

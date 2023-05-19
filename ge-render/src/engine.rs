@@ -7,6 +7,7 @@ use crate::{
     stats::FrameStats,
 };
 use ge_resource::ResourceManager;
+use ge_util::EngineConfig;
 use std::{cell::RefCell, rc::Rc};
 use wgpu::util::DeviceExt;
 use winit::{
@@ -16,6 +17,8 @@ use winit::{
 
 /// The `Engine` struct is the main entry point for the game engine.
 pub struct Engine {
+    pub config: EngineConfig,
+
     pub window: Window,
     pub renderer: Renderer,
     pub resources: ResourceManager,
@@ -36,6 +39,7 @@ pub struct Engine {
 impl Engine {
     pub fn new(window: Window, mut renderer: Renderer) -> Self {
         let resources = ResourceManager::default();
+        let config = resources.load_config("engine.toml").unwrap_or_default();
 
         let camera = Camera::new((0.0, 15.0, 105.0), cgmath::Deg(0.0), cgmath::Deg(15.0));
         let projection = Projection::new(
@@ -47,7 +51,7 @@ impl Engine {
         );
         let camera_controller = CameraController::new(5.0, 0.5);
 
-        let world = Rc::new(RefCell::new(World::new(cgmath::vec2(0, 0))));
+        let world = Rc::new(RefCell::new(World::new(cgmath::vec2(0, 0), &config)));
         renderer.set_world(Rc::clone(&world));
 
         let uniform_bind_group_layout =
@@ -98,6 +102,8 @@ impl Engine {
 
         tracing::trace!("created engine");
         return Self {
+            config,
+
             window,
             renderer,
             resources,
@@ -146,6 +152,7 @@ impl Engine {
             &self.renderer,
             &mut self.resources,
             &self.uniform_bind_group_layout,
+            &self.config,
         );
     }
 
@@ -154,7 +161,7 @@ impl Engine {
     /// # Errors
     /// Errors if the surface is lost.
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
-        return self.renderer.render(&self.uniform_bind_group);
+        return self.renderer.render(&self.uniform_bind_group, &self.config);
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {

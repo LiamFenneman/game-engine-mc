@@ -1,17 +1,8 @@
 use crate::drawables::world::World;
 use ge_resource::texture::Texture;
-use std::{cell::RefCell, rc::Rc, time::Duration};
+use ge_util::EngineConfig;
+use std::{cell::RefCell, rc::Rc};
 use winit::window::Window;
-
-const TARGET_FPS: u64 = 60;
-const TARGET_FRAME_TIME: Duration = Duration::from_micros(1_000_000 / TARGET_FPS);
-
-const WIREFRAME_MODE: bool = false;
-const POLYGON_MODE: wgpu::PolygonMode = if WIREFRAME_MODE {
-    wgpu::PolygonMode::Line
-} else {
-    wgpu::PolygonMode::Fill
-};
 
 /// The `Draw` trait is implemented by types that can be drawn by the `Renderer`.
 pub trait Draw {
@@ -141,6 +132,7 @@ impl Renderer {
     pub fn render(
         &mut self,
         uniform_bind_group: &wgpu::BindGroup,
+        config: &EngineConfig,
     ) -> Result<(), wgpu::SurfaceError> {
         let begin_time = std::time::Instant::now();
 
@@ -199,8 +191,8 @@ impl Renderer {
 
         // limit the FPS to the target FPS
         let frame_time = begin_time.elapsed();
-        if frame_time < TARGET_FRAME_TIME {
-            std::thread::sleep(TARGET_FRAME_TIME - frame_time);
+        if frame_time < config.renderer.target_frame_time() {
+            std::thread::sleep(config.renderer.target_frame_time() - frame_time);
         }
 
         // render finished, submit to the queue
@@ -225,6 +217,7 @@ pub fn create_render_pipeline(
     depth_format: Option<wgpu::TextureFormat>,
     vertex_layouts: &[wgpu::VertexBufferLayout],
     shader: wgpu::ShaderModuleDescriptor,
+    config: &EngineConfig,
 ) -> wgpu::RenderPipeline {
     let shader = renderer.device.create_shader_module(shader);
 
@@ -255,7 +248,7 @@ pub fn create_render_pipeline(
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
                 cull_mode: Some(wgpu::Face::Back),
-                polygon_mode: POLYGON_MODE,
+                polygon_mode: config.renderer.polygon_mode(),
                 unclipped_depth: false,
                 conservative: false,
             },
