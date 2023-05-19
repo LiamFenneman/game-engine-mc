@@ -35,8 +35,8 @@ impl TestRenderer {
 }
 
 fn main() {
-    let noise_field = ge_world::noise::NoiseField::new(1, 5, 1.0, 10.0, 2.0, 0.5);
-    let mut chunk_gen = NoiseChunkGenerator::with_noise_field(noise_field, 100);
+    let noise = ge_world::noise::Noise::new(5, 1.0, 10.0, 2.0, 0.5);
+    let mut chunk_gen = NoiseChunkGenerator::with_noise(noise, 100);
     let renderer = TestRenderer::new(
         chunk_gen
             .generate(ChunkOffset::default())

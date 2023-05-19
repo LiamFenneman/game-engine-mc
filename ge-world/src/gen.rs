@@ -1,4 +1,4 @@
-use crate::{noise::NoiseField, Block, Chunk, ChunkTransformation, World};
+use crate::{noise::Noise, Block, Chunk, ChunkTransformation, World};
 use ge_util::{
     coords::{CHUNK_HEIGHT, CHUNK_SIZE},
     ChunkOffset, ChunkPos,
@@ -17,17 +17,17 @@ pub struct FixedWorldGenerator {
 
 impl FixedWorldGenerator {
     #[must_use]
-    pub fn new(noise_field: NoiseField, chunk_count: (i32, i32)) -> Self {
-        return Self::with_transformations(noise_field, chunk_count, Vec::new());
+    pub fn new(noise: Noise, chunk_count: (i32, i32)) -> Self {
+        return Self::with_transformations(noise, chunk_count, Vec::new());
     }
 
     #[must_use]
     pub fn with_transformations(
-        noise_field: NoiseField,
+        noise: Noise,
         chunk_count: (i32, i32),
         transformations: Vec<Box<dyn ChunkTransformation>>,
     ) -> Self {
-        let gen = NoiseChunkGenerator::with_noise_field(noise_field, 100);
+        let gen = NoiseChunkGenerator::with_noise(noise, 100);
         return Self {
             gen,
             chunk_count,
@@ -94,7 +94,7 @@ pub trait ChunkGenerator {
 }
 
 pub struct NoiseChunkGenerator {
-    pub noise_field: NoiseField,
+    pub noise: Noise,
     base_z: i32,
 }
 
@@ -106,15 +106,13 @@ impl ChunkGenerator for NoiseChunkGenerator {
     ) -> Block {
         let chunk_pos: ChunkPos = chunk_pos.into();
         let world_pos = chunk_pos.to_world_pos(chunk_offset);
-        let sample_z = self.noise_field.sample_2d(
-            cgmath::vec2(f64::from(world_pos.x()), f64::from(world_pos.y())),
-            None,
-            Some(cgmath::vec2(f64::from(CHUNK_SIZE), f64::from(CHUNK_SIZE))),
-        );
+        let sample_z = self
+            .noise
+            .fbm(world_pos.x() as f32, world_pos.y() as f32, 0.0);
 
         #[allow(clippy::cast_possible_truncation, reason = "truncation is expected")]
         #[allow(clippy::cast_sign_loss, reason = "value should never be negative")]
-        let surface_z = (f64::from(self.base_z) + sample_z) as i32;
+        let surface_z = (self.base_z as f32 + sample_z) as i32;
         let ty = match surface_z {
             z if chunk_pos.z() > z => crate::BlockType::Air,
             _ => crate::BlockType::Stone,
@@ -129,23 +127,23 @@ impl NoiseChunkGenerator {
     pub fn new(
         seed: u64,
         base_z: i32,
-        octaves: u8,
-        frequency: f64,
-        amplitude: f64,
-        lacunarity: f64,
-        gain: f64,
+        octaves: usize,
+        frequency: f32,
+        amplitude: f32,
+        lacunarity: f32,
+        persistence: f32,
     ) -> Self {
-        let noise_field = NoiseField::new(seed, octaves, frequency, amplitude, lacunarity, gain);
+        let noise = Noise::new(octaves, frequency, amplitude, lacunarity, persistence);
         return Self {
-            noise_field,
+            noise,
             base_z,
         };
     }
 
     #[must_use]
-    pub fn with_noise_field(noise_field: NoiseField, base_z: i32) -> Self {
+    pub fn with_noise(noise: Noise, base_z: i32) -> Self {
         return Self {
-            noise_field,
+            noise,
             base_z,
         };
     }
@@ -153,10 +151,8 @@ impl NoiseChunkGenerator {
 
 impl Default for NoiseChunkGenerator {
     fn default() -> Self {
-        // let noise_field = NoiseField::new(rand::random(), 5, 1.0, 10.0, 2.0, 0.5);
-        let noise_field = NoiseField::new(0, 5, 1.0, 10.0, 2.0, 0.5);
         return Self {
-            noise_field,
+            noise: Noise::default(),
             base_z: 100,
         };
     }

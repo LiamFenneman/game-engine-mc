@@ -1,201 +1,187 @@
-use cgmath::{vec2, Vector2};
-use ge_util::{lerp, smoothstep2};
-use rand::{seq::SliceRandom, Rng, SeedableRng};
+// use rand::{Rng, SeedableRng};
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-pub struct NoiseField {
-    noises: Vec<Noise>,
-    seed: u64,
-}
+pub const MAX_OCTAVES: usize = 32;
+pub const DEFAULT_OCTAVES: usize = 1;
+pub const DEFAULT_FREQUENCY: f32 = 1.0;
+pub const DEFAULT_AMPLITUDE: f32 = 1.0;
+pub const DEFAULT_LACUNARITY: f32 = 2.0;
+pub const DEFAULT_PERSISTENCE: f32 = 0.5;
 
-impl NoiseField {
-    #[must_use]
-    pub fn new(
-        seed: u64,
-        octaves: u8,
-        frequency: f64,
-        amplitude: f64,
-        lacunarity: f64,
-        gain: f64,
-    ) -> Self {
-        let noises: Vec<Noise> = (0..octaves)
-            .map(|i| {
-                return Noise::new(
-                    seed,
-                    frequency * lacunarity.powi(i32::from(i)),
-                    amplitude * gain.powi(i32::from(i)),
-                );
-            })
-            .collect();
+pub const SIZE: usize = 256;
+pub const MASK: usize = SIZE - 1;
+pub const PERM: [u8; 512] = [
+    151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69,
+    142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219,
+    203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175,
+    74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230,
+    220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76,
+    132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173,
+    186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206,
+    59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163,
+    70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232,
+    178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162,
+    241, 81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204,
+    176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141,
+    128, 195, 78, 66, 215, 61, 156, 180, // -- Repeated -- //
+    151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69,
+    142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219,
+    203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175,
+    74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230,
+    220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76,
+    132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173,
+    186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206,
+    59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163,
+    70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232,
+    178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162,
+    241, 81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204,
+    176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141,
+    128, 195, 78, 66, 215, 61, 156, 180,
+];
 
-        return Self { noises, seed };
-    }
-
-    #[must_use]
-    pub fn sample_1d(&self, position: f64, offset: Option<f64>, scale: Option<f64>) -> f64 {
-        let scale = scale.unwrap_or(1.0);
-        return self
-            .noises
-            .iter()
-            .map(|noise| return noise.sample_1d(position / scale, offset))
-            .sum::<f64>();
-    }
-
-    #[must_use]
-    pub fn sample_2d(
-        &self,
-        position: Vector2<f64>,
-        offset: Option<Vector2<f64>>,
-        scale: Option<Vector2<f64>>,
-    ) -> f64 {
-        let scale = scale.unwrap_or(vec2(1.0, 1.0));
-        return self
-            .noises
-            .iter()
-            .map(|noise| {
-                return noise.sample_2d(vec2(position.x / scale.x, position.y / scale.y), offset);
-            })
-            .sum::<f64>();
-    }
-
-    /// Get the seed used to generate the noise.
-    #[must_use]
-    pub fn seed(&self) -> u64 {
-        return self.seed;
-    }
-}
-
-impl Default for NoiseField {
-    fn default() -> Self {
-        return NoiseField::new(0, 5, 1.0, 0.5, 2.0, 0.5);
-    }
-}
-
-/// A perlin noise generator.
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, Copy)]
 pub struct Noise {
-    frequency: f64,
-    amplitude: f64,
-    values: Vec<f64>,
-    perm: Vec<usize>,
+    octaves: usize,
+    frequency: f32,
+    amplitude: f32,
+    lacunarity: f32,
+    persistence: f32,
+}
+
+impl Default for Noise {
+    fn default() -> Self {
+        return Self::new(
+            DEFAULT_OCTAVES,
+            DEFAULT_FREQUENCY,
+            DEFAULT_AMPLITUDE,
+            DEFAULT_LACUNARITY,
+            DEFAULT_PERSISTENCE,
+        );
+    }
 }
 
 impl Noise {
-    const MASK: i32 = 255;
-
-    /// Create a new noise generator.
     #[must_use]
-    pub fn new(seed: u64, frequency: f64, amplitude: f64) -> Self {
-        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed);
-        let mut values = Vec::with_capacity(256);
-        let mut perm = Vec::with_capacity(512);
-        for k in 0..256 {
-            values.push(rng.gen_range(-1f64..=1f64));
-            perm.push(k);
-        }
-
-        perm.shuffle(&mut rng);
-        for k in 0..256 {
-            perm.push(k);
-        }
-
+    pub fn new(
+        octaves: usize,
+        frequency: f32,
+        amplitude: f32,
+        lacunarity: f32,
+        persistence: f32,
+    ) -> Self {
+        debug_assert!(octaves <= MAX_OCTAVES, "octaves too high");
         return Self {
+            octaves,
             frequency,
             amplitude,
-            values,
-            perm,
+            lacunarity,
+            persistence,
         };
     }
 
-    /// Sample the noise at a given value, using the default smooth function.
-    #[must_use]
-    pub fn sample_1d(&self, v: f64, offset: Option<f64>) -> f64 {
-        let offset = offset.unwrap_or(0.0);
-        return self.sample_1d_with_fn(v + offset, smoothstep2);
+    #[inline]
+    fn fade(t: f32) -> f32 {
+        return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
+    }
+
+    #[allow(clippy::match_same_arms, reason = "code is cleaner this way")]
+    #[inline]
+    fn grad(hash: u8, x: f32, y: f32, z: f32) -> f32 {
+        return match hash & 0xF {
+            0x0 => x + y,
+            0x1 => -x + y,
+            0x2 => x - y,
+            0x3 => -x - y,
+            0x4 => x + z,
+            0x5 => -x + z,
+            0x6 => x - z,
+            0x7 => -x - z,
+            0x8 => y + z,
+            0x9 => -y + z,
+            0xA => y - z,
+            0xB => -y - z,
+            0xC => y + x,
+            0xD => -y + z,
+            0xE => y - x,
+            0xF => -y - z,
+            _ => unreachable!(),
+        };
+    }
+
+    #[inline]
+    fn hash(x: usize, y: usize, z: usize) -> u8 {
+        return PERM[PERM[PERM[x] as usize + y] as usize + z];
     }
 
     #[allow(
+        clippy::many_single_char_names,
         clippy::cast_sign_loss,
-        clippy::cast_possible_truncation,
-        reason = "this needs to be fixed: see #1"
+        clippy::cast_possible_wrap,
+        clippy::cast_possible_truncation
     )]
-    /// Sample the noise at a given value, using a custom smooth function.
-    #[must_use]
-    fn sample_1d_with_fn<F>(&self, v: f64, smooth_fn: F) -> f64
-    where
-        F: Fn(f64) -> f64,
-    {
-        let v = v * self.frequency;
-        let i = v.floor() as i32;
+    fn eval(x: f32, y: f32, z: f32) -> f32 {
+        let xi0 = (x.floor() as isize & MASK as isize) as usize;
+        let yi0 = (y.floor() as isize & MASK as isize) as usize;
+        let zi0 = (z.floor() as isize & MASK as isize) as usize;
 
-        // get the frational part of v, if it is negative, then add 1
-        // so that it is always positive and in the range (0..=1)
-        let mut f = v.fract();
-        if f < 0.0 {
-            f += 1.0;
+        let xi1 = (xi0 + 1) & MASK;
+        let yi1 = (yi0 + 1) & MASK;
+        let zi1 = (zi0 + 1) & MASK;
+
+        let tx = x - x.floor();
+        let ty = y - y.floor();
+        let tz = z - z.floor();
+
+        let u = Self::fade(tx);
+        let v = Self::fade(ty);
+        let w = Self::fade(tz);
+
+        let x0 = tx;
+        let x1 = tx - 1.0;
+        let y0 = ty;
+        let y1 = ty - 1.0;
+        let z0 = tz;
+        let z1 = tz - 1.0;
+
+        let a = Self::grad(Self::hash(xi0, yi0, zi0), x0, y0, z0);
+        let b = Self::grad(Self::hash(xi1, yi0, zi0), x1, y0, z0);
+        let c = Self::grad(Self::hash(xi0, yi1, zi0), x0, y1, z0);
+        let d = Self::grad(Self::hash(xi1, yi1, zi0), x1, y1, z0);
+        let e = Self::grad(Self::hash(xi0, yi0, zi1), x0, y0, z1);
+        let f = Self::grad(Self::hash(xi1, yi0, zi1), x1, y0, z1);
+        let g = Self::grad(Self::hash(xi0, yi1, zi1), x0, y1, z1);
+        let h = Self::grad(Self::hash(xi1, yi1, zi1), x1, y1, z1);
+
+        let k0 = a;
+        let k1 = b - a;
+        let k2 = c - a;
+        let k3 = e - a;
+        let k4 = a + d - b - c;
+        let k5 = a + f - b - e;
+        let k6 = a + g - c - e;
+        let k7 = b + c + e + h - a - d - f - g;
+
+        return k0
+            + k1 * u
+            + k2 * v
+            + k3 * w
+            + k4 * u * v
+            + k5 * u * w
+            + k6 * v * w
+            + k7 * u * v * w;
+    }
+
+    #[must_use]
+    pub fn fbm(&self, x: f32, y: f32, z: f32) -> f32 {
+        let mut freq = self.frequency;
+        let mut amp = self.amplitude;
+        let mut sum = 0.0;
+
+        for _ in 0..self.octaves {
+            sum += Self::eval(x * freq, y * freq, z * freq) * amp;
+            freq *= self.lacunarity;
+            amp *= self.persistence;
         }
 
-        let t = smooth_fn(f);
-
-        let min = (i & Self::MASK) as usize;
-        let max = min + 1;
-        let out = lerp(self.values[min], self.values[max], t);
-        return out * self.amplitude;
-    }
-
-    #[must_use]
-    pub fn sample_2d(&self, v: Vector2<f64>, offset: Option<Vector2<f64>>) -> f64 {
-        let offset = offset.unwrap_or(Vector2::new(0.0, 0.0));
-        return self.sample_2d_with_fn(v + offset, smoothstep2);
-    }
-
-    #[allow(
-        clippy::cast_sign_loss,
-        clippy::cast_possible_truncation,
-        reason = "this needs to be fixed: see #1"
-    )]
-    fn sample_2d_with_fn<F>(&self, v: Vector2<f64>, smooth_fn: F) -> f64
-    where
-        F: Fn(f64) -> f64,
-    {
-        let v = v * self.frequency;
-
-        let ix = v.x.floor() as i32;
-        let iy = v.y.floor() as i32;
-        
-        let fx = {
-            let f = v.x.fract();
-            if f < 0.0 {
-                f + 1.0
-            } else {
-                f
-            }
-        };
-        let fy = {
-            let f = v.y.fract();
-            if f < 0.0 {
-                f + 1.0
-            } else {
-                f
-            }
-        };
-
-        let rx0 = (ix & Self::MASK) as usize;
-        let rx1 = rx0 + 1;
-        let ry0 = (iy & Self::MASK) as usize;
-        let ry1 = ry0 + 1;
-
-        let c00 = self.values[self.perm[self.perm[rx0] + ry0]];
-        let c10 = self.values[self.perm[self.perm[rx1] + ry0]];
-        let c01 = self.values[self.perm[self.perm[rx0] + ry1]];
-        let c11 = self.values[self.perm[self.perm[rx1] + ry1]];
-
-        let sx = smooth_fn(fx);
-        let sy = smooth_fn(fy);
-
-        let nx0 = lerp(c00, c10, sx);
-        let nx1 = lerp(c01, c11, sx);
-
-        return lerp(nx0, nx1, sy) * self.amplitude;
+        return sum;
     }
 }

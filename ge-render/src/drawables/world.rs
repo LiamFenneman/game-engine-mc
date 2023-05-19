@@ -9,7 +9,7 @@ use ge_resource::ResourceManager;
 use ge_util::ChunkOffset;
 use ge_world::{
     gen::{FixedWorldGenerator, WorldGenerator},
-    noise::NoiseField,
+    noise::Noise,
     sea_level::SeaLevel,
     surface_painting::SimpleSurfacePainter,
     Chunk,
@@ -28,7 +28,7 @@ impl World {
     #[must_use]
     pub fn new(position: Vector2<i32>) -> Self {
         let chunk_count = (RENDER_DISTANCE, RENDER_DISTANCE);
-        let noise_field = NoiseField::new(0, 5, 1.0, 10.0, 2.0, 0.5);
+        let noise_field = Noise::new(5, 1.0 / 16.0, 10.0, 2.0, 0.5);
         let sea_level = Box::new(SeaLevel::new(90));
         let surface_painter = Box::new(SimpleSurfacePainter);
         let world_gen = FixedWorldGenerator::with_transformations(

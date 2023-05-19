@@ -1,9 +1,9 @@
-use cgmath::{vec2, Vector2};
+use cgmath::Vector2;
 use egui::{
     plot::{Line, Plot, PlotPoints},
     ColorImage, TextureHandle,
 };
-use ge_world::noise::NoiseField;
+use ge_world::noise::Noise;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct Noise2D {
@@ -11,16 +11,16 @@ pub struct Noise2D {
     size: usize,
 
     seed: u64,
-    octaves: u8,
-    frequency: f64,
-    amplitude: f64,
-    lacunarity: f64,
-    gain: f64,
-    offset: Vector2<f64>,
-    scale: f64,
+    octaves: usize,
+    frequency: f32,
+    amplitude: f32,
+    lacunarity: f32,
+    gain: f32,
+    offset: Vector2<f32>,
+    scale: f32,
 
     #[serde(skip)]
-    noise_field: Option<NoiseField>,
+    noise_field: Option<Noise>,
     #[serde(skip)]
     image: Option<ColorImage>,
     #[serde(skip)]
@@ -28,10 +28,9 @@ pub struct Noise2D {
 }
 
 impl Noise2D {
-    pub fn generate_noise_field(&mut self) -> NoiseField {
+    pub fn generate_noise_field(&mut self) -> Noise {
         tracing::debug!("Generated noise field");
-        return NoiseField::new(
-            self.seed,
+        return Noise::new(
             self.octaves,
             self.frequency,
             self.amplitude,
@@ -50,11 +49,12 @@ impl Noise2D {
                     clippy::cast_precision_loss,
                     reason = "sample uses f64 so we need to cast"
                 )]
-                samples.push(self.noise_field.as_ref().unwrap().sample_2d(
-                    vec2(x as f64, y as f64),
-                    Some(self.offset),
-                    Some(vec2(self.scale, self.scale)),
-                ));
+                samples.push(
+                    self.noise_field
+                        .as_ref()
+                        .unwrap()
+                        .fbm(x as f32, y as f32, 0.0),
+                );
             }
         }
 
@@ -206,26 +206,25 @@ pub struct Noise1D {
     pub is_open: bool,
 
     seed: u64,
-    octaves: u8,
-    frequency: f64,
-    amplitude: f64,
-    lacunarity: f64,
-    gain: f64,
-    offset: f64,
+    octaves: usize,
+    frequency: f32,
+    amplitude: f32,
+    lacunarity: f32,
+    gain: f32,
+    offset: f32,
 
     min: i32,
     max: i32,
     samples: u32,
 
     #[serde(skip)]
-    noise_field: Option<NoiseField>,
+    noise_field: Option<Noise>,
 }
 
 impl Noise1D {
-    pub fn generate_noise_field(&mut self) -> NoiseField {
+    pub fn generate_noise_field(&mut self) -> Noise {
         tracing::debug!("Generated noise field");
-        return NoiseField::new(
-            self.seed,
+        return Noise::new(
             self.octaves,
             self.frequency,
             self.amplitude,
@@ -313,12 +312,14 @@ impl Noise1D {
             if let Some(nf) = &self.noise_field {
                 #[allow(
                     clippy::cast_possible_wrap,
+                    clippy::cast_lossless,
+                    clippy::cast_precision_loss,
                     reason = "values large enough to wrap will not be used"
                 )]
                 let points: PlotPoints = ((self.min * self.samples as i32)
                     ..=(self.max * self.samples as i32))
-                    .map(|x| return f64::from(x) / f64::from(self.samples))
-                    .map(|x| return [x, nf.sample_1d(x, Some(self.offset), None)])
+                    .map(|x| return x as f32 / self.samples as f32)
+                    .map(|x| return [x as f64, nf.fbm(x, 0.0, 0.0) as f64])
                     .collect();
                 let line = Line::new(points);
                 Plot::new("noise_1d").show(ui, |plot_ui| return plot_ui.line(line));
