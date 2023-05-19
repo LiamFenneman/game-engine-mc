@@ -3,6 +3,7 @@ use ge_util::{coords::CHUNK_SIZE, ChunkPos};
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
 /// A naive surface painter that paints the top layer of blocks.
+#[derive(Debug, Clone, Copy)]
 pub struct SimpleSurfacePainter;
 
 impl ChunkTransformation for SimpleSurfacePainter {

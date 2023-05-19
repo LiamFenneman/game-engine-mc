@@ -15,3 +15,6 @@ pub mod trns;
 
 mod types;
 pub use types::*;
+
+#[macro_use]
+extern crate ge_macros;
