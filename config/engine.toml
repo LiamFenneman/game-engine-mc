@@ -1,7 +1,7 @@
 [renderer]
 target_fps = 120
 wireframe_mode = false
-render_distance = 5
+render_distance = 2
 
 [camera]
 initial_position = [ 0.0, 15.0, 105.0 ]
@@ -15,10 +15,11 @@ sensitivity = 0.5
 base_height = 100
 sea_level = 100
 culling = true
+cull_border = false
 
 [world_gen.noise]
 octaves = 5
 frequency = 0.0625
-amplitude = 8.0
+amplitude = 12.0
 lacunarity = 2.0
 persistence = 0.5

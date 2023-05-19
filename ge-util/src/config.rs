@@ -29,6 +29,7 @@ pub struct WorldGenConfig {
     pub base_height: i32,
     pub sea_level: i32,
     pub culling: bool,
+    pub cull_border: bool,
     pub noise: NoiseConfig,
 }
 
@@ -84,6 +85,7 @@ impl Default for WorldGenConfig {
             base_height: 100,
             sea_level: 90,
             culling: true,
+            cull_border: false,
             noise: Default::default(),
         };
     }

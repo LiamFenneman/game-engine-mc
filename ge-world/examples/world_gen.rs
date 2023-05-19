@@ -34,9 +34,9 @@ impl TestRenderer {
 }
 
 fn main() {
-    let noise = ge_world::noise::Noise::new(5, 1.0, 10.0, 2.0, 0.5);
-    let sea_level = Box::new(ge_world::sea_level::SeaLevel::new(95));
-    let surface_painter = Box::new(ge_world::surface_painting::SimpleSurfacePainter);
+    let noise = ge_world::noise::Noise::new(5, 1.0 / 16.0, 10.0, 2.0, 0.5);
+    let sea_level = Box::new(ge_world::trns::SeaLevel::new(95));
+    let surface_painter = Box::new(ge_world::trns::SimpleSurfacePainter);
     let world = FixedWorldGenerator::new(
         noise,
         CHUNK_COUNT,

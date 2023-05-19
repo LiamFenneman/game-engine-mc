@@ -47,7 +47,14 @@ impl Chunk {
         }
 
         let mut visible_blocks = Vec::with_capacity(self.blocks.len());
-        for blk in self.blocks.values() {
+        for blk in self.blocks.values().filter(|blk| {
+            if !config.world_gen.cull_border {
+                return blk.chunk_pos.x() != 0 || blk.chunk_pos.y() != 0 || blk.chunk_pos.z() != 0;
+            }
+
+            // if we are culling the border then do nothing
+            return true;
+        }) {
             // if the block is air then it is not visible
             if blk.ty == BlockType::Air {
                 continue;
@@ -75,6 +82,15 @@ impl Chunk {
             if num_visible < neighbours.len() {
                 visible_blocks.push(blk);
             }
+        }
+
+        if !config.world_gen.cull_border {
+            visible_blocks.extend(
+                self.blocks
+                    .iter()
+                    .filter(|(pos, _)| return pos.x() == 0 || pos.y() == 0)
+                    .map(|(_, b)| return b),
+            );
         }
 
         return visible_blocks;

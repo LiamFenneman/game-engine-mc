@@ -10,8 +10,7 @@ use ge_util::{ChunkOffset, EngineConfig};
 use ge_world::{
     gen::{FixedWorldGenerator, WorldGenerator},
     noise::Noise,
-    sea_level::SeaLevel,
-    surface_painting::SimpleSurfacePainter,
+    trns::{SeaLevel, SimpleSurfacePainter},
     Chunk,
 };
 
@@ -34,14 +33,11 @@ impl World {
             (rd, rd)
         };
         let noise = Noise::from(config);
-        let sea_level = Box::new(SeaLevel::new(config.world_gen.sea_level));
-        let surface_painter = Box::new(SimpleSurfacePainter);
-        let world_gen = FixedWorldGenerator::new(
-            noise,
-            count,
-            vec![sea_level, surface_painter],
-            config,
-        );
+        let trns: Vec<Box<dyn ge_world::ChunkTransformation>> = vec![
+            Box::new(SeaLevel::new(config.world_gen.sea_level)),
+            Box::new(SimpleSurfacePainter),
+        ];
+        let world_gen = FixedWorldGenerator::new(noise, count, trns, config);
 
         let instances = HashMap::with_capacity((config.renderer.render_distance as usize).pow(2));
 

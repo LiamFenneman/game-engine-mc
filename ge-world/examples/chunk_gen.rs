@@ -40,8 +40,8 @@ fn main() {
     let renderer = TestRenderer::new(
         chunk_gen
             .generate(ChunkOffset::default())
-            .apply_transformation(&ge_world::sea_level::SeaLevel::new(95))
-            .apply_transformation(&ge_world::surface_painting::SimpleSurfacePainter),
+            .apply_transformation(&ge_world::trns::SeaLevel::new(95))
+            .apply_transformation(&ge_world::trns::SimpleSurfacePainter),
     );
     renderer.render(90..=100);
 }
