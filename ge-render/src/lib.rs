@@ -31,17 +31,26 @@ pub async fn run() {
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
     window.set_cursor_visible(false);
-    window
-        .set_cursor_grab(CursorGrabMode::Confined)
-        .or_else(|_e| return window.set_cursor_grab(CursorGrabMode::Locked))
-        .expect("could not grab cursor");
     tracing::trace!("created window");
 
     let renderer = renderer::Renderer::new(&window, window.inner_size()).await;
     let mut engine = engine::Engine::new(window, renderer);
 
+    let mut try_grab_cursor = false;
     event_loop.run(move |event, _, control_flow| match event {
         Event::MainEventsCleared => {
+            // try to grab the cursor until it works
+            if !try_grab_cursor {
+                if let Err(e) = engine
+                    .window
+                    .set_cursor_grab(CursorGrabMode::Confined)
+                    .or_else(|_| return engine.window.set_cursor_grab(CursorGrabMode::Locked))
+                {
+                    tracing::error!("failed to grab cursor: {:?}", e);
+                } else {
+                    try_grab_cursor = true;
+                }
+            }
             engine.update();
             match engine.render() {
                 Ok(_) => {}
