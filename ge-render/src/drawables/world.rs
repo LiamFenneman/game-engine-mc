@@ -16,7 +16,7 @@ use ge_world::{
 };
 
 pub struct World {
-    position: Vector2<i32>,
+    camera_position: Vector2<i32>,
     world_gen: FixedWorldGenerator,
     instances: HashMap<ChunkOffset, DrawChunk>,
     dirty: bool,
@@ -24,8 +24,8 @@ pub struct World {
 
 impl World {
     #[must_use]
-    pub fn new(position: Vector2<i32>, config: &EngineConfig) -> Self {
-        let chunk_count = {
+    pub fn new(camera_position: Vector2<i32>, config: &EngineConfig) -> Self {
+        let count = {
             #[allow(
                 clippy::cast_possible_wrap,
                 reason = "value should not be large enought to wrap"
@@ -36,16 +36,17 @@ impl World {
         let noise = Noise::from(config);
         let sea_level = Box::new(SeaLevel::new(config.world_gen.sea_level));
         let surface_painter = Box::new(SimpleSurfacePainter);
-        let world_gen = FixedWorldGenerator::with_transformations(
+        let world_gen = FixedWorldGenerator::new(
             noise,
-            chunk_count,
+            count,
             vec![sea_level, surface_painter],
+            config,
         );
 
         let instances = HashMap::with_capacity((config.renderer.render_distance as usize).pow(2));
 
         return Self {
-            position,
+            camera_position,
             world_gen,
             instances,
             dirty: true,
@@ -64,7 +65,13 @@ impl World {
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
         config: &ge_util::EngineConfig,
     ) {
-        self.position = world_pos_to_chunk_pos(new_pos);
+        let last_pos = self.camera_position;
+        self.camera_position = world_pos_to_chunk_pos(new_pos);
+
+        if last_pos != self.camera_position {
+            tracing::trace!("camera position changed: {:?}", self.camera_position);
+        }
+
         if !self.dirty {
             // TODO: replace self.dirty with a check if the pos is the same chunk as last frame
             return;

@@ -1,7 +1,7 @@
 use crate::{noise::Noise, Block, Chunk, ChunkTransformation, World};
 use ge_util::{
     coords::{CHUNK_HEIGHT, CHUNK_SIZE},
-    ChunkOffset, ChunkPos,
+    ChunkOffset, ChunkPos, EngineConfig,
 };
 
 /// A `WorldGenerator` is a trait that generates a `World`.
@@ -11,26 +11,22 @@ pub trait WorldGenerator {
 
 pub struct FixedWorldGenerator {
     gen: NoiseChunkGenerator,
-    pub chunk_count: (i32, i32),
+    pub count: (i32, i32),
     transformations: Vec<Box<dyn ChunkTransformation>>,
 }
 
 impl FixedWorldGenerator {
     #[must_use]
-    pub fn new(noise: Noise, chunk_count: (i32, i32)) -> Self {
-        return Self::with_transformations(noise, chunk_count, Vec::new());
-    }
-
-    #[must_use]
-    pub fn with_transformations(
+    pub fn new(
         noise: Noise,
-        chunk_count: (i32, i32),
+        count: (i32, i32),
         transformations: Vec<Box<dyn ChunkTransformation>>,
+        config: &EngineConfig,
     ) -> Self {
-        let gen = NoiseChunkGenerator::with_noise(noise, 100);//TODO: add to config
+        let gen = NoiseChunkGenerator::with_noise(noise, config.world_gen.base_height);
         return Self {
             gen,
-            chunk_count,
+            count,
             transformations,
         };
     }
@@ -43,8 +39,8 @@ impl FixedWorldGenerator {
 impl WorldGenerator for FixedWorldGenerator {
     fn generate(&mut self) -> World {
         let mut chunks = vec![];
-        for x in (1 - self.chunk_count.0)..self.chunk_count.0 {
-            for y in (1 - self.chunk_count.1)..self.chunk_count.1 {
+        for x in (1 - self.count.0)..self.count.0 {
+            for y in (1 - self.count.1)..self.count.1 {
                 let off = ChunkOffset::new(x, y, 0).unwrap();
                 let mut chunk = self.generate_chunk(off);
                 for trns in &self.transformations {
@@ -126,8 +122,7 @@ impl ChunkGenerator for NoiseChunkGenerator {
 impl NoiseChunkGenerator {
     #[must_use]
     pub fn new(
-        #[allow(unused)]
-        seed: u64,
+        #[allow(unused)] seed: u64,
         base_z: i32,
         octaves: usize,
         frequency: f32,
@@ -136,17 +131,11 @@ impl NoiseChunkGenerator {
         persistence: f32,
     ) -> Self {
         let noise = Noise::new(octaves, frequency, amplitude, lacunarity, persistence);
-        return Self {
-            noise,
-            base_z,
-        };
+        return Self { noise, base_z };
     }
 
     #[must_use]
     pub fn with_noise(noise: Noise, base_z: i32) -> Self {
-        return Self {
-            noise,
-            base_z,
-        };
+        return Self { noise, base_z };
     }
 }
