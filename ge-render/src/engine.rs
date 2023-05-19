@@ -168,6 +168,7 @@ impl Engine {
         if new_size.width > 0 && new_size.height > 0 {
             self.projection.resize(new_size.width, new_size.height);
             self.renderer.resize(new_size);
+            self.renderer.debug_text.resize(new_size);
         }
     }
 

@@ -66,6 +66,10 @@ impl TextRenderer {
             .expect("Draw queued");
     }
 
+    pub fn resize(&mut self, new_size: PhysicalSize<u32>) {
+        self.size = new_size;
+    }
+
     fn text(&self) -> String {
         return self.lines.values().fold(String::new(), |mut acc, line| {
             acc.push_str(line);
