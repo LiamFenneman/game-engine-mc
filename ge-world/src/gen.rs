@@ -1,4 +1,4 @@
-use crate::{noise::Noise, Block, Chunk, ChunkTransformation, World, trns::Transformation};
+use crate::{noise::Noise, trns::Transformation, Block, Chunk, ChunkTransformation, World};
 use ge_util::{
     coords::{CHUNK_HEIGHT, CHUNK_SIZE},
     ChunkOffset, ChunkPos, EngineConfig,
@@ -6,7 +6,7 @@ use ge_util::{
 
 /// A `WorldGenerator` is a trait that generates a `World`.
 pub trait WorldGenerator {
-    fn generate(&mut self) -> World;
+    fn generate(&self) -> World;
 }
 
 pub struct FixedWorldGenerator {
@@ -26,14 +26,10 @@ impl FixedWorldGenerator {
         let gen = NoiseChunkGenerator::with_noise(noise, config.world_gen.base_height);
         return Self { gen, count, trns };
     }
-
-    fn generate_chunk(&mut self, chunk_offset: impl Into<ChunkOffset> + Copy) -> Chunk {
-        return self.gen.generate(chunk_offset);
-    }
 }
 
 impl WorldGenerator for FixedWorldGenerator {
-    fn generate(&mut self) -> World {
+    fn generate(&self) -> World {
         let lo = (1 - self.count.0, 1 - self.count.1, 0);
         let hi = (self.count.0, self.count.1, 0);
 
@@ -44,7 +40,7 @@ impl WorldGenerator for FixedWorldGenerator {
                 });
             })
             .map(|o| {
-                let mut chunk = self.generate_chunk(o);
+                let mut chunk = self.gen.generate(o);
                 for trns in &self.trns {
                     trns.transform(&mut chunk);
                 }
@@ -60,13 +56,13 @@ impl WorldGenerator for FixedWorldGenerator {
 pub trait ChunkGenerator {
     /// Generate a block at a specific position.
     fn generate_at(
-        &mut self,
+        &self,
         chunk_pos: impl Into<ChunkPos>,
         chunk_offset: impl Into<ChunkOffset> + Copy,
     ) -> Block;
 
     /// Generate a `Chunk`.
-    fn generate(&mut self, chunk_offset: impl Into<ChunkOffset> + Copy) -> Chunk {
+    fn generate(&self, chunk_offset: impl Into<ChunkOffset> + Copy) -> Chunk {
         let start = std::time::Instant::now();
         let mut blocks = std::collections::HashMap::new();
         // TODO: parallelize this
@@ -100,7 +96,7 @@ pub struct NoiseChunkGenerator {
 #[allow(clippy::cast_precision_loss, reason = "precisions is not important")]
 impl ChunkGenerator for NoiseChunkGenerator {
     fn generate_at(
-        &mut self,
+        &self,
         chunk_pos: impl Into<ChunkPos>,
         chunk_offset: impl Into<ChunkOffset> + Copy,
     ) -> Block {
