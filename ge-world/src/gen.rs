@@ -24,11 +24,7 @@ impl FixedWorldGenerator {
         config: &EngineConfig,
     ) -> Self {
         let gen = NoiseChunkGenerator::with_noise(noise, config.world_gen.base_height);
-        return Self {
-            gen,
-            count,
-            trns,
-        };
+        return Self { gen, count, trns };
     }
 
     fn generate_chunk(&mut self, chunk_offset: impl Into<ChunkOffset> + Copy) -> Chunk {
@@ -38,17 +34,24 @@ impl FixedWorldGenerator {
 
 impl WorldGenerator for FixedWorldGenerator {
     fn generate(&mut self) -> World {
-        let mut chunks = vec![];
-        for x in (1 - self.count.0)..self.count.0 {
-            for y in (1 - self.count.1)..self.count.1 {
-                let off = ChunkOffset::new(x, y, 0).unwrap();
-                let mut chunk = self.generate_chunk(off);
+        let lo = (1 - self.count.0, 1 - self.count.1, 0);
+        let hi = (self.count.0, self.count.1, 0);
+
+        let chunks = (lo.0..=hi.0)
+            .flat_map(|x| {
+                return (lo.1..=hi.1).map(move |y| {
+                    return ChunkOffset::new(x, y, 0).unwrap();
+                });
+            })
+            .map(|o| {
+                let mut chunk = self.generate_chunk(o);
                 for trns in &self.trns {
                     trns.transform(&mut chunk);
                 }
-                chunks.push(chunk);
-            }
-        }
+                return chunk;
+            })
+            .collect::<Vec<_>>();
+
         return World { chunks };
     }
 }

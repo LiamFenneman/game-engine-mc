@@ -1,7 +1,6 @@
 [renderer]
 target_fps = 120
 wireframe_mode = false
-render_distance = 2
 
 [camera]
 initial_position = [ 0.0, 15.0, 105.0 ]
@@ -12,6 +11,7 @@ speed = 10.0
 sensitivity = 0.5
 
 [world_gen]
+render_distance = 2
 base_height = 100
 sea_level = 100
 culling = true

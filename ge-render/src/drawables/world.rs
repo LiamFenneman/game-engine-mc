@@ -27,9 +27,10 @@ impl World {
         let count = {
             #[allow(
                 clippy::cast_possible_wrap,
-                reason = "value should not be large enought to wrap"
+                clippy::cast_possible_truncation,
+                reason = "value should not be large enought to wrap or truncate"
             )]
-            let rd = config.renderer.render_distance as i32;
+            let rd = config.world_gen.render_distance as i32;
             (rd, rd)
         };
         let noise = Noise::from(config);
@@ -39,7 +40,7 @@ impl World {
         ];
         let world_gen = FixedWorldGenerator::new(noise, count, trns, config);
 
-        let instances = HashMap::with_capacity((config.renderer.render_distance as usize).pow(2));
+        let instances = HashMap::with_capacity((config.world_gen.render_distance).pow(2));
 
         return Self {
             camera_position,
