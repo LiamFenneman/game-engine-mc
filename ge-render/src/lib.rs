@@ -7,6 +7,10 @@
 //
 #![feature(lint_reasons)]
 
+#[allow(unused_imports)]
+#[macro_use]
+extern crate ge_macros;
+
 pub mod block;
 pub mod camera;
 pub mod drawables;
