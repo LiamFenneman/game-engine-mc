@@ -1,6 +1,6 @@
 use crate::{Block, ChunkTransformation};
 use ge_util::{coords::CHUNK_SIZE, ChunkPos};
-use rayon::prelude::{IntoParallelIterator, ParallelIterator};
+use rayon::prelude::{ParallelBridge, ParallelIterator};
 
 /// A naive surface painter that paints the top layer of blocks.
 #[derive(Debug, Clone, Copy)]
@@ -20,8 +20,7 @@ impl ChunkTransformation for SimpleSurfacePainter {
                     return (x, y);
                 });
             })
-            .collect::<Vec<(i32, i32)>>()
-            .into_par_iter()
+            .par_bridge()
             .map(|(x, y)| {
                 let z = chunk
                     .blocks
