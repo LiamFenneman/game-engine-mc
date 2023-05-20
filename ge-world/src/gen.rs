@@ -33,9 +33,9 @@ impl WorldGenerator for FixedWorldGenerator {
         let lo = (1 - self.count.0, 1 - self.count.1, 0);
         let hi = (self.count.0, self.count.1, 0);
 
-        let chunks = (lo.0..=hi.0)
+        let chunks = (lo.0..hi.0)
             .flat_map(|x| {
-                return (lo.1..=hi.1).map(move |y| {
+                return (lo.1..hi.1).map(move |y| {
                     return ChunkOffset::new(x, y, 0).unwrap();
                 });
             })
