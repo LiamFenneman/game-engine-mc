@@ -2,6 +2,7 @@ pub mod controller;
 pub mod projection;
 pub mod uniform;
 
+use crate::text::DrawText;
 use cgmath::{InnerSpace, Matrix4, Point3, Rad, Vector3};
 
 #[derive(Debug)]
@@ -37,10 +38,20 @@ impl Camera {
     }
 }
 
-impl std::fmt::Display for Camera {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(
-            f,
+impl DrawText for Camera {
+    #[inline]
+    fn name(&self) -> &'static str {
+        return "camera";
+    }
+
+    #[inline]
+    fn priority(&self) -> u8 {
+        return 200;
+    }
+
+    #[inline]
+    fn text(&self) -> String {
+        return format!(
             "P: {:?} Y: {:?} P: {:?}",
             self.position, self.yaw, self.pitch
         );

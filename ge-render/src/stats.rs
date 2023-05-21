@@ -1,3 +1,4 @@
+use crate::text::DrawText;
 use std::time::Instant;
 
 #[derive(Debug)]
@@ -42,5 +43,22 @@ impl FrameStats {
             self.frame_time = 0.0;
             self.current_fps = tmp;
         }
+    }
+}
+
+impl DrawText for FrameStats {
+    #[inline]
+    fn name(&self) -> &'static str {
+        return "fps";
+    }
+
+    #[inline]
+    fn priority(&self) -> u8 {
+        return u8::MAX;
+    }
+
+    #[inline]
+    fn text(&self) -> String {
+        return format!("FPS {} DT {}", self.current_fps, self.delta_time);
     }
 }

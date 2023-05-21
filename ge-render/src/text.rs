@@ -2,6 +2,12 @@ use std::collections::BTreeMap;
 use wgpu_glyph::{ab_glyph, GlyphBrushBuilder, Section, Text};
 use winit::dpi::PhysicalSize;
 
+pub trait DrawText {
+    fn name(&self) -> &'static str;
+    fn priority(&self) -> u8;
+    fn text(&self) -> String;
+}
+
 pub struct TextRenderer {
     lines: BTreeMap<TextEntry, String>,
     size: PhysicalSize<u32>,
@@ -78,8 +84,8 @@ impl TextRenderer {
         });
     }
 
-    pub fn add_entry(&mut self, name: &'static str, priority: u8, text: impl Into<String>) {
-        self.lines.insert((name, priority).into(), text.into());
+    pub fn add_entry<T: DrawText>(&mut self, t: &T) {
+        self.lines.insert((t.name(), t.priority()).into(), t.text());
     }
 }
 

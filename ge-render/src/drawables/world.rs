@@ -34,10 +34,8 @@ impl World {
             (rd, rd)
         };
         let noise = Noise::from(config);
-        let trns: Vec<Transformation> = vec![
-            SeaLevel::new(config).into(),
-            SimpleSurfacePainter.into(),
-        ];
+        let trns: Vec<Transformation> =
+            vec![SeaLevel::new(config).into(), SimpleSurfacePainter.into()];
         let world_gen = FixedWorldGenerator::new(noise, count, trns, config);
 
         let instances = HashMap::with_capacity((config.world_gen.render_distance).pow(2));

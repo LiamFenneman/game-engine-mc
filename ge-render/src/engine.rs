@@ -129,17 +129,6 @@ impl Engine {
 
     pub fn update(&mut self) {
         self.stats.fps();
-        self.renderer.debug_text.add_entry(
-            "fps",
-            250,
-            format!(
-                "FPS {} DT {}",
-                self.stats.current_fps, self.stats.delta_time
-            ),
-        );
-        self.renderer
-            .debug_text
-            .add_entry("camera", 200, format!("{}", self.camera));
         self.camera_controller
             .update_camera(&mut self.camera, self.stats.delta_time);
         self.camera_uniform.update_view_proj(
@@ -159,6 +148,8 @@ impl Engine {
             &self.uniform_bind_group_layout,
             &self.config,
         );
+        self.renderer.debug_text.add_entry(&self.stats);
+        self.renderer.debug_text.add_entry(&self.camera);
     }
 
     /// Renders the game.
