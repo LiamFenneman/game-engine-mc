@@ -15,12 +15,11 @@ pub struct Noise2D {
     frequency: f32,
     amplitude: f32,
     lacunarity: f32,
-    gain: f32,
+    persistence: f32,
     offset: Vector2<f32>,
-    scale: f32,
 
     #[serde(skip)]
-    noise_field: Option<Noise>,
+    noise: Option<Noise>,
     #[serde(skip)]
     image: Option<ColorImage>,
     #[serde(skip)]
@@ -35,12 +34,12 @@ impl Noise2D {
             self.frequency,
             self.amplitude,
             self.lacunarity,
-            self.gain,
+            self.persistence,
         );
     }
 
     pub fn generate_image(&mut self) -> ColorImage {
-        debug_assert!(self.noise_field.is_some());
+        debug_assert!(self.noise.is_some());
 
         let mut samples = Vec::with_capacity(self.size * self.size);
         for y in 0..self.size {
@@ -49,12 +48,11 @@ impl Noise2D {
                     clippy::cast_precision_loss,
                     reason = "sample uses f64 so we need to cast"
                 )]
-                samples.push(
-                    self.noise_field
-                        .as_ref()
-                        .unwrap()
-                        .fbm(x as f32, y as f32, 0.0),
-                );
+                samples.push(self.noise.as_ref().unwrap().fbm(
+                    x as f32 + self.offset.x,
+                    y as f32 + self.offset.y,
+                    0.0,
+                ));
             }
         }
 
@@ -84,19 +82,18 @@ impl Default for Noise2D {
 
             seed: 0,
             octaves: 5,
-            frequency: 1.0,
+            frequency: 16.0,
             amplitude: 0.5,
             lacunarity: 2.0,
-            gain: 0.5,
+            persistence: 0.5,
             offset: Vector2::new(0.0, 0.0),
-            scale: 256.0,
 
-            noise_field: None,
+            noise: None,
             image: None,
             texture: None,
         };
 
-        s.noise_field = Some(s.generate_noise_field());
+        s.noise = Some(s.generate_noise_field());
         s.image = Some(s.generate_image());
         return s;
     }
@@ -134,8 +131,8 @@ impl Noise2D {
                     .text("Octaves"),
             );
             let r_freq = ui.add(
-                egui::Slider::new(&mut self.frequency, 0.1..=10.0)
-                    .step_by(0.1)
+                egui::Slider::new(&mut self.frequency, 1.0..=1000.0)
+                    .step_by(1.0)
                     .text("Frequency"),
             );
             let r_ampl = ui.add(
@@ -149,7 +146,7 @@ impl Noise2D {
                     .text("Lacunarity"),
             );
             let r_gain = ui.add(
-                egui::Slider::new(&mut self.gain, 0.1..=1.0)
+                egui::Slider::new(&mut self.persistence, 0.1..=1.0)
                     .step_by(0.05)
                     .text("Gain"),
             );
@@ -163,11 +160,6 @@ impl Noise2D {
                     .step_by(1.0)
                     .text("Offset Y"),
             );
-            let r_scal = ui.add(
-                egui::Slider::new(&mut self.scale, 1.0..=512.0)
-                    .step_by(1.0)
-                    .text("Scale"),
-            );
 
             if r_seed.changed()
                 || r_size.changed()
@@ -178,9 +170,8 @@ impl Noise2D {
                 || r_gain.changed()
                 || r_offx.changed()
                 || r_offy.changed()
-                || r_scal.changed()
             {
-                self.noise_field = Some(self.generate_noise_field());
+                self.noise = Some(self.generate_noise_field());
                 self.image = Some(self.generate_image());
                 self.texture = None;
             }
@@ -210,7 +201,7 @@ pub struct Noise1D {
     frequency: f32,
     amplitude: f32,
     lacunarity: f32,
-    gain: f32,
+    persistence: f32,
     offset: f32,
 
     min: i32,
@@ -229,7 +220,7 @@ impl Noise1D {
             self.frequency,
             self.amplitude,
             self.lacunarity,
-            self.gain,
+            self.persistence,
         );
     }
 
@@ -253,8 +244,8 @@ impl Noise1D {
                     .text("Octaves"),
             );
             let r_freq = ui.add(
-                egui::Slider::new(&mut self.frequency, 0.1..=10.0)
-                    .step_by(0.1)
+                egui::Slider::new(&mut self.frequency, 1.0..=100.0)
+                    .step_by(1.0)
                     .text("Frequency"),
             );
             let r_ampl = ui.add(
@@ -268,7 +259,7 @@ impl Noise1D {
                     .text("Lacunarity"),
             );
             let r_gain = ui.add(
-                egui::Slider::new(&mut self.gain, 0.1..=1.0)
+                egui::Slider::new(&mut self.persistence, 0.1..=1.0)
                     .step_by(0.05)
                     .text("Gain"),
             );
@@ -319,7 +310,7 @@ impl Noise1D {
                 let points: PlotPoints = ((self.min * self.samples as i32)
                     ..=(self.max * self.samples as i32))
                     .map(|x| return x as f32 / self.samples as f32)
-                    .map(|x| return [x as f64, nf.fbm(x, 0.0, 0.0) as f64])
+                    .map(|x| return [x as f64, nf.fbm(x + self.offset, 0.0, 0.0) as f64])
                     .collect();
                 let line = Line::new(points);
                 Plot::new("noise_1d").show(ui, |plot_ui| return plot_ui.line(line));
@@ -335,10 +326,10 @@ impl Default for Noise1D {
 
             seed: 0,
             octaves: 5,
-            frequency: 1.0,
-            amplitude: 0.5,
+            frequency: 16.0,
+            amplitude: 1.0,
             lacunarity: 2.0,
-            gain: 0.5,
+            persistence: 0.5,
             offset: 0.0,
 
             min: -10,
