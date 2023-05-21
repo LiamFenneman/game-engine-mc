@@ -155,7 +155,7 @@ impl Noise {
 
     #[must_use]
     pub fn fbm(&self, x: f32, y: f32, z: f32) -> f32 {
-        let mut freq = self.frequency;
+        let mut freq = 1.0 / self.frequency;
         let mut amp = self.amplitude;
         let mut sum = 0.0;
 

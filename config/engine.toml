@@ -20,7 +20,7 @@ cull_border = true
 
 [world_gen.noise]
 octaves = 5
-frequency = 0.0625
+frequency = 16.0
 amplitude = 12.0
 lacunarity = 2.0
 persistence = 0.5
