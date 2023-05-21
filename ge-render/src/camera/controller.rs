@@ -120,5 +120,7 @@ impl CameraController {
         } else if camera.pitch > SAFE_FRAC_PI_2 {
             camera.pitch = SAFE_FRAC_PI_2;
         }
+
+        camera.yaw = camera.yaw.rem_euclid(2.0 * std::f32::consts::PI);
     }
 }
