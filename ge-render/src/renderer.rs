@@ -23,7 +23,6 @@ pub struct Renderer {
     pub queue: wgpu::Queue,
     pub size: winit::dpi::PhysicalSize<u32>,
     pub depth_texture: Texture,
-    drawables: Vec<Box<dyn Draw>>,
     world: Option<Rc<RefCell<World>>>, // TODO: remove this and only use drawable
 
     pub staging_belt: wgpu::util::StagingBelt,
@@ -88,7 +87,6 @@ impl Renderer {
         surface.configure(&device, &config);
 
         let depth_texture = Texture::create_depth_texture(&device, &config, "depth_texture");
-        let drawables = vec![];
 
         let staging_belt = wgpu::util::StagingBelt::new(1024);
         let debug_text = crate::text::TextRenderer::new(
@@ -106,7 +104,6 @@ impl Renderer {
             queue,
             size,
             depth_texture,
-            drawables,
             world: None,
 
             staging_belt,
@@ -177,11 +174,6 @@ impl Renderer {
                 }),
             });
 
-            // render things to the scene
-            for drawable in &mut self.drawables {
-                drawable.draw(&mut render_pass, uniform_bind_group);
-            }
-
             // render the world
             world.draw(&mut render_pass, uniform_bind_group);
         }
@@ -201,10 +193,6 @@ impl Renderer {
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
         return Ok(());
-    }
-
-    pub fn add_drawable(&mut self, drawable: Box<dyn Draw>) {
-        self.drawables.push(drawable);
     }
 
     pub fn set_world(&mut self, world: Rc<RefCell<World>>) {
