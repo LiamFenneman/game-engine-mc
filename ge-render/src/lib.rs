@@ -13,13 +13,13 @@
 #[macro_use]
 extern crate ge_macros;
 
-pub mod block;
-pub mod camera;
-pub mod drawables;
-pub mod engine;
-pub mod renderer;
-pub mod stats;
-pub mod text;
+pub(crate) mod block;
+pub(crate) mod camera;
+pub(crate) mod drawables;
+pub(crate) mod engine;
+pub(crate) mod renderer;
+pub(crate) mod stats;
+pub(crate) mod text;
 
 use winit::{
     event::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},

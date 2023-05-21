@@ -80,7 +80,7 @@ impl World {
             .map(|chunk| {
                 return (
                     chunk.position,
-                    self.create_instance(
+                    create_instance(
                         chunk,
                         renderer,
                         resources,
@@ -94,23 +94,22 @@ impl World {
 
         self.dirty = false;
     }
+}
 
-    pub fn create_instance(
-        &mut self,
-        chunk: Chunk,
-        renderer: &Renderer,
-        resources: &mut ResourceManager,
-        uniform_bind_group_layout: &wgpu::BindGroupLayout,
-        config: &ge_util::EngineConfig,
-    ) -> DrawChunk {
-        return DrawChunk::new(
-            chunk,
-            renderer,
-            resources,
-            uniform_bind_group_layout,
-            config,
-        );
-    }
+fn create_instance(
+    chunk: Chunk,
+    renderer: &Renderer,
+    resources: &mut ResourceManager,
+    uniform_bind_group_layout: &wgpu::BindGroupLayout,
+    config: &ge_util::EngineConfig,
+) -> DrawChunk {
+    return DrawChunk::new(
+        chunk,
+        renderer,
+        resources,
+        uniform_bind_group_layout,
+        config,
+    );
 }
 
 impl Draw for World {
