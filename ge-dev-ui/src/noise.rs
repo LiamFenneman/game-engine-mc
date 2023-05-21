@@ -1,4 +1,4 @@
-use cgmath::Vector2;
+use cgmath::Vector3;
 use egui::{
     plot::{Line, Plot, PlotPoints},
     ColorImage, TextureHandle,
@@ -16,7 +16,7 @@ pub struct Noise2D {
     amplitude: f32,
     lacunarity: f32,
     persistence: f32,
-    offset: Vector2<f32>,
+    offset: Vector3<f32>,
 
     #[serde(skip)]
     noise: Option<Noise>,
@@ -51,7 +51,7 @@ impl Noise2D {
                 samples.push(self.noise.as_ref().unwrap().fbm(
                     x as f32 + self.offset.x,
                     y as f32 + self.offset.y,
-                    0.0,
+                    self.offset.z,
                 ));
             }
         }
@@ -86,7 +86,7 @@ impl Default for Noise2D {
             amplitude: 0.5,
             lacunarity: 2.0,
             persistence: 0.5,
-            offset: Vector2::new(0.0, 0.0),
+            offset: Vector3::new(0.0, 0.0, 0.0),
 
             noise: None,
             image: None,
@@ -160,6 +160,11 @@ impl Noise2D {
                     .step_by(1.0)
                     .text("Offset Y"),
             );
+            let r_offz = ui.add(
+                egui::Slider::new(&mut self.offset.z, -1000.0..=1000.0)
+                    .step_by(1.0)
+                    .text("Offset Z"),
+            );
 
             if r_seed.changed()
                 || r_size.changed()
@@ -170,6 +175,7 @@ impl Noise2D {
                 || r_gain.changed()
                 || r_offx.changed()
                 || r_offy.changed()
+                || r_offz.changed()
             {
                 self.noise = Some(self.generate_noise_field());
                 self.image = Some(self.generate_image());
