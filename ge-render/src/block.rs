@@ -47,6 +47,7 @@ impl Vertex for BlockVertex {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Block {
     faces: [Face; 6],
 }
@@ -99,6 +100,7 @@ impl Block {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 enum FaceDirection {
     Top,
     Bottom,
@@ -119,7 +121,7 @@ macro_rules! vert {
 }
 
 impl FaceDirection {
-    pub fn get_vertices(&self) -> [BlockVertex; 4] {
+    pub fn get_vertices(self) -> [BlockVertex; 4] {
         return match self {
             FaceDirection::Top => [
                 vert!(1.0 0.0 1.0, 1.0 0.0, 0),
@@ -161,6 +163,7 @@ impl FaceDirection {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 #[allow(unused)]
 struct Face {
     vertices: [BlockVertex; 4],

@@ -15,6 +15,7 @@ pub trait Vertex {
 }
 
 /// The `Renderer` struct is responsible for rendering the game.
+#[derive(Debug)]
 pub struct Renderer {
     surface: wgpu::Surface,
     pub config: wgpu::SurfaceConfiguration,

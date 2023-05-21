@@ -4,6 +4,7 @@ use nalgebra_glm::perspective;
 /// The camera projection.
 ///
 /// The projection only really needs to change if the window resizes.
+#[derive(Debug, Clone, Copy)]
 pub struct Projection {
     aspect: f32,
     fovy: f32,

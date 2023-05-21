@@ -143,7 +143,7 @@ impl ChunkOffset {
     }
 }
 
-#[derive(Debug, Error, PartialEq)]
+#[derive(Debug, Clone, Copy, Error, PartialEq)]
 pub enum CoordError {
     #[error("world position out of bounds: {0}")]
     WorldPosRange(WorldPos),

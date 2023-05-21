@@ -17,6 +17,7 @@ use winit::{
 };
 
 /// The `Engine` struct is the main entry point for the game engine.
+#[derive(Debug)]
 pub struct Engine {
     pub config: EngineConfig,
 

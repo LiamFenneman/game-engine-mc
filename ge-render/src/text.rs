@@ -8,6 +8,7 @@ pub trait DrawText {
     fn text(&self) -> String;
 }
 
+#[derive(Debug)]
 pub struct TextRenderer {
     lines: BTreeMap<TextEntry, String>,
     size: PhysicalSize<u32>,
@@ -89,7 +90,7 @@ impl TextRenderer {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct TextEntry {
     name: &'static str,
     priority: u8,

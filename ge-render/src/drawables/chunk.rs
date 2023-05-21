@@ -7,10 +7,11 @@ use ge_resource::{
     ResourceManager,
 };
 use ge_world::{BlockType, Chunk};
-use nalgebra::{Vector3, Matrix4};
+use nalgebra::{Matrix4, Vector3};
 use std::{collections::HashSet, rc::Rc};
 use wgpu::util::DeviceExt;
 
+#[derive(Debug)]
 pub struct DrawChunk {
     instances: Vec<DrawInstancedBlocks>,
     #[allow(dead_code, reason = "TODO: add to debug info")]
@@ -64,6 +65,7 @@ impl Draw for DrawChunk {
     }
 }
 
+#[derive(Debug)]
 pub struct DrawInstancedBlocks {
     render_pipeline: wgpu::RenderPipeline,
     bind_group: Rc<wgpu::BindGroup>,
@@ -170,7 +172,7 @@ impl Draw for DrawInstancedBlocks {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Instance {
     position: Vector3<f32>,
 }

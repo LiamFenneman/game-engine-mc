@@ -6,7 +6,7 @@ use crate::text::DrawText;
 use nalgebra::{Matrix4, Vector3};
 use nalgebra_glm::look_at_lh;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Camera {
     pub position: Vector3<f32>,
     yaw: f32,

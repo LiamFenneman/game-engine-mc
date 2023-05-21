@@ -4,6 +4,8 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::similar_names)]
 #![allow(clippy::default_trait_access)]
+#![deny(missing_debug_implementations)]
+#![deny(missing_copy_implementations)]
 //
 #![feature(btree_cursors)]
 #![feature(lint_reasons)]

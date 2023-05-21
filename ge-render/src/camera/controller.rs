@@ -6,7 +6,7 @@ use winit::event::{ElementState, VirtualKeyCode};
 
 const SAFE_FRAC_PI_2: f32 = FRAC_PI_2 - 0.0001;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct CameraController {
     amount_left: f32,
     amount_right: f32,

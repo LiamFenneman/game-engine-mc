@@ -13,6 +13,7 @@ use ge_world::{
 use nalgebra::{Vector2, Vector3};
 use std::collections::HashMap;
 
+#[derive(Debug)]
 pub struct World {
     camera_position: Vector2<i32>,
     world_gen: FixedWorldGenerator,

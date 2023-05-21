@@ -9,6 +9,7 @@ pub trait WorldGenerator {
     fn generate(&self) -> World;
 }
 
+#[derive(Debug, Clone)]
 pub struct FixedWorldGenerator {
     gen: NoiseChunkGenerator,
     pub count: (i32, i32),
@@ -88,6 +89,7 @@ pub trait ChunkGenerator {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct NoiseChunkGenerator {
     pub noise: Noise,
     base_z: i32,

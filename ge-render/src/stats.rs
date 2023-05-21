@@ -1,7 +1,7 @@
 use crate::text::DrawText;
 use std::time::Instant;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct FrameStats {
     pub current_fps: u32,
     last_time: Instant,

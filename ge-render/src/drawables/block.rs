@@ -6,6 +6,7 @@ use ge_resource::{texture::Texture, ResourceManager};
 use std::rc::Rc;
 use wgpu::util::DeviceExt;
 
+#[derive(Debug)]
 pub struct DrawBlock {
     render_pipeline: wgpu::RenderPipeline,
     bind_group: Rc<wgpu::BindGroup>,
