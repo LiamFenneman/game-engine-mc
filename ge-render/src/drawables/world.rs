@@ -35,7 +35,7 @@ impl World {
         };
         let noise = Noise::from(config);
         let trns: Vec<Transformation> = vec![
-            SeaLevel::new(config.world_gen.sea_level).into(),
+            SeaLevel::new(config).into(),
             SimpleSurfacePainter.into(),
         ];
         let world_gen = FixedWorldGenerator::new(noise, count, trns, config);

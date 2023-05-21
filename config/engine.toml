@@ -14,8 +14,9 @@ sensitivity = 0.5
 render_distance = 2
 base_height = 100
 sea_level = 100
+fill_water = false
 culling = true
-cull_border = false
+cull_border = true
 
 [world_gen.noise]
 octaves = 5
