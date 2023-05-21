@@ -30,6 +30,7 @@ impl Noise2D {
     pub fn generate_noise_field(&mut self) -> Noise {
         tracing::debug!("Generated noise field");
         return Noise::new(
+            self.seed,
             self.octaves,
             self.frequency,
             self.amplitude,
@@ -222,6 +223,7 @@ impl Noise1D {
     pub fn generate_noise_field(&mut self) -> Noise {
         tracing::debug!("Generated noise field");
         return Noise::new(
+            self.seed,
             self.octaves,
             self.frequency,
             self.amplitude,

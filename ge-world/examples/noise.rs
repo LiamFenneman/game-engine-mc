@@ -6,7 +6,7 @@ const SIZE: usize = 512;
 const OFFSET: f32 = -256.0;
 
 fn main() {
-    let noise = Noise::new(5, 3.0, 1.0, 2.0, 0.5);
+    let noise = Noise::new(0, 5, 3.0, 1.0, 2.0, 0.5);
     let mut samples = Vec::with_capacity(SIZE * SIZE);
     for y in 0..SIZE {
         for x in 0..SIZE {

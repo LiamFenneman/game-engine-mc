@@ -35,7 +35,7 @@ impl TestRenderer {
 }
 
 fn main() {
-    let noise = ge_world::noise::Noise::new(5, 1.0, 10.0, 2.0, 0.5);
+    let noise = ge_world::noise::Noise::new(0, 5, 1.0, 10.0, 2.0, 0.5);
     let chunk_gen = NoiseChunkGenerator::with_noise(noise, 100);
     let renderer = TestRenderer::new(
         chunk_gen

@@ -121,7 +121,7 @@ impl ChunkGenerator for NoiseChunkGenerator {
 impl NoiseChunkGenerator {
     #[must_use]
     pub fn new(
-        #[allow(unused)] seed: u64,
+        seed: u64,
         base_z: i32,
         octaves: usize,
         frequency: f32,
@@ -129,7 +129,7 @@ impl NoiseChunkGenerator {
         lacunarity: f32,
         persistence: f32,
     ) -> Self {
-        let noise = Noise::new(octaves, frequency, amplitude, lacunarity, persistence);
+        let noise = Noise::new(seed, octaves, frequency, amplitude, lacunarity, persistence);
         return Self { noise, base_z };
     }
 

@@ -1,63 +1,54 @@
 // use rand::{Rng, SeedableRng};
 use ge_util::EngineConfig;
+use rand::{seq::SliceRandom, SeedableRng};
 
+pub const DEFAULT_SEED: u64 = 0;
 pub const MAX_OCTAVES: usize = 32;
 pub const SIZE: usize = 256;
 pub const MASK: usize = SIZE - 1;
-pub const PERM: [u8; 512] = [
-    151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69,
-    142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219,
-    203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175,
-    74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230,
-    220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76,
-    132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173,
-    186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206,
-    59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163,
-    70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232,
-    178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162,
-    241, 81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204,
-    176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141,
-    128, 195, 78, 66, 215, 61, 156, 180, // -- Repeated -- //
-    151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69,
-    142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219,
-    203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175,
-    74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230,
-    220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76,
-    132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173,
-    186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206,
-    59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163,
-    70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232,
-    178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162,
-    241, 81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204,
-    176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141,
-    128, 195, 78, 66, 215, 61, 156, 180,
-];
 
 #[derive(Debug, Clone, Copy)]
 pub struct Noise {
+    seed: u64,
     octaves: usize,
     frequency: f32,
     amplitude: f32,
     lacunarity: f32,
     persistence: f32,
+
+    perm: [u8; 512],
 }
 
 impl Noise {
     #[must_use]
     pub fn new(
+        seed: u64,
         octaves: usize,
         frequency: f32,
         amplitude: f32,
         lacunarity: f32,
         persistence: f32,
     ) -> Self {
+        let perm = {
+            let mut p = (0u8..=0xFF).collect::<Vec<_>>();
+            p.shuffle(&mut rand_chacha::ChaCha8Rng::seed_from_u64(seed));
+            let mut buf = [0; 512];
+            for (i, v) in p.iter().enumerate() {
+                buf[i] = *v;
+                buf[i + 256] = *v;
+            }
+            buf
+        };
+
         debug_assert!(octaves <= MAX_OCTAVES, "octaves too high");
         return Self {
+            seed,
             octaves,
             frequency,
             amplitude,
             lacunarity,
             persistence,
+            perm,
         };
     }
 
@@ -91,8 +82,8 @@ impl Noise {
     }
 
     #[inline]
-    fn hash(x: usize, y: usize, z: usize) -> u8 {
-        return PERM[PERM[PERM[x] as usize + y] as usize + z];
+    fn hash(&self, x: usize, y: usize, z: usize) -> u8 {
+        return self.perm[self.perm[self.perm[x] as usize + y] as usize + z];
     }
 
     #[allow(
@@ -101,7 +92,7 @@ impl Noise {
         clippy::cast_possible_wrap,
         clippy::cast_possible_truncation
     )]
-    fn eval(x: f32, y: f32, z: f32) -> f32 {
+    fn eval(&self, x: f32, y: f32, z: f32) -> f32 {
         let xi0 = (x.floor() as isize & MASK as isize) as usize;
         let yi0 = (y.floor() as isize & MASK as isize) as usize;
         let zi0 = (z.floor() as isize & MASK as isize) as usize;
@@ -125,14 +116,14 @@ impl Noise {
         let z0 = tz;
         let z1 = tz - 1.0;
 
-        let a = Self::grad(Self::hash(xi0, yi0, zi0), x0, y0, z0);
-        let b = Self::grad(Self::hash(xi1, yi0, zi0), x1, y0, z0);
-        let c = Self::grad(Self::hash(xi0, yi1, zi0), x0, y1, z0);
-        let d = Self::grad(Self::hash(xi1, yi1, zi0), x1, y1, z0);
-        let e = Self::grad(Self::hash(xi0, yi0, zi1), x0, y0, z1);
-        let f = Self::grad(Self::hash(xi1, yi0, zi1), x1, y0, z1);
-        let g = Self::grad(Self::hash(xi0, yi1, zi1), x0, y1, z1);
-        let h = Self::grad(Self::hash(xi1, yi1, zi1), x1, y1, z1);
+        let a = Self::grad(self.hash(xi0, yi0, zi0), x0, y0, z0);
+        let b = Self::grad(self.hash(xi1, yi0, zi0), x1, y0, z0);
+        let c = Self::grad(self.hash(xi0, yi1, zi0), x0, y1, z0);
+        let d = Self::grad(self.hash(xi1, yi1, zi0), x1, y1, z0);
+        let e = Self::grad(self.hash(xi0, yi0, zi1), x0, y0, z1);
+        let f = Self::grad(self.hash(xi1, yi0, zi1), x1, y0, z1);
+        let g = Self::grad(self.hash(xi0, yi1, zi1), x0, y1, z1);
+        let h = Self::grad(self.hash(xi1, yi1, zi1), x1, y1, z1);
 
         let k0 = a;
         let k1 = b - a;
@@ -160,18 +151,24 @@ impl Noise {
         let mut sum = 0.0;
 
         for _ in 0..self.octaves {
-            sum += Self::eval(x * freq, y * freq, z * freq) * amp;
+            sum += self.eval(x * freq, y * freq, z * freq) * amp;
             freq *= self.lacunarity;
             amp *= self.persistence;
         }
 
         return sum;
     }
+
+    #[must_use]
+    pub fn seed(&self) -> u64 {
+        return self.seed;
+    }
 }
 
 impl From<&EngineConfig> for Noise {
     fn from(value: &EngineConfig) -> Self {
         return Self::new(
+            DEFAULT_SEED,
             value.world_gen.noise.octaves,
             value.world_gen.noise.frequency,
             value.world_gen.noise.amplitude,
