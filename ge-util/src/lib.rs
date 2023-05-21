@@ -13,14 +13,12 @@ mod convert;
 pub mod coords;
 mod lerp;
 mod macros;
-mod smooth;
 
 pub use circle::points_in_circle;
 pub use config::{EngineConfig, WorldGenConfig};
 pub use convert::{deg_to_rad, rad_to_deg};
 pub use coords::{ChunkOffset, ChunkPos, WorldPos};
-pub use lerp::{inverse_lerp, lerp, remap};
-pub use smooth::{cosine_smooth, smoothstep, smoothstep2};
+pub use lerp::lerp;
 
 #[macro_export]
 macro_rules! wpos {
