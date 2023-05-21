@@ -1,10 +1,7 @@
-use std::collections::HashMap;
-
 use crate::{
     drawables::chunk::DrawChunk,
     renderer::{Draw, Renderer},
 };
-use cgmath::Vector2;
 use ge_resource::ResourceManager;
 use ge_util::{ChunkOffset, EngineConfig};
 use ge_world::{
@@ -13,6 +10,8 @@ use ge_world::{
     trns::{SeaLevel, SimpleSurfacePainter, Transformation},
     Chunk,
 };
+use nalgebra::{Vector2, Vector3};
+use std::collections::HashMap;
 
 pub struct World {
     camera_position: Vector2<i32>,
@@ -54,7 +53,7 @@ impl World {
     /// If the chunk offset is invalid.
     pub fn update(
         &mut self,
-        new_pos: cgmath::Point3<f32>,
+        new_pos: Vector3<f32>,
         renderer: &Renderer,
         resources: &mut ResourceManager,
         uniform_bind_group_layout: &wgpu::BindGroupLayout,
@@ -121,7 +120,7 @@ impl Draw for World {
     }
 }
 
-fn world_pos_to_chunk_pos(pos: cgmath::Point3<f32>) -> Vector2<i32> {
+fn world_pos_to_chunk_pos(pos: Vector3<f32>) -> Vector2<i32> {
     #[allow(
         clippy::cast_possible_truncation,
         reason = "we don't need exact position"

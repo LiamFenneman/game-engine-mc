@@ -1,6 +1,6 @@
 use crate::renderer::Vertex;
 use bytemuck::{Pod, Zeroable};
-use cgmath::{Vector2, Vector3};
+use nalgebra::{Vector2, Vector3};
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Pod, Zeroable)]
@@ -110,7 +110,11 @@ enum FaceDirection {
 
 macro_rules! vert {
     ($x:literal $y:literal $z:literal, $u:literal $v:literal, $i:literal) => {
-        BlockVertex::new(cgmath::vec3($x, $y, $z), cgmath::vec2($u, $v), $i)
+        BlockVertex::new(
+            nalgebra::Vector3::new($x, $y, $z),
+            nalgebra::Vector2::new($u, $v),
+            $i,
+        )
     };
 }
 

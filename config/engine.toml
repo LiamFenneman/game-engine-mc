@@ -6,9 +6,9 @@ wireframe_mode = false
 initial_position = [ 0.0, 15.0, 105.0 ]
 initial_yaw_pitch = [ 0.0, 10.0 ]
 znear_zfar = [ 0.1, 3000.0 ]
-vertical_fov = 60.0
+vertical_fov = 70.0
 speed = 10.0
-sensitivity = 0.5
+sensitivity = 30.0
 
 [world_gen]
 render_distance = 2

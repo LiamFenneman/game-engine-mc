@@ -8,11 +8,12 @@ default-run = "ge-render"
 [dependencies]
 beul = "1.0"
 bytemuck = { version = "1.13", features = [ "derive" ] }
-cgmath.workspace = true
 ge-macros = { path = "../ge-macros" }
 ge-resource = { path = "../ge-resource" }
 ge-util = { path = "../ge-util" }
 ge-world = { path = "../ge-world" }
+nalgebra.workspace = true
+nalgebra-glm.workspace = true
 rayon.workspace = true
 tracing-appender.workspace = true
 tracing-subscriber.workspace = true

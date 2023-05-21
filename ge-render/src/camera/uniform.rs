@@ -1,4 +1,4 @@
-use cgmath::{Matrix4, Point3, SquareMatrix};
+use nalgebra::{Matrix4, Vector3};
 
 #[repr(C)]
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
@@ -18,7 +18,7 @@ impl CameraUniform {
 
     pub fn update_view_proj(
         &mut self,
-        position: Point3<f32>,
+        position: Vector3<f32>,
         camera_matrix: Matrix4<f32>,
         projection_matrix: Matrix4<f32>,
     ) {

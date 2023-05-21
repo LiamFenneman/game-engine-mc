@@ -2,12 +2,12 @@ use crate::{
     block::{Block, BlockVertex},
     renderer::{create_render_pipeline, Draw, Renderer, Vertex},
 };
-use cgmath::vec3;
 use ge_resource::{
     texture::{Texture, TextureArray},
     ResourceManager,
 };
 use ge_world::{BlockType, Chunk};
+use nalgebra::{Vector3, Matrix4};
 use std::{collections::HashSet, rc::Rc};
 use wgpu::util::DeviceExt;
 
@@ -125,7 +125,7 @@ impl DrawInstancedBlocks {
             .map(|&b| {
                 #[allow(clippy::cast_precision_loss, reason = "no other way")]
                 return Instance {
-                    position: vec3(
+                    position: Vector3::new(
                         b.world_pos().x() as f32,
                         b.world_pos().y() as f32,
                         b.world_pos().z() as f32,
@@ -172,7 +172,7 @@ impl Draw for DrawInstancedBlocks {
 
 #[derive(Copy, Clone)]
 pub struct Instance {
-    position: cgmath::Vector3<f32>,
+    position: Vector3<f32>,
 }
 
 #[repr(C)]
@@ -216,7 +216,7 @@ impl InstanceRaw {
 impl From<Instance> for InstanceRaw {
     fn from(value: Instance) -> Self {
         return Self {
-            model: cgmath::Matrix4::from_translation(value.position).into(),
+            model: Matrix4::new_translation(&value.position).into(),
         };
     }
 }

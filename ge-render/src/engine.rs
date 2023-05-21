@@ -7,7 +7,8 @@ use crate::{
     stats::FrameStats,
 };
 use ge_resource::ResourceManager;
-use ge_util::EngineConfig;
+use ge_util::{deg_to_rad, EngineConfig};
+use nalgebra::Vector2;
 use std::{cell::RefCell, rc::Rc};
 use wgpu::util::DeviceExt;
 use winit::{
@@ -43,20 +44,24 @@ impl Engine {
 
         let camera = Camera::new(
             config.camera.initial_position,
-            cgmath::Deg(config.camera.initial_yaw_pitch[0]),
-            cgmath::Deg(config.camera.initial_yaw_pitch[1]),
+            deg_to_rad(config.camera.initial_yaw_pitch[0]),
+            deg_to_rad(config.camera.initial_yaw_pitch[1]),
         );
         let projection = Projection::new(
             renderer.config.width,
             renderer.config.height,
-            cgmath::Deg(config.camera.vertical_fov),
+            deg_to_rad(config.camera.vertical_fov),
             config.camera.znear_zfar[0],
             config.camera.znear_zfar[1],
         );
-        let camera_controller =
-            CameraController::new(config.camera.speed, config.camera.sensitivity);
+        let camera_controller = CameraController::new(
+            config.camera.speed,
+            config.camera.sensitivity,
+            renderer.config.width,
+            renderer.config.height,
+        );
 
-        let world = Rc::new(RefCell::new(World::new(cgmath::vec2(0, 0), &config)));
+        let world = Rc::new(RefCell::new(World::new(Vector2::new(0, 0), &config)));
         renderer.set_world(Rc::clone(&world));
 
         let uniform_bind_group_layout =

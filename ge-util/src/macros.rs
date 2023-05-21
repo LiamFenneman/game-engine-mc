@@ -23,25 +23,22 @@ macro_rules! impl_common {
             }
         }
 
-        impl<T> TryFrom<cgmath::Vector3<T>> for $ty
-        where
-            T: Into<i32>,
-        {
+        impl TryFrom<nalgebra::Vector3<i32>> for $ty {
             type Error = crate::coords::CoordError;
 
-            fn try_from(value: cgmath::Vector3<T>) -> crate::coords::Result<Self> {
+            fn try_from(value: nalgebra::Vector3<i32>) -> crate::coords::Result<Self> {
                 return Self::new(value.x.into(), value.y.into(), value.z.into());
             }
         }
 
-        impl<T> TryFrom<cgmath::Point3<T>> for $ty
+        impl<T> TryFrom<[T; 3]> for $ty
         where
-            T: Into<i32>,
+            T: Into<i32> + Copy,
         {
             type Error = crate::coords::CoordError;
 
-            fn try_from(value: cgmath::Point3<T>) -> crate::coords::Result<Self> {
-                return Self::new(value.x.into(), value.y.into(), value.z.into());
+            fn try_from(value: [T; 3]) -> crate::coords::Result<Self> {
+                return Self::new(value[0].into(), value[1].into(), value[2].into());
             }
         }
 
@@ -121,7 +118,7 @@ macro_rules! impl_common {
                 return Self::new(self.x * rhs.x, self.y * rhs.y, self.z * rhs.z);
             }
         }
-        
+
         impl std::ops::Div for $ty {
             type Output = crate::coords::Result<Self>;
 

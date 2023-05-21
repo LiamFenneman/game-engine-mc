@@ -10,12 +10,13 @@ members = [
 
 [workspace.package]
 authors = ["Liam Fenneman"]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [workspace.dependencies]
-cgmath = { version = "0.18.0", features = ["serde"] }
 image = { version = "0.24.6", default-features = false, features = ["png"] }
+nalgebra = { version = "0.32", features = ["serde-serialize"] }
+nalgebra-glm = "0.18"
 rayon = "1.7"
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0"

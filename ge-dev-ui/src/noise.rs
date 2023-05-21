@@ -1,9 +1,9 @@
-use cgmath::Vector3;
 use egui::{
     plot::{Line, Plot, PlotPoints},
     ColorImage, TextureHandle,
 };
 use ge_world::noise::Noise;
+use nalgebra::Vector3;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct Noise2D {

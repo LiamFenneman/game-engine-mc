@@ -1,16 +1,28 @@
+#[inline]
 #[must_use]
-pub fn three_to_one(x: u32, y: u32, z: u32, size: cgmath::Vector3<u32>) -> usize {
-    return (x + y * size.x + z * size.x * size.y) as usize;
+pub fn deg_to_rad(degrees: f32) -> f32 {
+    return degrees * std::f32::consts::PI / 180.0;
 }
 
+#[inline]
 #[must_use]
-pub fn one_to_three(index: usize, size: cgmath::Vector3<u32>) -> cgmath::Vector3<u32> {
-    let x = index % size.x as usize;
-    let y = (index / size.x as usize) % size.y as usize;
-    let z = index / (size.x * size.y) as usize;
-    return cgmath::vec3(
-        u32::try_from(x).expect("index is out of bounds"),
-        u32::try_from(y).expect("index is out of bounds"),
-        u32::try_from(z).expect("index is out of bounds"),
-    );
+pub fn rad_to_deg(radians: f32) -> f32 {
+    return radians * 180.0 / std::f32::consts::PI;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case(0.0, 0.0)]
+    #[case(90.0, std::f32::consts::FRAC_PI_2)]
+    #[case(180.0, std::f32::consts::PI)]
+    #[case(270.0, std::f32::consts::PI + std::f32::consts::FRAC_PI_2)]
+    #[case(360.0, std::f32::consts::PI * 2.0)]
+    fn test_rad_deg(#[case] degrees: f32, #[case] expected_radians: f32) {
+        assert!(deg_to_rad(degrees).eq(&expected_radians));
+        assert!(rad_to_deg(expected_radians).eq(&degrees));
+    }
 }
