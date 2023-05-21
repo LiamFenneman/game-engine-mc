@@ -10,7 +10,7 @@
 mod noise;
 
 #[derive(Default, serde::Deserialize, serde::Serialize)]
-pub struct App {
+pub(crate) struct App {
     win_noise1d: noise::Noise1D,
     win_noise2d: noise::Noise2D,
 }
@@ -57,4 +57,22 @@ impl eframe::App for App {
         self.win_noise1d.window(ctx);
         self.win_noise2d.window(ctx);
     }
+}
+
+pub fn run_app() {
+    tracing_subscriber::fmt()
+        .compact()
+        .with_max_level(tracing::Level::DEBUG)
+        .init();
+
+    let options = eframe::NativeOptions {
+        initial_window_size: Some(egui::vec2(800.0, 600.0)),
+        ..Default::default()
+    };
+
+    _ = eframe::run_native(
+        "Show an image with eframe/egui",
+        options,
+        Box::new(|_cc| return Box::<App>::default()),
+    );
 }

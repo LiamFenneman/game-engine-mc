@@ -6,8 +6,8 @@ use ge_world::noise::Noise;
 use nalgebra::Vector3;
 
 #[derive(serde::Deserialize, serde::Serialize)]
-pub struct Noise2D {
-    pub is_open: bool,
+pub(crate) struct Noise2D {
+    pub(crate) is_open: bool,
     size: usize,
 
     seed: u64,
@@ -27,7 +27,7 @@ pub struct Noise2D {
 }
 
 impl Noise2D {
-    pub fn generate_noise_field(&mut self) -> Noise {
+    pub(crate) fn generate_noise_field(&mut self) -> Noise {
         tracing::debug!("Generated noise field");
         return Noise::new(
             self.seed,
@@ -39,7 +39,7 @@ impl Noise2D {
         );
     }
 
-    pub fn generate_image(&mut self) -> ColorImage {
+    pub(crate) fn generate_image(&mut self) -> ColorImage {
         debug_assert!(self.noise.is_some());
 
         let mut samples = Vec::with_capacity(self.size * self.size);
@@ -107,7 +107,7 @@ impl std::fmt::Display for Noise2D {
 }
 
 impl Noise2D {
-    pub fn window(&mut self, ctx: &egui::Context) {
+    pub(crate) fn window(&mut self, ctx: &egui::Context) {
         if !self.is_open {
             return;
         }
@@ -200,8 +200,8 @@ impl Noise2D {
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
-pub struct Noise1D {
-    pub is_open: bool,
+pub(crate) struct Noise1D {
+    pub(crate) is_open: bool,
 
     seed: u64,
     octaves: usize,
@@ -220,7 +220,7 @@ pub struct Noise1D {
 }
 
 impl Noise1D {
-    pub fn generate_noise_field(&mut self) -> Noise {
+    pub(crate) fn generate_noise_field(&mut self) -> Noise {
         tracing::debug!("Generated noise field");
         return Noise::new(
             self.seed,
@@ -232,7 +232,7 @@ impl Noise1D {
         );
     }
 
-    pub fn window(&mut self, ctx: &egui::Context) {
+    pub(crate) fn window(&mut self, ctx: &egui::Context) {
         if !self.is_open {
             return;
         }
