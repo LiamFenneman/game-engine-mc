@@ -113,7 +113,7 @@ impl Engine {
         let stats = FrameStats::default();
 
         let context = Context::new(config, uniform_bind_group, uniform_bind_group_layout);
-        let world_sys = WorldSystem::new(context.clone(), &world);
+        let world_sys = WorldSystem::new(context.clone(), Arc::clone(&world));
 
         trace!("created engine");
         return Self {

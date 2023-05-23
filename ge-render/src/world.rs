@@ -18,9 +18,7 @@ pub(crate) struct WorldSystem {
 pub(crate) type WorldState = Arc<Mutex<World>>;
 
 impl WorldSystem {
-    pub(crate) fn new(cx: Context, state: &WorldState) -> Self {
-        let _state = Arc::clone(state);
-
+    pub fn new(_cx: Context, _state: WorldState) -> Self {
         let (tx, rx) = std::sync::mpsc::channel();
         let handle = std::thread::spawn(move || loop {
             let Ok(val) = rx.recv() else {
