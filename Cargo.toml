@@ -1,11 +1,6 @@
 [workspace]
 members = [
-    "ge-dev-ui",
-    "ge-macros",
-    "ge-render",
-    "ge-resource",
-    "ge-util",
-    "ge-world",
+    "crates/*",
 ]
 
 [workspace.package]

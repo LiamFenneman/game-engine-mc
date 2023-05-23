@@ -28,7 +28,7 @@ impl TextRenderer {
         render_format: wgpu::TextureFormat,
     ) -> Self {
         let font = ab_glyph::FontArc::try_from_slice(include_bytes!(
-            "../../assets/fonts/IBMPlexMono-Regular.ttf"
+            "../../../assets/fonts/IBMPlexMono-Regular.ttf"
         ))
         .unwrap();
 
