@@ -48,9 +48,14 @@ impl DrawText for Camera {
 
     #[inline]
     fn text(&self) -> String {
+        #[allow(clippy::cast_possible_truncation, reason = "truncation is fine here")]
         return format!(
-            "P: {:?} Y: {:?} P: {:?}",
-            self.position, self.yaw, self.pitch
+            "P: {} {} {} Y: {:.2} P: {:.2}",
+            self.position.x.floor() as i32,
+            self.position.y.floor() as i32,
+            self.position.z.floor() as i32,
+            ge_util::rad_to_deg(self.yaw),
+            ge_util::rad_to_deg(self.pitch)
         );
     }
 }
