@@ -7,6 +7,9 @@
 //
 #![feature(lint_reasons)]
 
+#[macro_use]
+extern crate tracing;
+
 mod noise;
 
 #[derive(Default, serde::Deserialize, serde::Serialize)]

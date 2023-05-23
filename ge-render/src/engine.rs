@@ -115,7 +115,7 @@ impl Engine {
         let context = Context::new(config, uniform_bind_group, uniform_bind_group_layout);
         let world_sys = WorldSystem::new(context.clone(), &world);
 
-        tracing::trace!("created engine");
+        trace!("created engine");
         return Self {
             context,
 

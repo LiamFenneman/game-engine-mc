@@ -77,7 +77,7 @@ pub trait ChunkGenerator {
             }
         }
 
-        tracing::trace!(
+        trace!(
             "generated chunk at {:?} in {}ms",
             chunk_offset.into(),
             start.elapsed().as_millis()

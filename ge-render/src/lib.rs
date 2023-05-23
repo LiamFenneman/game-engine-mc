@@ -17,6 +17,9 @@
 #[macro_use]
 extern crate ge_macros;
 
+#[macro_use]
+extern crate tracing;
+
 pub(crate) mod block;
 pub(crate) mod camera;
 pub(crate) mod context;
@@ -43,7 +46,7 @@ pub async fn run() {
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
     window.set_cursor_visible(false);
-    tracing::trace!("created window");
+    trace!("created window");
 
     let renderer = renderer::Renderer::new(&window, window.inner_size()).await;
     let mut engine = engine::Engine::new(window, renderer);
@@ -58,7 +61,7 @@ pub async fn run() {
                     .set_cursor_grab(CursorGrabMode::Confined)
                     .or_else(|_| return engine.window.set_cursor_grab(CursorGrabMode::Locked))
                 {
-                    tracing::error!("failed to grab cursor: {:?}", e);
+                    error!("failed to grab cursor: {:?}", e);
                 } else {
                     try_grab_cursor = true;
                 }
@@ -68,7 +71,7 @@ pub async fn run() {
                 Ok(_) => {}
                 Err(wgpu::SurfaceError::Lost) => engine.resize(engine.renderer.size),
                 Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
-                Err(e) => tracing::error!("{:?}", e),
+                Err(e) => error!("{:?}", e),
             }
         }
         Event::DeviceEvent {

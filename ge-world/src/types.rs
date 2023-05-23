@@ -116,7 +116,7 @@ pub trait ChunkTransformation {
     fn transform_timed(&self, chunk: &mut Chunk, trace_name: &str) {
         let start = std::time::Instant::now();
         self.transform(chunk);
-        tracing::trace!(
+        trace!(
             "{}: transform took {:?} ms",
             trace_name,
             start.elapsed().as_millis()

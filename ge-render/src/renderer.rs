@@ -96,7 +96,7 @@ impl Renderer {
             surface_caps.formats[0],
         );
 
-        tracing::trace!("created renderer");
+        trace!("created renderer");
         return Self {
             surface,
             config,

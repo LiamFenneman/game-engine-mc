@@ -28,7 +28,7 @@ pub(crate) struct Noise2D {
 
 impl Noise2D {
     pub(crate) fn generate_noise_field(&mut self) -> Noise {
-        tracing::debug!("Generated noise field");
+        debug!("Generated noise field");
         return Noise::new(
             self.seed,
             self.octaves,
@@ -70,7 +70,7 @@ impl Noise2D {
             })
             .collect::<Vec<_>>();
 
-        tracing::debug!("Generated noise image");
+        debug!("Generated noise image");
         return ColorImage::from_rgb([self.size, self.size], &buffer);
     }
 }
@@ -221,7 +221,7 @@ pub(crate) struct Noise1D {
 
 impl Noise1D {
     pub(crate) fn generate_noise_field(&mut self) -> Noise {
-        tracing::debug!("Generated noise field");
+        debug!("Generated noise field");
         return Noise::new(
             self.seed,
             self.octaves,

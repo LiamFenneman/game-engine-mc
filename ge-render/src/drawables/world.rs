@@ -64,7 +64,7 @@ impl World {
         self.camera_position = ChunkOffset::from(new_pos);
 
         if last_pos != self.camera_position {
-            tracing::trace!("camera position changed: {:?}", self.camera_position);
+            trace!("camera position changed: {:?}", self.camera_position);
         }
 
         if !self.dirty {

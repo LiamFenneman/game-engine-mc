@@ -26,7 +26,7 @@ impl WorldSystem {
             let Ok(val) = rx.recv() else {
                 break;
             };
-            tracing::trace!("received chunk offset: {:?}", val);
+            trace!("received chunk offset: {:?}", val);
         });
 
         let last_pos = ChunkOffset::default();
