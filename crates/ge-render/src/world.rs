@@ -41,8 +41,6 @@ impl WorldSystem {
         ];
         let mut world_gen = FixedWorldGenerator::new(noise, count, trns, &cx.config);
 
-        drop(cx);
-
         let (tx, rx) = std::sync::mpsc::channel::<ChunkOffset>();
         let handle = std::thread::spawn(move || loop {
             let Ok(val) = rx.recv() else {
