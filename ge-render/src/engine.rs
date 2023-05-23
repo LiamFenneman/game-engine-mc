@@ -63,9 +63,6 @@ impl Engine {
             renderer.config.height,
         );
 
-        let world = Arc::new(Mutex::new(World::new(ChunkOffset::default(), &config)));
-        renderer.set_world(&world);
-
         let uniform_bind_group_layout =
             renderer
                 .device
@@ -113,7 +110,9 @@ impl Engine {
         let stats = FrameStats::default();
 
         let context = Context::new(config, uniform_bind_group, uniform_bind_group_layout);
+        let world = Arc::new(Mutex::new(World::new(context.clone(), ChunkOffset::default())));
         let world_sys = WorldSystem::new(context.clone(), Arc::clone(&world));
+        renderer.set_world(&world);
 
         trace!("created engine");
         return Self {
@@ -137,7 +136,6 @@ impl Engine {
     }
 
     pub fn update(&mut self) {
-        let cx = self.context.lock();
         self.stats.fps();
         self.camera_controller
             .update_camera(&mut self.camera, self.stats.delta_time);
@@ -155,8 +153,6 @@ impl Engine {
             self.camera.position,
             &self.renderer,
             &mut self.resources,
-            &cx.uniform_bind_group_layout,
-            &cx.config,
         );
         self.world_sys.update(self.camera.position);
         self.renderer.debug_text.add_entry(&self.stats);

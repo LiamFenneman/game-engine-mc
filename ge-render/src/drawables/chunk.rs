@@ -1,5 +1,6 @@
 use crate::{
     block::{Block, BlockVertex},
+    context::Context,
     renderer::{create_render_pipeline, Draw, Renderer, Vertex},
 };
 use ge_resource::{
@@ -20,13 +21,13 @@ pub(crate) struct DrawChunk {
 
 impl DrawChunk {
     pub fn new(
+        cx: Context,
         chunk: Chunk,
         renderer: &Renderer,
         resources: &mut ResourceManager,
-        uniform_bind_group_layout: &wgpu::BindGroupLayout,
-        config: &ge_util::EngineConfig,
     ) -> Self {
-        let visible = chunk.visible_blocks(config);
+        let config = cx.lock().config;
+        let visible = chunk.visible_blocks(&config);
 
         // block types present in the chunk
         let present_blk_ty = visible
@@ -45,11 +46,10 @@ impl DrawChunk {
                 .map(|blk| return **blk)
                 .collect::<Vec<_>>();
             instances.push(DrawInstancedBlocks::new(
+                cx.clone(),
                 renderer,
                 &blocks,
                 textures,
-                uniform_bind_group_layout,
-                config,
             ));
         }
 
@@ -78,11 +78,10 @@ pub(crate) struct DrawInstancedBlocks {
 
 impl DrawInstancedBlocks {
     pub fn new(
+        cx: Context,
         renderer: &Renderer,
         blocks: &[ge_world::Block],
         textures: &TextureArray,
-        uniform_bind_group_layout: &wgpu::BindGroupLayout,
-        config: &ge_util::EngineConfig,
     ) -> Self {
         let block = Block::new();
         let vertex_buffer = renderer
@@ -106,7 +105,10 @@ impl DrawInstancedBlocks {
             .device
             .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Block Pipeline Layout"),
-                bind_group_layouts: &[&textures.bind_group_layout, uniform_bind_group_layout],
+                bind_group_layouts: &[
+                    &textures.bind_group_layout,
+                    &cx.lock().uniform_bind_group_layout,
+                ],
                 push_constant_ranges: &[],
             });
 
@@ -118,7 +120,7 @@ impl DrawInstancedBlocks {
             Some(Texture::DEPTH_FORMAT),
             &[BlockVertex::desc(), InstanceRaw::desc()],
             shader,
-            config,
+            &cx.lock().config,
         );
 
         let instances = blocks

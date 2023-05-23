@@ -1,20 +1,21 @@
 use crate::{
+    context::Context,
     drawables::chunk::DrawChunk,
     renderer::{Draw, Renderer},
 };
 use ge_resource::ResourceManager;
-use ge_util::{ChunkOffset, EngineConfig};
+use ge_util::ChunkOffset;
 use ge_world::{
     gen::{FixedWorldGenerator, WorldGenerator},
     noise::Noise,
     trns::{SeaLevel, SimpleSurfacePainter, Transformation},
-    Chunk,
 };
 use nalgebra::Vector3;
 use std::collections::HashMap;
 
 #[derive(Debug)]
 pub(crate) struct World {
+    context: Context,
     camera_position: ChunkOffset,
     world_gen: FixedWorldGenerator,
     instances: HashMap<ChunkOffset, DrawChunk>,
@@ -23,7 +24,8 @@ pub(crate) struct World {
 
 impl World {
     #[must_use]
-    pub fn new(camera_position: ChunkOffset, config: &EngineConfig) -> Self {
+    pub fn new(cx: Context, camera_position: ChunkOffset) -> Self {
+        let config = cx.lock().config;
         let count = {
             #[allow(
                 clippy::cast_possible_wrap,
@@ -33,14 +35,15 @@ impl World {
             let rd = config.world_gen.render_distance as i32;
             (rd, rd)
         };
-        let noise = Noise::from(config);
+        let noise = Noise::from(&config);
         let trns: Vec<Transformation> =
-            vec![SeaLevel::new(config).into(), SimpleSurfacePainter.into()];
-        let world_gen = FixedWorldGenerator::new(noise, count, trns, config);
+            vec![SeaLevel::new(&config).into(), SimpleSurfacePainter.into()];
+        let world_gen = FixedWorldGenerator::new(noise, count, trns, &config);
 
         let instances = HashMap::with_capacity((config.world_gen.render_distance).pow(2));
 
         return Self {
+            context: cx,
             camera_position,
             world_gen,
             instances,
@@ -57,8 +60,6 @@ impl World {
         new_pos: Vector3<f32>,
         renderer: &Renderer,
         resources: &mut ResourceManager,
-        uniform_bind_group_layout: &wgpu::BindGroupLayout,
-        config: &ge_util::EngineConfig,
     ) {
         let last_pos = self.camera_position;
         self.camera_position = ChunkOffset::from(new_pos);
@@ -80,13 +81,7 @@ impl World {
             .map(|chunk| {
                 return (
                     chunk.position,
-                    create_instance(
-                        chunk,
-                        renderer,
-                        resources,
-                        uniform_bind_group_layout,
-                        config,
-                    ),
+                    DrawChunk::new(self.context.clone(), chunk, renderer, resources),
                 );
             })
             .collect::<HashMap<_, _>>();
@@ -94,22 +89,6 @@ impl World {
 
         self.dirty = false;
     }
-}
-
-fn create_instance(
-    chunk: Chunk,
-    renderer: &Renderer,
-    resources: &mut ResourceManager,
-    uniform_bind_group_layout: &wgpu::BindGroupLayout,
-    config: &ge_util::EngineConfig,
-) -> DrawChunk {
-    return DrawChunk::new(
-        chunk,
-        renderer,
-        resources,
-        uniform_bind_group_layout,
-        config,
-    );
 }
 
 impl Draw for World {
