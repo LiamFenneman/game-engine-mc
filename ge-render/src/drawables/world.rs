@@ -14,7 +14,7 @@ use nalgebra::Vector3;
 use std::collections::HashMap;
 
 #[derive(Debug)]
-pub struct World {
+pub(crate) struct World {
     camera_position: ChunkOffset,
     world_gen: FixedWorldGenerator,
     instances: HashMap<ChunkOffset, DrawChunk>,

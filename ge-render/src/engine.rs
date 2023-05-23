@@ -2,13 +2,14 @@ use crate::{
     camera::{
         controller::CameraController, projection::Projection, uniform::CameraUniform, Camera,
     },
+    context::Context,
     drawables::world::World,
     renderer::Renderer,
     stats::FrameStats,
     world::{WorldState, WorldSystem},
 };
 use ge_resource::ResourceManager;
-use ge_util::{deg_to_rad, EngineConfig, ChunkOffset};
+use ge_util::{deg_to_rad, ChunkOffset, EngineConfig};
 use std::sync::{Arc, Mutex};
 use wgpu::util::DeviceExt;
 use winit::{
@@ -18,8 +19,8 @@ use winit::{
 
 /// The `Engine` struct is the main entry point for the game engine.
 #[derive(Debug)]
-pub struct Engine {
-    pub config: EngineConfig,
+pub(crate) struct Engine {
+    pub context: Context,
 
     pub window: Window,
     pub renderer: Renderer,
@@ -34,8 +35,6 @@ pub struct Engine {
 
     pub camera_uniform: CameraUniform,
     pub uniform_buffer: wgpu::Buffer,
-    pub uniform_bind_group: wgpu::BindGroup,
-    pub uniform_bind_group_layout: wgpu::BindGroupLayout,
 
     pub stats: FrameStats,
 }
@@ -66,7 +65,6 @@ impl Engine {
 
         let world = Arc::new(Mutex::new(World::new(ChunkOffset::default(), &config)));
         renderer.set_world(&world);
-        let world_sys = WorldSystem::new(&world);
 
         let uniform_bind_group_layout =
             renderer
@@ -114,9 +112,12 @@ impl Engine {
 
         let stats = FrameStats::default();
 
+        let context = Context::new(config, uniform_bind_group, uniform_bind_group_layout);
+        let world_sys = WorldSystem::new(context.clone(), &world);
+
         tracing::trace!("created engine");
         return Self {
-            config,
+            context,
 
             window,
             renderer,
@@ -130,14 +131,13 @@ impl Engine {
 
             camera_uniform,
             uniform_buffer,
-            uniform_bind_group,
-            uniform_bind_group_layout,
 
             stats,
         };
     }
 
     pub fn update(&mut self) {
+        let cx = self.context.lock();
         self.stats.fps();
         self.camera_controller
             .update_camera(&mut self.camera, self.stats.delta_time);
@@ -155,8 +155,8 @@ impl Engine {
             self.camera.position,
             &self.renderer,
             &mut self.resources,
-            &self.uniform_bind_group_layout,
-            &self.config,
+            &cx.uniform_bind_group_layout,
+            &cx.config,
         );
         self.world_sys.update(self.camera.position);
         self.renderer.debug_text.add_entry(&self.stats);
@@ -168,7 +168,7 @@ impl Engine {
     /// # Errors
     /// Errors if the surface is lost.
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
-        return self.renderer.render(&self.uniform_bind_group, &self.config);
+        return self.renderer.render(self.context.clone());
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {

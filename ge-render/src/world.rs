@@ -1,4 +1,4 @@
-use crate::drawables::world::World;
+use crate::{context::Context, drawables::world::World};
 use ge_util::ChunkOffset;
 use nalgebra::Vector3;
 use std::{
@@ -7,7 +7,7 @@ use std::{
 };
 
 #[derive(Debug)]
-pub struct WorldSystem {
+pub(crate) struct WorldSystem {
     #[allow(dead_code)]
     handle: JoinHandle<()>,
     tx: Sender<ChunkOffset>,
@@ -15,10 +15,10 @@ pub struct WorldSystem {
     last_pos: ChunkOffset,
 }
 
-pub type WorldState = Arc<Mutex<World>>;
+pub(crate) type WorldState = Arc<Mutex<World>>;
 
 impl WorldSystem {
-    pub fn new(state: &WorldState) -> Self {
+    pub(crate) fn new(cx: Context, state: &WorldState) -> Self {
         let _state = Arc::clone(state);
 
         let (tx, rx) = std::sync::mpsc::channel();

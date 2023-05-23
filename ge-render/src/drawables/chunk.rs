@@ -12,7 +12,7 @@ use std::{collections::HashSet, sync::Arc};
 use wgpu::util::DeviceExt;
 
 #[derive(Debug)]
-pub struct DrawChunk {
+pub(crate) struct DrawChunk {
     instances: Vec<DrawInstancedBlocks>,
     #[allow(dead_code, reason = "TODO: add to debug info")]
     chunk: Chunk,
@@ -66,7 +66,7 @@ impl Draw for DrawChunk {
 }
 
 #[derive(Debug)]
-pub struct DrawInstancedBlocks {
+pub(crate) struct DrawInstancedBlocks {
     render_pipeline: wgpu::RenderPipeline,
     bind_group: Arc<wgpu::BindGroup>,
     vertex_buffer: wgpu::Buffer,

@@ -6,6 +6,10 @@
 #![allow(clippy::default_trait_access)]
 #![deny(missing_debug_implementations)]
 #![deny(missing_copy_implementations)]
+#![allow(
+    clippy::needless_pass_by_value,
+    reason = "false positive when using Context"
+)]
 //
 #![feature(lint_reasons)]
 
@@ -15,6 +19,7 @@ extern crate ge_macros;
 
 pub(crate) mod block;
 pub(crate) mod camera;
+pub(crate) mod context;
 pub(crate) mod drawables;
 pub(crate) mod engine;
 pub(crate) mod renderer;

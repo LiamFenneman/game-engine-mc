@@ -1,4 +1,4 @@
-use crate::world::WorldState;
+use crate::{context::Context, world::WorldState};
 use ge_resource::texture::Texture;
 use ge_util::EngineConfig;
 use std::sync::Arc;
@@ -16,7 +16,7 @@ pub trait Vertex {
 
 /// The `Renderer` struct is responsible for rendering the game.
 #[derive(Debug)]
-pub struct Renderer {
+pub(crate) struct Renderer {
     surface: wgpu::Surface,
     pub config: wgpu::SurfaceConfiguration,
     pub device: wgpu::Device,
@@ -127,11 +127,7 @@ impl Renderer {
     ///
     /// # Panics
     /// TODO: avoid panicking
-    pub fn render(
-        &mut self,
-        uniform_bind_group: &wgpu::BindGroup,
-        config: &EngineConfig,
-    ) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(&mut self, cx: Context) -> Result<(), wgpu::SurfaceError> {
         let begin_time = std::time::Instant::now();
 
         // get the frame to draw to
@@ -147,6 +143,7 @@ impl Renderer {
             });
 
         let world = self.world.as_ref().unwrap().lock().unwrap();
+        let cx = cx.lock();
 
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -175,7 +172,7 @@ impl Renderer {
             });
 
             // render the world
-            world.draw(&mut render_pass, uniform_bind_group);
+            world.draw(&mut render_pass, &cx.uniform_bind_group);
         }
 
         // render text
@@ -184,8 +181,8 @@ impl Renderer {
 
         // limit the FPS to the target FPS
         let frame_time = begin_time.elapsed();
-        if frame_time < config.renderer.target_frame_time() {
-            std::thread::sleep(config.renderer.target_frame_time() - frame_time);
+        if frame_time < cx.config.renderer.target_frame_time() {
+            std::thread::sleep(cx.config.renderer.target_frame_time() - frame_time);
         }
 
         // render finished, submit to the queue
@@ -200,7 +197,7 @@ impl Renderer {
     }
 }
 
-pub fn create_render_pipeline(
+pub(crate) fn create_render_pipeline(
     renderer: &Renderer,
     layout: &wgpu::PipelineLayout,
     depth_format: Option<wgpu::TextureFormat>,
