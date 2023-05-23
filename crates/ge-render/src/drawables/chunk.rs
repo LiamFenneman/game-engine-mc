@@ -15,14 +15,12 @@ use wgpu::util::DeviceExt;
 #[derive(Debug)]
 pub(crate) struct DrawChunk {
     instances: Vec<DrawInstancedBlocks>,
-    #[allow(dead_code, reason = "TODO: add to debug info")]
-    chunk: Chunk,
 }
 
 impl DrawChunk {
     pub fn new(
         cx: Context,
-        chunk: Chunk,
+        chunk: &Chunk,
         renderer: &Renderer,
         resources: &mut ResourceManager,
     ) -> Self {
@@ -53,7 +51,7 @@ impl DrawChunk {
             ));
         }
 
-        return Self { instances, chunk };
+        return Self { instances };
     }
 }
 

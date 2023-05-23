@@ -13,6 +13,7 @@ pub trait WorldGenerator {
 pub struct FixedWorldGenerator {
     gen: NoiseChunkGenerator,
     pub count: (i32, i32),
+    pub center: (i32, i32),
     trns: Vec<Transformation>,
 }
 
@@ -25,7 +26,8 @@ impl FixedWorldGenerator {
         config: &EngineConfig,
     ) -> Self {
         let gen = NoiseChunkGenerator::with_noise(noise, config.world_gen.base_height);
-        return Self { gen, count, trns };
+        let center = (0, 0);
+        return Self { gen, count, center, trns };
     }
 }
 
@@ -37,7 +39,7 @@ impl WorldGenerator for FixedWorldGenerator {
         let chunks = (lo.0..hi.0)
             .flat_map(|x| {
                 return (lo.1..hi.1).map(move |y| {
-                    return ChunkOffset::new(x, y, 0).unwrap();
+                    return ChunkOffset::new(x + self.center.0, y + self.center.1, 0).unwrap();
                 });
             })
             .map(|o| {

@@ -5,11 +5,7 @@ use crate::{
 };
 use ge_resource::ResourceManager;
 use ge_util::ChunkOffset;
-use ge_world::{
-    gen::{FixedWorldGenerator, WorldGenerator},
-    noise::Noise,
-    trns::{SeaLevel, SimpleSurfacePainter, Transformation},
-};
+use ge_world::Chunk;
 use nalgebra::Vector3;
 use std::collections::HashMap;
 
@@ -17,36 +13,24 @@ use std::collections::HashMap;
 pub(crate) struct World {
     context: Context,
     camera_position: ChunkOffset,
-    world_gen: FixedWorldGenerator,
     instances: HashMap<ChunkOffset, DrawChunk>,
-    dirty: bool,
+    pub chunks: Vec<Chunk>,
+    pub dirty: bool,
 }
 
 impl World {
     #[must_use]
     pub fn new(cx: Context, camera_position: ChunkOffset) -> Self {
         let config = cx.lock().config;
-        let count = {
-            #[allow(
-                clippy::cast_possible_wrap,
-                clippy::cast_possible_truncation,
-                reason = "value should not be large enought to wrap or truncate"
-            )]
-            let rd = config.world_gen.render_distance as i32;
-            (rd, rd)
-        };
-        let noise = Noise::from(&config);
-        let trns: Vec<Transformation> =
-            vec![SeaLevel::new(&config).into(), SimpleSurfacePainter.into()];
-        let world_gen = FixedWorldGenerator::new(noise, count, trns, &config);
-
-        let instances = HashMap::with_capacity((config.world_gen.render_distance).pow(2));
+        let cap = (config.world_gen.render_distance).pow(2);
+        let instances = HashMap::with_capacity(cap);
+        let chunks = Vec::with_capacity(cap);
 
         return Self {
             context: cx,
             camera_position,
-            world_gen,
             instances,
+            chunks,
             dirty: true,
         };
     }
@@ -73,11 +57,10 @@ impl World {
             return;
         }
 
-        let instances = self
-            .world_gen
-            .generate()
+        dbg_time! {
+        self.instances = self
             .chunks
-            .into_iter()
+            .iter()
             .map(|chunk| {
                 return (
                     chunk.position,
@@ -85,7 +68,7 @@ impl World {
                 );
             })
             .collect::<HashMap<_, _>>();
-        self.instances.extend(instances);
+        }
 
         self.dirty = false;
     }

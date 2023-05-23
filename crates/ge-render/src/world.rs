@@ -1,5 +1,10 @@
 use crate::{context::Context, drawables::world::World};
 use ge_util::ChunkOffset;
+use ge_world::{
+    gen::{FixedWorldGenerator, WorldGenerator},
+    noise::Noise,
+    trns::{SeaLevel, SimpleSurfacePainter, Transformation},
+};
 use nalgebra::Vector3;
 use std::{
     sync::{mpsc::Sender, Arc, Mutex},
@@ -11,21 +16,54 @@ pub(crate) struct WorldSystem {
     #[allow(dead_code)]
     handle: JoinHandle<()>,
     tx: Sender<ChunkOffset>,
-
     last_pos: ChunkOffset,
 }
 
 pub(crate) type WorldState = Arc<Mutex<World>>;
 
 impl WorldSystem {
-    pub fn new(_cx: Context, _state: WorldState) -> Self {
-        let (tx, rx) = std::sync::mpsc::channel();
+    pub fn new(cx: Context, state: WorldState) -> Self {
+        let cx = cx.lock();
+
+        let count = {
+            #[allow(
+                clippy::cast_possible_wrap,
+                clippy::cast_possible_truncation,
+                reason = "value should not be large enought to wrap or truncate"
+            )]
+            let rd = cx.config.world_gen.render_distance as i32;
+            (rd, rd)
+        };
+        let noise = Noise::from(&cx.config);
+        let trns: Vec<Transformation> = vec![
+            SeaLevel::new(&cx.config).into(),
+            SimpleSurfacePainter.into(),
+        ];
+        let mut world_gen = FixedWorldGenerator::new(noise, count, trns, &cx.config);
+
+        drop(cx);
+
+        let (tx, rx) = std::sync::mpsc::channel::<ChunkOffset>();
         let handle = std::thread::spawn(move || loop {
             let Ok(val) = rx.recv() else {
                 break;
             };
             trace!("received chunk offset: {:?}", val);
+
+            // calculate which chunks to generate
+            world_gen.center = (val.x(), val.y());
+
+            // generate new chunks
+            let world = world_gen.generate();
+
+            // update the world state
+            let mut state = state.lock().unwrap();
+            state.chunks = world.chunks;
+            state.dirty = true;
         });
+
+        // send the initial position
+        tx.send(ChunkOffset::default()).unwrap();
 
         let last_pos = ChunkOffset::default();
 
