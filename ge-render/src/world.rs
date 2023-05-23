@@ -23,7 +23,9 @@ impl WorldSystem {
 
         let (tx, rx) = std::sync::mpsc::channel();
         let handle = std::thread::spawn(move || loop {
-            let val = rx.recv().unwrap();
+            let Ok(val) = rx.recv() else {
+                break;
+            };
             tracing::trace!("received chunk offset: {:?}", val);
         });
 
