@@ -143,6 +143,21 @@ impl ChunkOffset {
     }
 }
 
+impl From<nalgebra::Vector3<f32>> for ChunkOffset {
+    fn from(value: nalgebra::Vector3<f32>) -> Self {
+        #[allow(
+            clippy::cast_possible_truncation,
+            reason = "we don't need exact position"
+        )]
+        return ChunkOffset::new(
+            (value.x / 16.0).floor() as i32,
+            (value.y / 16.0).floor() as i32,
+            0,
+        )
+        .unwrap();
+    }
+}
+
 #[derive(Debug, Clone, Copy, Error, PartialEq)]
 pub enum CoordError {
     #[error("world position out of bounds: {0}")]
