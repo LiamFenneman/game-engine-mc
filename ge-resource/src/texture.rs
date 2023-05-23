@@ -1,7 +1,7 @@
 use crate::block::BlockMeta;
 use ge_world::BlockType;
 use image::GenericImageView;
-use std::{num::NonZeroU32, path::PathBuf, rc::Rc};
+use std::{num::NonZeroU32, path::PathBuf, sync::Arc};
 
 impl crate::ResourceManager {
     /// Load a texture array from disk. If the texture array has already been loaded, it will be
@@ -68,7 +68,7 @@ impl crate::ResourceManager {
 pub struct TextureArray {
     pub textures: Vec<Texture>,
     pub bind_group_layout: wgpu::BindGroupLayout,
-    pub bind_group: Rc<wgpu::BindGroup>,
+    pub bind_group: Arc<wgpu::BindGroup>,
     pub block_meta: BlockMeta,
 }
 
@@ -99,13 +99,17 @@ impl TextureArray {
                         view_dimension: wgpu::TextureViewDimension::D2,
                         sample_type: wgpu::TextureSampleType::Float { filterable: true },
                     },
-                    count: Some(NonZeroU32::new(u32::try_from(textures.len()).unwrap_or(1)).unwrap()),
+                    count: Some(
+                        NonZeroU32::new(u32::try_from(textures.len()).unwrap_or(1)).unwrap(),
+                    ),
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 1,
                     visibility: wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                    count: Some(NonZeroU32::new(u32::try_from(textures.len()).unwrap_or(1)).unwrap()),
+                    count: Some(
+                        NonZeroU32::new(u32::try_from(textures.len()).unwrap_or(1)).unwrap(),
+                    ),
                 },
             ],
             label: Some("block_bind_group_layout"),
@@ -129,7 +133,7 @@ impl TextureArray {
         return Self {
             textures,
             bind_group_layout,
-            bind_group: Rc::new(bind_group),
+            bind_group: Arc::new(bind_group),
             block_meta,
         };
     }

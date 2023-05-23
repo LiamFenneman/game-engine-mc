@@ -5,11 +5,11 @@ use crate::{
     drawables::world::World,
     renderer::Renderer,
     stats::FrameStats,
+    world::{WorldState, WorldSystem},
 };
 use ge_resource::ResourceManager;
-use ge_util::{deg_to_rad, EngineConfig};
-use nalgebra::Vector2;
-use std::{cell::RefCell, rc::Rc};
+use ge_util::{deg_to_rad, EngineConfig, ChunkOffset};
+use std::sync::{Arc, Mutex};
 use wgpu::util::DeviceExt;
 use winit::{
     event::{KeyboardInput, WindowEvent},
@@ -25,7 +25,9 @@ pub struct Engine {
     pub renderer: Renderer,
     pub resources: ResourceManager,
 
-    pub world: Rc<RefCell<World>>,
+    pub world: WorldState,
+    pub world_sys: WorldSystem,
+
     pub camera: Camera,
     pub projection: Projection,
     pub camera_controller: CameraController,
@@ -62,8 +64,9 @@ impl Engine {
             renderer.config.height,
         );
 
-        let world = Rc::new(RefCell::new(World::new(Vector2::new(0, 0), &config)));
-        renderer.set_world(Rc::clone(&world));
+        let world = Arc::new(Mutex::new(World::new(ChunkOffset::default(), &config)));
+        renderer.set_world(&world);
+        let world_sys = WorldSystem::new(&world);
 
         let uniform_bind_group_layout =
             renderer
@@ -120,6 +123,7 @@ impl Engine {
             resources,
 
             world,
+            world_sys,
             camera,
             projection,
             camera_controller,
@@ -147,13 +151,14 @@ impl Engine {
             0,
             bytemuck::cast_slice(&[self.camera_uniform]),
         );
-        self.world.borrow_mut().update(
+        self.world.lock().unwrap().update(
             self.camera.position,
             &self.renderer,
             &mut self.resources,
             &self.uniform_bind_group_layout,
             &self.config,
         );
+        self.world_sys.update(self.camera.position);
         self.renderer.debug_text.add_entry(&self.stats);
         self.renderer.debug_text.add_entry(&self.camera);
     }

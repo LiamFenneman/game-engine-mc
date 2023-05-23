@@ -20,6 +20,7 @@ pub(crate) mod engine;
 pub(crate) mod renderer;
 pub(crate) mod stats;
 pub(crate) mod text;
+pub(crate) mod world;
 
 use winit::{
     event::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},

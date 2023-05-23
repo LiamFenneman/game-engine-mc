@@ -1,7 +1,7 @@
-use crate::drawables::world::World;
+use crate::world::WorldState;
 use ge_resource::texture::Texture;
 use ge_util::EngineConfig;
-use std::{cell::RefCell, rc::Rc};
+use std::sync::Arc;
 use winit::window::Window;
 
 /// The `Draw` trait is implemented by types that can be drawn by the `Renderer`.
@@ -23,7 +23,7 @@ pub struct Renderer {
     pub queue: wgpu::Queue,
     pub size: winit::dpi::PhysicalSize<u32>,
     pub depth_texture: Texture,
-    world: Option<Rc<RefCell<World>>>, // TODO: remove this and only use drawable
+    world: Option<WorldState>,
 
     pub staging_belt: wgpu::util::StagingBelt,
     pub debug_text: crate::text::TextRenderer,
@@ -146,7 +146,7 @@ impl Renderer {
                 label: Some("Render Encoder"),
             });
 
-        let world = self.world.as_ref().unwrap().borrow();
+        let world = self.world.as_ref().unwrap().lock().unwrap();
 
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -195,8 +195,8 @@ impl Renderer {
         return Ok(());
     }
 
-    pub fn set_world(&mut self, world: Rc<RefCell<World>>) {
-        self.world = Some(world);
+    pub fn set_world(&mut self, world: &WorldState) {
+        self.world = Some(Arc::clone(world));
     }
 }
 

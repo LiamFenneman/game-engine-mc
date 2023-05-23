@@ -10,12 +10,12 @@ use ge_world::{
     trns::{SeaLevel, SimpleSurfacePainter, Transformation},
     Chunk,
 };
-use nalgebra::{Vector2, Vector3};
+use nalgebra::Vector3;
 use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct World {
-    camera_position: Vector2<i32>,
+    camera_position: ChunkOffset,
     world_gen: FixedWorldGenerator,
     instances: HashMap<ChunkOffset, DrawChunk>,
     dirty: bool,
@@ -23,7 +23,7 @@ pub struct World {
 
 impl World {
     #[must_use]
-    pub fn new(camera_position: Vector2<i32>, config: &EngineConfig) -> Self {
+    pub fn new(camera_position: ChunkOffset, config: &EngineConfig) -> Self {
         let count = {
             #[allow(
                 clippy::cast_possible_wrap,
@@ -61,7 +61,7 @@ impl World {
         config: &ge_util::EngineConfig,
     ) {
         let last_pos = self.camera_position;
-        self.camera_position = world_pos_to_chunk_pos(new_pos);
+        self.camera_position = ChunkOffset::from(new_pos);
 
         if last_pos != self.camera_position {
             tracing::trace!("camera position changed: {:?}", self.camera_position);
@@ -118,12 +118,4 @@ impl Draw for World {
             .iter()
             .for_each(|(_, d)| d.draw(render_pass, uniforms));
     }
-}
-
-fn world_pos_to_chunk_pos(pos: Vector3<f32>) -> Vector2<i32> {
-    #[allow(
-        clippy::cast_possible_truncation,
-        reason = "we don't need exact position"
-    )]
-    return Vector2::new((pos.x / 16.0).floor() as i32, (pos.y / 16.0).floor() as i32);
 }

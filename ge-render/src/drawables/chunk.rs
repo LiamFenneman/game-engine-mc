@@ -8,7 +8,7 @@ use ge_resource::{
 };
 use ge_world::{BlockType, Chunk};
 use nalgebra::{Matrix4, Vector3};
-use std::{collections::HashSet, rc::Rc};
+use std::{collections::HashSet, sync::Arc};
 use wgpu::util::DeviceExt;
 
 #[derive(Debug)]
@@ -68,7 +68,7 @@ impl Draw for DrawChunk {
 #[derive(Debug)]
 pub struct DrawInstancedBlocks {
     render_pipeline: wgpu::RenderPipeline,
-    bind_group: Rc<wgpu::BindGroup>,
+    bind_group: Arc<wgpu::BindGroup>,
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
     num_indices: u32,
@@ -149,7 +149,7 @@ impl DrawInstancedBlocks {
 
         return Self {
             render_pipeline,
-            bind_group: Rc::clone(&textures.bind_group),
+            bind_group: Arc::clone(&textures.bind_group),
             vertex_buffer,
             index_buffer,
             num_indices,
