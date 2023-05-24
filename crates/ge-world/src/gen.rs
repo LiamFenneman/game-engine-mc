@@ -3,10 +3,63 @@ use ge_util::{
     coords::{CHUNK_HEIGHT, CHUNK_SIZE},
     ChunkOffset, ChunkPos, EngineConfig,
 };
+use rayon::prelude::{ParallelBridge, ParallelIterator};
 
 /// A `WorldGenerator` is a trait that generates a `World`.
 pub trait WorldGenerator {
     fn generate(&self) -> World;
+}
+
+#[derive(Debug, Clone)]
+pub struct AsyncWorldGenerator {
+    gen: NoiseChunkGenerator,
+    pub count: (i32, i32),
+    pub center: (i32, i32),
+    trns: Vec<Transformation>,
+}
+
+impl AsyncWorldGenerator {
+    #[must_use]
+    pub fn new(
+        noise: Noise,
+        count: (i32, i32),
+        trns: Vec<Transformation>,
+        config: &EngineConfig,
+    ) -> Self {
+        let gen = NoiseChunkGenerator::with_noise(noise, config.world_gen.base_height);
+        let center = (0, 0);
+        return Self {
+            gen,
+            count,
+            center,
+            trns,
+        };
+    }
+}
+
+impl WorldGenerator for AsyncWorldGenerator {
+    fn generate(&self) -> World {
+        let lo = (1 - self.count.0, 1 - self.count.1, 0);
+        let hi = (self.count.0, self.count.1, 0);
+
+        let chunks = (lo.0..hi.0)
+            .flat_map(|x| {
+                return (lo.1..hi.1).map(move |y| {
+                    return ChunkOffset::new(x + self.center.0, y + self.center.1, 0).unwrap();
+                });
+            })
+            .par_bridge()
+            .map(|o| {
+                let mut chunk = self.gen.generate(o);
+                for trns in &self.trns {
+                    trns.transform(&mut chunk);
+                }
+                return chunk;
+            })
+            .collect::<Vec<_>>();
+
+        return World { chunks };
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -27,7 +80,12 @@ impl FixedWorldGenerator {
     ) -> Self {
         let gen = NoiseChunkGenerator::with_noise(noise, config.world_gen.base_height);
         let center = (0, 0);
-        return Self { gen, count, center, trns };
+        return Self {
+            gen,
+            count,
+            center,
+            trns,
+        };
     }
 }
 

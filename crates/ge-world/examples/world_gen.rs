@@ -1,48 +1,42 @@
-use ge_util::coords::CHUNK_SIZE;
-use ge_world::{
-    gen::{FixedWorldGenerator, WorldGenerator},
-    World,
-};
-use std::ops::RangeInclusive;
+use ge_world::gen::{AsyncWorldGenerator, FixedWorldGenerator, WorldGenerator};
 
-const CHUNK_COUNT: (i32, i32) = (2, 2);
-
-#[derive(Debug, Clone)]
-pub struct TestRenderer(World);
-
-impl TestRenderer {
-    pub fn render(&self, z_range: RangeInclusive<i32>) {
-        let blocks = self.0.into_world_blocks();
-        let n = CHUNK_COUNT.1 * CHUNK_SIZE;
-        let m = CHUNK_COUNT.0 * CHUNK_SIZE;
-        for z in z_range {
-            for y in -n..n {
-                for x in -m..m {
-                    if let Some(blk) = blocks.iter().find(|blk| {
-                        blk.world_pos().x() == x
-                            && blk.world_pos().y() == y
-                            && blk.world_pos().z() == z
-                    }) {
-                        print!("{}", blk.ty());
-                    }
-                }
-                println!();
-            }
-            println!();
-        }
-    }
-}
+const CHUNK_COUNT: (i32, i32) = (8, 8);
 
 fn main() {
     let noise = ge_world::noise::Noise::new(0, 5, 1.0 / 16.0, 10.0, 2.0, 0.5);
     let sea_level = ge_world::trns::SeaLevel::new(&Default::default());
     let surface_painter = ge_world::trns::SimpleSurfacePainter;
-    let world = FixedWorldGenerator::new(
-        noise,
-        CHUNK_COUNT,
-        vec![sea_level.into(), surface_painter.into()],
-        &ge_util::EngineConfig::default(),
-    )
-    .generate();
-    TestRenderer(world).render(90..=90);
+
+    rayon::join(
+        || {
+            let start = std::time::Instant::now();
+            let world = AsyncWorldGenerator::new(
+                noise,
+                CHUNK_COUNT,
+                vec![sea_level.into(), surface_painter.into()],
+                &ge_util::EngineConfig::default(),
+            )
+            .generate();
+            println!(
+                "async: generated {} chunks in {:?}",
+                world.chunks.len(),
+                start.elapsed()
+            );
+        },
+        || {
+            let start = std::time::Instant::now();
+            let world = FixedWorldGenerator::new(
+                noise,
+                CHUNK_COUNT,
+                vec![sea_level.into(), surface_painter.into()],
+                &ge_util::EngineConfig::default(),
+            )
+            .generate();
+            println!(
+                "fixed: generated {} chunks in {:?}",
+                world.chunks.len(),
+                start.elapsed()
+            );
+        },
+    );
 }

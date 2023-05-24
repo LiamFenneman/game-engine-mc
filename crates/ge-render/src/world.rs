@@ -1,7 +1,7 @@
 use crate::{context::Context, drawables::world::World};
 use ge_util::ChunkOffset;
 use ge_world::{
-    gen::{FixedWorldGenerator, WorldGenerator},
+    gen::{AsyncWorldGenerator, WorldGenerator},
     noise::Noise,
     trns::{SeaLevel, SimpleSurfacePainter, Transformation},
 };
@@ -39,7 +39,7 @@ impl WorldSystem {
             SeaLevel::new(&cx.config).into(),
             SimpleSurfacePainter.into(),
         ];
-        let mut world_gen = FixedWorldGenerator::new(noise, count, trns, &cx.config);
+        let mut world_gen = AsyncWorldGenerator::new(noise, count, trns, &cx.config);
 
         let (tx, rx) = std::sync::mpsc::channel::<ChunkOffset>();
         let handle = std::thread::spawn(move || loop {
