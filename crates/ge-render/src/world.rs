@@ -6,16 +6,13 @@ use ge_world::{
     trns::{SeaLevel, SimpleSurfacePainter, Transformation},
 };
 use nalgebra::Vector3;
-use std::{
-    sync::{mpsc::Sender, Arc, Mutex},
-    thread::JoinHandle,
-};
+use std::sync::{Arc, Mutex};
 
 #[derive(Debug)]
 pub(crate) struct WorldSystem {
-    #[allow(dead_code)]
-    handle: JoinHandle<()>,
-    tx: Sender<ChunkOffset>,
+    pool: rayon::ThreadPool,
+    state: WorldState,
+    world_gen: AsyncWorldGenerator,
     last_pos: ChunkOffset,
 }
 
@@ -23,8 +20,13 @@ pub(crate) type WorldState = Arc<Mutex<DrawWorld>>;
 
 impl WorldSystem {
     pub fn new(cx: Context, state: WorldState) -> Self {
-        let cx = cx.lock();
+        let num_cpus = num_cpus::get();
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(num_cpus)
+            .build()
+            .unwrap();
 
+        let cx = cx.lock();
         let count = {
             #[allow(
                 clippy::cast_possible_wrap,
@@ -39,35 +41,12 @@ impl WorldSystem {
             SeaLevel::new(&cx.config).into(),
             SimpleSurfacePainter.into(),
         ];
-        let mut world_gen = AsyncWorldGenerator::new(noise, count, trns, &cx.config);
-
-        let (tx, rx) = std::sync::mpsc::channel::<ChunkOffset>();
-        let handle = std::thread::spawn(move || loop {
-            let Ok(val) = rx.recv() else {
-                break;
-            };
-            trace!("received chunk offset: {:?}", val);
-
-            // calculate which chunks to generate
-            world_gen.center = (val.x(), val.y());
-
-            // generate new chunks
-            let world = world_gen.generate();
-
-            // update the world state
-            let mut state = state.lock().unwrap();
-            state.chunks = world.chunks;
-            state.dirty = true;
-        });
-
-        // send the initial position
-        tx.send(ChunkOffset::default()).unwrap();
-
+        let world_gen = AsyncWorldGenerator::new(noise, count, trns, &cx.config);
         let last_pos = ChunkOffset::default();
-
         return Self {
-            handle,
-            tx,
+            pool,
+            state,
+            world_gen,
             last_pos,
         };
     }
@@ -75,7 +54,21 @@ impl WorldSystem {
     pub fn update(&mut self, camera_pos: Vector3<f32>) {
         let pos = ChunkOffset::from(camera_pos);
         if pos != self.last_pos {
-            self.tx.send(pos).unwrap();
+            self.pool.install(|| {
+                let val = pos;
+                trace!("received chunk offset: {:?}", val);
+
+                // calculate which chunks to generate
+                self.world_gen.center = (val.x(), val.y());
+
+                // generate new chunks
+                let world = self.world_gen.generate();
+
+                // update the world state
+                let mut state = self.state.lock().unwrap();
+                state.chunks = world.chunks;
+                state.dirty = true;
+            });
             self.last_pos = pos;
         }
     }

@@ -1037,6 +1037,7 @@ dependencies = [
  "ge-world",
  "nalgebra",
  "nalgebra-glm",
+ "num_cpus",
  "rayon",
  "tracing",
  "tracing-appender",
