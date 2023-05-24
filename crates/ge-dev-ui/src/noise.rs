@@ -5,6 +5,8 @@ use egui::{
 use ge_world::noise::Noise;
 use nalgebra::Vector3;
 
+use crate::Window;
+
 #[derive(serde::Deserialize, serde::Serialize)]
 pub(crate) struct Noise2D {
     pub(crate) is_open: bool,
@@ -106,8 +108,12 @@ impl std::fmt::Display for Noise2D {
     }
 }
 
-impl Noise2D {
-    pub(crate) fn window(&mut self, ctx: &egui::Context) {
+impl Window for Noise2D {
+    fn is_open(&mut self) -> &mut bool {
+        return &mut self.is_open;
+    }
+
+    fn window(&mut self, ctx: &egui::Context) {
         if !self.is_open {
             return;
         }
@@ -197,6 +203,10 @@ impl Noise2D {
             }
         });
     }
+
+    fn title(&self) -> &str {
+        return "2D Noise";
+    }
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -220,7 +230,7 @@ pub(crate) struct Noise1D {
 }
 
 impl Noise1D {
-    pub(crate) fn generate_noise_field(&mut self) -> Noise {
+    fn generate_noise_field(&mut self) -> Noise {
         debug!("Generated noise field");
         return Noise::new(
             self.seed,
@@ -231,8 +241,14 @@ impl Noise1D {
             self.persistence,
         );
     }
+}
 
-    pub(crate) fn window(&mut self, ctx: &egui::Context) {
+impl Window for Noise1D {
+    fn is_open(&mut self) -> &mut bool {
+        return &mut self.is_open;
+    }
+
+    fn window(&mut self, ctx: &egui::Context) {
         if !self.is_open {
             return;
         }
@@ -324,6 +340,10 @@ impl Noise1D {
                 Plot::new("noise_1d").show(ui, |plot_ui| return plot_ui.line(line));
             }
         });
+    }
+
+    fn title(&self) -> &str {
+        return "1D Noise";
     }
 }
 

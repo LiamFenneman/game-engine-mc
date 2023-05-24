@@ -11,11 +11,27 @@
 extern crate tracing;
 
 mod noise;
+use noise::{Noise1D, Noise2D};
 
-#[derive(Default, serde::Deserialize, serde::Serialize)]
+pub(crate) trait Window {
+    fn is_open(&mut self) -> &mut bool;
+    fn window(&mut self, ctx: &egui::Context);
+    fn title(&self) -> &str;
+}
+
 pub(crate) struct App {
-    win_noise1d: noise::Noise1D,
-    win_noise2d: noise::Noise2D,
+    windows: Vec<Box<dyn Window>>,
+}
+
+impl Default for App {
+    fn default() -> Self {
+        return Self {
+            windows: vec![
+                Box::<Noise1D>::default(),
+                Box::<Noise2D>::default(),
+            ],
+        };
+    }
 }
 
 impl eframe::App for App {
@@ -37,8 +53,10 @@ impl eframe::App for App {
                     ui.with_layout(egui::Layout::top_down_justified(egui::Align::LEFT), |ui| {
                         ui.label("Windows");
 
-                        ui.toggle_value(&mut self.win_noise1d.is_open, "1D Noise");
-                        ui.toggle_value(&mut self.win_noise2d.is_open, "2D Noise");
+                        for window in &mut self.windows {
+                            let title = window.title().to_owned();
+                            ui.toggle_value(window.is_open(), title);
+                        }
 
                         ui.separator();
 
@@ -56,9 +74,9 @@ impl eframe::App for App {
             });
         });
 
-        // windows
-        self.win_noise1d.window(ctx);
-        self.win_noise2d.window(ctx);
+        for window in &mut self.windows {
+            window.window(ctx);
+        }
     }
 }
 
