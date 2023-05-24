@@ -1,4 +1,4 @@
-use crate::{context::Context, drawables::world::World};
+use crate::{context::Context, drawables::world::DrawWorld};
 use ge_util::ChunkOffset;
 use ge_world::{
     gen::{AsyncWorldGenerator, WorldGenerator},
@@ -19,7 +19,7 @@ pub(crate) struct WorldSystem {
     last_pos: ChunkOffset,
 }
 
-pub(crate) type WorldState = Arc<Mutex<World>>;
+pub(crate) type WorldState = Arc<Mutex<DrawWorld>>;
 
 impl WorldSystem {
     pub fn new(cx: Context, state: WorldState) -> Self {

@@ -10,7 +10,7 @@ use nalgebra::Vector3;
 use std::collections::HashMap;
 
 #[derive(Debug)]
-pub(crate) struct World {
+pub(crate) struct DrawWorld {
     context: Context,
     camera_position: ChunkOffset,
     instances: HashMap<ChunkOffset, DrawChunk>,
@@ -18,7 +18,7 @@ pub(crate) struct World {
     pub dirty: bool,
 }
 
-impl World {
+impl DrawWorld {
     #[must_use]
     pub fn new(cx: Context, camera_position: ChunkOffset) -> Self {
         let config = cx.lock().config;
@@ -74,7 +74,7 @@ impl World {
     }
 }
 
-impl Draw for World {
+impl Draw for DrawWorld {
     fn draw<'a>(&'a self, render_pass: &mut wgpu::RenderPass<'a>, uniforms: &'a wgpu::BindGroup) {
         self.instances
             .iter()

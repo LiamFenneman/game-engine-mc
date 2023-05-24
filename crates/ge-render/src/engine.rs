@@ -3,7 +3,7 @@ use crate::{
         controller::CameraController, projection::Projection, uniform::CameraUniform, Camera,
     },
     context::Context,
-    drawables::world::World,
+    drawables::world::DrawWorld,
     renderer::Renderer,
     stats::FrameStats,
     world::{WorldState, WorldSystem},
@@ -110,7 +110,7 @@ impl Engine {
         let stats = FrameStats::default();
 
         let context = Context::new(config, uniform_bind_group, uniform_bind_group_layout);
-        let world = Arc::new(Mutex::new(World::new(context.clone(), ChunkOffset::default())));
+        let world = Arc::new(Mutex::new(DrawWorld::new(context.clone(), ChunkOffset::default())));
         let world_sys = WorldSystem::new(context.clone(), Arc::clone(&world));
         renderer.set_world(&world);
 
