@@ -113,8 +113,9 @@ impl DrawInstancedBlocks {
         let shader = wgpu::include_wgsl!("../shaders/block.wgsl");
 
         let render_pipeline = create_render_pipeline(
-            renderer,
+            &renderer.device,
             &layout,
+            renderer.config.format,
             Some(Texture::DEPTH_FORMAT),
             &[BlockVertex::desc(), InstanceRaw::desc()],
             shader,
