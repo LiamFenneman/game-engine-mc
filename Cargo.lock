@@ -1115,6 +1115,8 @@ dependencies = [
  "image",
  "vulkano",
  "vulkano-shaders",
+ "vulkano-win",
+ "winit",
 ]
 
 [[package]]
@@ -3179,6 +3181,19 @@ dependencies = [
  "shaderc",
  "syn 1.0.109",
  "vulkano",
+]
+
+[[package]]
+name = "vulkano-win"
+version = "0.33.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "666c77efe5ea82837781961a6bcd957ee2e926777e8de0005f580335d6eaefe7"
+dependencies = [
+ "core-graphics-types",
+ "objc",
+ "raw-window-handle",
+ "vulkano",
+ "winit",
 ]
 
 [[package]]

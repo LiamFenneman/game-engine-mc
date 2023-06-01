@@ -8,4 +8,8 @@ default-run = "ge-render-vk"
 [dependencies]
 vulkano = "0.33.0"
 vulkano-shaders = "0.33.0"
+vulkano-win = "0.33.0"
+winit.workspace = true
+
+[dev-dependencies]
 image = "0.24"
