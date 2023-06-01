@@ -3,7 +3,7 @@ name = "ge-render"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
-default-run = "ge-render"
+# default-run = "ge-render"
 
 [dependencies]
 beul = "1.0"
